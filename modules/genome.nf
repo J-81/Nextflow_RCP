@@ -43,6 +43,12 @@ process ALIGN_STAR {
           path("${ sampleID }Aligned.sortedByCoord.out.bam"), emit: genomeMapping
     tuple val(sampleID), \
           path("${ sampleID }Aligned.toTranscriptome.out.bam"), emit: transcriptomeMapping
+
+  stub:
+    """
+    touch "${ sampleID }Aligned.sortedByCoord.out.bam" "${ sampleID }Aligned.toTranscriptome.out.bam"
+    """
+
   script:
     """
     STAR --twopassMode Basic \
@@ -95,6 +101,14 @@ process COUNT_ALIGNED {
     tuple val(sampleID), path("${ sampleID }.genes.results"), emit: countsPerGene
     tuple val(sampleID), path("${ sampleID }.isoforms.results"), emit: countsPerIsoform
     tuple val(sampleID), path("${ sampleID }.stat"), emit: stats
+
+  stub:
+    """
+    touch "${ sampleID }.genes.results" \
+          "${ sampleID }.isoforms.results" \
+          "${ sampleID }.stat"
+    """
+
   script:
     """
     rsem-calculate-expression --num-threads $task.cpus \

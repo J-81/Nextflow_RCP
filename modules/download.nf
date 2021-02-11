@@ -5,22 +5,38 @@
 
 process DOWNLOAD_RAW_READS {
   label 'networkBound'
-  storeDir "${params.storeDirPath}/raw_reads"
+  publishDir "${params.publishDirPath}/00-RawData/Fastq"
 
   input:
     val(sample)
   output:
     tuple val(sample), path("${sample}_R?_raw.fastq.gz"), emit: raw_reads
+
+  stub:
+    if ( params.pairedEnd ) {
+      """
+      touch ${sample}_R1_raw.fastq.gz
+      touch ${sample}_R2_raw.fastq.gz
+      """
+    } else {
+      """
+      touch ${sample}_R1_raw.fastq.gz
+      """
+    }
+
   script:
     """
     wget --no-check-certificate --quiet \
     -O ${sample}_R1_raw.fastq.gz \
     ${params.GLDS_URL_PREFIX}${sample}_R1_raw.fastq.gz${params.GLDS_URL_SUFFIX}
-
-    wget --no-check-certificate --quiet \
-    -O ${sample}_R2_raw.fastq.gz \
-    ${params.GLDS_URL_PREFIX}${sample}_R2_raw.fastq.gz${params.GLDS_URL_SUFFIX}
     """
+    if ( params.pairedEnd ) {
+      """
+      wget --no-check-certificate --quiet \
+      -O ${sample}_R2_raw.fastq.gz \
+      ${params.GLDS_URL_PREFIX}${sample}_R2_raw.fastq.gz${params.GLDS_URL_SUFFIX}
+      """
+    }
 }
 
 /*
