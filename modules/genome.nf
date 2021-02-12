@@ -4,7 +4,10 @@
 
 process BUILD_STAR {
   conda "${baseDir}/envs/star.yml"
-  storeDir "${params.storeDirPath}/STAR_${ params.ensembl_version }"
+  storeDir ( params.genomeSubsample ?
+              "${params.storeDirPath}/${ params.organism }/subsampled/STAR_${ params.ensembl_version }" :
+              "${params.storeDirPath}/${ params.organism }/STAR_${ params.ensembl_version }"
+            )
   label 'maxCPU'
   label 'big_mem'
 
@@ -78,7 +81,10 @@ process ALIGN_STAR {
 
 process BUILD_RSEM {
   conda "${baseDir}/envs/rsem.yml"
-  storeDir "${params.storeDirPath}/RSEM_${ params.ensembl_version }"
+  storeDir ( params.genomeSubsample ?
+              "${params.storeDirPath}/${ params.organism }/subsampled/RSEM_${ params.ensembl_version }" :
+              "${params.storeDirPath}/${ params.organism }/RSEM_${ params.ensembl_version }"
+            )
 
   input:
     tuple path(genomeFasta), path(genomeGtf)
@@ -124,4 +130,28 @@ process COUNT_ALIGNED {
       $sampleID
     """
 
+}
+
+
+/*
+ * Download and decompress genome and annotation files
+ */
+
+process SUBSAMPLE_GENOME {
+  conda "${baseDir}/envs/samtools.yml"
+  storeDir "${params.storeDirPath}/ensembl/${params.ensembl_version}/${params.organism}"
+
+  input:
+    tuple path(genome_fasta), path(genome_gtf)
+  output:
+    tuple path("subsampled/${params.genomeSubsample}/${genome_fasta}"), \
+          path("subsampled/${params.genomeSubsample}/${genome_gtf}")
+  script:
+    """
+    mkdir subsampled
+    grep -P "^#|^${params.genomeSubsample}\t" ${genome_gtf} > subsampled/${params.genomeSubsample}/${genome_gtf}
+
+    samtools faidx ${genome_fasta} ${params.genomeSubsample} > subsampled/${params.genomeSubsample}/${genome_fasta}
+
+    """
 }
