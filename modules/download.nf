@@ -5,7 +5,8 @@
 
 process DOWNLOAD_RAW_READS {
   label 'networkBound'
-  publishDir "${params.publishDirPath}/00-RawData/Fastq"
+  storeDir "${params.publishDirPath}/00-RawData/Fastq"
+  // publishDir "${params.publishDirPath}/00-RawData/Fastq"
 
   input:
     val(sample)
@@ -45,7 +46,7 @@ process DOWNLOAD_RAW_READS {
 
 process DOWNLOAD_GENOME_ANNOTATIONS {
   label 'networkBound'
-  storeDir "${params.storeDirPath}/ensembl"
+  storeDir "${params.storeDirPath}/ensembl/${params.ensembl_version}/${params.organism}"
 
   input:
   output:
