@@ -2,15 +2,16 @@ nextflow.enable.dsl=2
 
 include { DOWNLOAD_RAW_READS;
           DOWNLOAD_GENOME_ANNOTATIONS } from './modules/download.nf'
-include { FASTQC as RAW_FASTQC } from './modules/quality.nf'
-include { FASTQC as TRIM_FASTQC } from './modules/quality.nf'
+include { FASTQC as RAW_FASTQC } from './modules/quality.nf' addParams(fastQCLabel: 'raw')
+include { FASTQC as TRIM_FASTQC } from './modules/quality.nf' addParams(fastQCLabel: 'trimmed')
 include { MULTIQC as RAW_MULTIQC } from './modules/quality.nf' addParams(multiQCLabel: 'raw')
 include { MULTIQC as TRIM_MULTIQC } from './modules/quality.nf' addParams(multiQCLabel: 'trimmed')
 include { TRIMGALORE } from './modules/quality.nf'
 include { BUILD_STAR;
           ALIGN_STAR;
           BUILD_RSEM;
-          COUNT_ALIGNED } from './modules/genome.nf'
+          COUNT_ALIGNED;
+          SUBSAMPLE_GENOME } from './modules/genome.nf'
 include { DGE_BY_DESEQ2 } from './modules/dge.nf'
 
 samples_ch = Channel.fromList( params.samples )
@@ -43,8 +44,7 @@ workflow {
                    | flatten \
                    | unique \
                    | collect \
-                   | RAW_MULTIQC \
-                   | view
+                   | RAW_MULTIQC
 
     raw_reads_ch | map{ it -> [ it[0], it[1][0], it[1][1] ] } | TRIMGALORE
 
@@ -62,6 +62,11 @@ workflow {
     } else {
       DOWNLOAD_GENOME_ANNOTATIONS | set { genome_annotations }
     }
+
+    if ( params.genomeSubsample ) {
+      genome_annotations | SUBSAMPLE_GENOME | set { genome_annotations }
+    }
+
     genome_annotations | view
     genome_annotations | BUILD_STAR
 
