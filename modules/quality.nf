@@ -78,13 +78,16 @@ process MULTIQC {
 
 process TRIMGALORE {
   conda "${baseDir}/envs/trim_galore.yml"
+  publishDir "${params.publishDirPath}/${params.trimmedDataPath}"
   cpus 4
 
   input:
     tuple val(sample), path(forward_read), path(reverse_read)
   output:
-    tuple val(sample), path("${ forward_read.simpleName }_val_1.fq.gz"), path("${ reverse_read.simpleName }_val_2.fq.gz"), emit: reads
-    tuple val(sample), path("${ forward_read }_trimming_report.txt"), path("${ reverse_read }_trimming_report.txt"), emit: trim_reports
+    tuple val(sample), path("Fastq/${ forward_read.simpleName }_val_1.fq.gz"), \
+                       path("Fastq/${ reverse_read.simpleName }_val_2.fq.gz"), emit: reads
+    tuple val(sample), path("Trimming_Reports/${ forward_read }_trimming_report.txt"), \
+                       path("Trimming_Reports/${ reverse_read }_trimming_report.txt"), emit: trim_reports
 
   stub:
   // TODO: add support for single end studies
@@ -108,5 +111,11 @@ process TRIMGALORE {
     --phred33 \
     --paired $forward_read $reverse_read \
     --output_dir .
+
+    mkdir Fastq
+    mv *.fq.gz Fastq
+
+    mkdir Trimming_Reports
+    mv *_trimming_report.txt Trimming_Reports
     """
 }
