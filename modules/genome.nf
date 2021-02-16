@@ -148,10 +148,30 @@ process SUBSAMPLE_GENOME {
           path("subsampled/${params.genomeSubsample}/${genome_gtf}")
   script:
     """
-    mkdir subsampled
+    mkdir -p subsampled/${params.genomeSubsample}
     grep -P "^#|^${params.genomeSubsample}\t" ${genome_gtf} > subsampled/${params.genomeSubsample}/${genome_gtf}
 
     samtools faidx ${genome_fasta} ${params.genomeSubsample} > subsampled/${params.genomeSubsample}/${genome_fasta}
 
     """
+}
+
+process CONCAT_ERCC {
+  storeDir ( params.genomeSubsample ?
+              "${params.storeDirPath}/ensembl/${params.ensembl_version}/${params.organism}/ERCC/subsampled" :
+              "${params.storeDirPath}/ensembl/${params.ensembl_version}/${params.organism}/ERCC"
+              )
+
+  input:
+    tuple path(genome_fasta), path(genome_gtf)
+    tuple path(ercc_fasta), path(ercc_gtf)
+  output:
+    tuple path("${params.organism}_and_ERCC.fa"), \
+          path("${params.organism}_and_ERCC.gtf")
+
+  script:
+  """
+  cat ${genome_fasta} ${ercc_fasta} > ${params.organism}_and_ERCC.fa
+  cat ${genome_gtf} ${ercc_gtf} > ${params.organism}_and_ERCC.gtf
+  """
 }

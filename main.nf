@@ -1,7 +1,8 @@
 nextflow.enable.dsl=2
 
 include { DOWNLOAD_RAW_READS;
-          DOWNLOAD_GENOME_ANNOTATIONS } from './modules/download.nf'
+          DOWNLOAD_GENOME_ANNOTATIONS;
+          DOWNLOAD_ERCC } from './modules/download.nf'
 include { FASTQC as RAW_FASTQC } from './modules/quality.nf' addParams(fastQCLabel: 'raw')
 include { FASTQC as TRIM_FASTQC } from './modules/quality.nf' addParams(fastQCLabel: 'trimmed')
 include { MULTIQC as RAW_MULTIQC } from './modules/quality.nf' addParams(multiQCLabel: 'raw')
@@ -11,7 +12,8 @@ include { BUILD_STAR;
           ALIGN_STAR;
           BUILD_RSEM;
           COUNT_ALIGNED;
-          SUBSAMPLE_GENOME } from './modules/genome.nf'
+          SUBSAMPLE_GENOME;
+          CONCAT_ERCC } from './modules/genome.nf'
 include { DGE_BY_DESEQ2 } from './modules/dge.nf'
 
 samples_ch = Channel.fromList( params.samples )
@@ -63,8 +65,19 @@ workflow {
       DOWNLOAD_GENOME_ANNOTATIONS | set { genome_annotations }
     }
 
+    /*
+    SUBSAMPLING STEP : USED FOR DEBUG/TEST RUNS
+    */
     if ( params.genomeSubsample ) {
       genome_annotations | SUBSAMPLE_GENOME | set { genome_annotations }
+    }
+
+    /*
+    ERCC STEP : ADD ERCC Fasta and GTF to genome files
+    */
+    if ( params.ERCC ) {
+      DOWNLOAD_ERCC | set { ercc_annotations }
+      CONCAT_ERCC( genome_annotations, ercc_annotations ) | set { genome_annotations }
     }
 
     genome_annotations | view

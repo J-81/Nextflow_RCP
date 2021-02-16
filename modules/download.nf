@@ -67,3 +67,20 @@ process DOWNLOAD_GENOME_ANNOTATIONS {
 
     """
 }
+
+process DOWNLOAD_ERCC {
+  label 'networkBound'
+  storeDir "${params.storeDirPath}/thermofisher/ERCC"
+
+  input:
+  output:
+    tuple path("ERCC92.fa"), path("ERCC92.gtf")
+  script:
+    """
+    wget --no-check-certificate --quiet \
+    -O ERCC92.zip \
+    https://assets.thermofisher.com/TFS-Assets/LSG/manuals/ERCC92.zip  \
+    && \
+    unzip ERCC92.zip
+    """
+}
