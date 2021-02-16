@@ -84,3 +84,21 @@ process DOWNLOAD_ERCC {
     unzip ERCC92.zip
     """
 }
+
+
+/* Stub process
+TODO: replace with ISA download via api
+*/
+process DOWNLOAD_ISA {
+  publishDir "${params.publishDirPath}/Metadata"
+
+  input:
+  output:
+    path("GLDS-${ params.GLDS }_metadata_GLDS-${ params.GLDS }-ISA.zip")
+
+  script:
+    """
+    cp ${ params.ISAZip } GLDS-${ params.GLDS }_metadata_GLDS-${ params.GLDS }-ISA.zip
+    """
+
+}

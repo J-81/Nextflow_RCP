@@ -2,7 +2,8 @@ nextflow.enable.dsl=2
 
 include { DOWNLOAD_RAW_READS;
           DOWNLOAD_GENOME_ANNOTATIONS;
-          DOWNLOAD_ERCC } from './modules/download.nf'
+          DOWNLOAD_ERCC;
+          DOWNLOAD_ISA } from './modules/download.nf'
 include { FASTQC as RAW_FASTQC } from './modules/quality.nf' addParams(fastQCLabel: 'raw')
 include { FASTQC as TRIM_FASTQC } from './modules/quality.nf' addParams(fastQCLabel: 'trimmed')
 include { MULTIQC as RAW_MULTIQC } from './modules/quality.nf' addParams(multiQCLabel: 'raw')
@@ -92,7 +93,7 @@ workflow {
 
     COUNT_ALIGNED.out.countsPerGene | map { it[1] } | collect | toList | set { rsem_ch }
 
-    isa_ch = channel.fromPath( params.ISAZip)
+    DOWNLOAD_ISA | set{ isa_ch }
     organism_ch = channel.fromPath( params.organismCSV )
     external_ch = isa_ch.combine( organism_ch )
 
