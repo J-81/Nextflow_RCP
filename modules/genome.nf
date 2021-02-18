@@ -5,8 +5,8 @@
 process BUILD_STAR {
   conda "${baseDir}/envs/star.yml"
   storeDir ( params.genomeSubsample ?
-              "${params.storeDirPath}/${ params.organism }/subsampled/STAR_${ params.ensembl_version }" :
-              "${params.storeDirPath}/${ params.organism }/STAR_${ params.ensembl_version }"
+              "${params.storeDirPath}/${ params.organism }/subsampled/${ params.genomeSubsample }/STAR_ensembl_${ params.ensembl_version }" :
+              "${params.storeDirPath}/${ params.organism }/STAR_ensembl_${ params.ensembl_version }"
             )
   label 'maxCPU'
   label 'big_mem'
@@ -36,6 +36,7 @@ STAR --runThreadN ${task.cpus} \
 
 process ALIGN_STAR {
   conda "${baseDir}/envs/star.yml"
+  publishDir "${params.publishDirPath}/${params.starOutputPath}/${sampleID}"
   label 'maxCPU'
   label 'big_mem'
 
@@ -46,10 +47,23 @@ process ALIGN_STAR {
           path("${ sampleID }Aligned.sortedByCoord.out.bam"), emit: genomeMapping
     tuple val(sampleID), \
           path("${ sampleID }Aligned.toTranscriptome.out.bam"), emit: transcriptomeMapping
+    tuple val(sampleID), \
+          path("${ sampleID }Log.final.out"), \
+          path("${ sampleID }Log.out"), \
+          path("${ sampleID }Log.progress.out"), \
+          path("${ sampleID }SJ.out.tab"), \
+          path("${ sampleID }_STARgenome"), \
+          path("${ sampleID }_STARpass1"), emit: logs
 
   stub:
     """
     touch "${ sampleID }Aligned.sortedByCoord.out.bam" "${ sampleID }Aligned.toTranscriptome.out.bam"
+    touch path("${ sampleID }Log.final.out"), \
+              path("${ sampleID }Log.out"), \
+              path("${ sampleID }Log.progress.out"), \
+              path("${ sampleID }SJ.out.tab"), \
+              path("${ sampleID }_STARgenome"), \
+              path("${ sampleID }_STARpass1"), emit: logs
     """
 
   script:
@@ -82,8 +96,8 @@ process ALIGN_STAR {
 process BUILD_RSEM {
   conda "${baseDir}/envs/rsem.yml"
   storeDir ( params.genomeSubsample ?
-              "${params.storeDirPath}/${ params.organism }/subsampled/RSEM_${ params.ensembl_version }" :
-              "${params.storeDirPath}/${ params.organism }/RSEM_${ params.ensembl_version }"
+              "${params.storeDirPath}/${ params.organism }/subsampled/${ params.genomeSubsample }/RSEM_ensembl_${ params.ensembl_version }" :
+              "${params.storeDirPath}/${ params.organism }/RSEM_ensembl_${ params.ensembl_version }"
             )
 
   input:
@@ -100,6 +114,7 @@ process BUILD_RSEM {
 
 process COUNT_ALIGNED {
   conda "${baseDir}/envs/rsem.yml"
+  publishDir "${params.publishDirPath}/${params.rsemOutputPath}/${sampleID}"
 
   input:
     tuple val(sampleID), path(transcriptomeMapping), path(RSEM_REF)

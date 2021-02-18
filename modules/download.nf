@@ -6,7 +6,6 @@
 process DOWNLOAD_RAW_READS {
   label 'networkBound'
   storeDir "${params.publishDirPath}/00-RawData/Fastq"
-  // publishDir "${params.publishDirPath}/00-RawData/Fastq"
 
   input:
     val(sample)
@@ -90,7 +89,7 @@ process DOWNLOAD_ERCC {
 TODO: replace with ISA download via api
 */
 process DOWNLOAD_ISA {
-  publishDir "${params.publishDirPath}/Metadata"
+  publishDir "${params.publishDirPath}/${ params.metaDataPath }"
 
   input:
   output:

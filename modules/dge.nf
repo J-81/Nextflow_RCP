@@ -6,9 +6,15 @@
  * Script written by NASA, parameterized by dataset
  */
 
+// TODO: rewrite for general R script, including folder naming by params (see below)!
+//     # mkdir ${ params.deseq2NormPath }
+//    # mkdir ${ params.deseq2DgePath }
+
 process DGE_BY_DESEQ2 {
   conda "${baseDir}/envs/r_deseq2.yml"
-  publishDir "${params.publishDirPath}/dge"
+  publishDir "${params.publishDirPath}/${params.deseq2NormPath}", pattern: "norm_counts_output/*"
+  publishDir "${params.publishDirPath}/${params.deseq2DgePath}", pattern: "dge_output/*"
+
 
   input:
     tuple path(ISA_zip), path(organisms_csv), path(Rsem_gene_counts)
