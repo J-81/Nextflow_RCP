@@ -78,7 +78,8 @@ process MULTIQC {
 
 process TRIMGALORE {
   conda "${baseDir}/envs/trim_galore.yml"
-  publishDir "${params.publishDirPath}/${params.trimmedDataPath}"
+  publishDir "${params.publishDirPath}/${params.trimmedDataPath}",
+                saveAs: { filename ->  filename.replaceAll("_raw_val_[12].fq","_trimmed.fastq")}
   cpus 4
 
   input:
