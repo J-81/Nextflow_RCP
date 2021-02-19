@@ -36,7 +36,8 @@ STAR --runThreadN ${task.cpus} \
 
 process ALIGN_STAR {
   conda "${baseDir}/envs/star.yml"
-  publishDir "${params.publishDirPath}/${params.starOutputPath}/${sampleID}"
+  publishDir "${params.publishDirPath}/${params.starOutputPath}/${sampleID}",
+              saveAs: { filename -> filename.replaceAll("${sampleID}","${sampleID}_") }
   label 'maxCPU'
   label 'big_mem'
 
