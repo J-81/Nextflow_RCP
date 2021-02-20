@@ -325,7 +325,7 @@ if ("ENTREZID" %in% columns(eval(parse(text = ann.dbi),env=.GlobalEnv))){
         annot$ENTREZID<-mapIds(eval(parse(text = ann.dbi),env=.GlobalEnv),keys = rownames(output_table_2),keytype = keytype, column = "ENTREZID", multiVals = "first")
 }
 
-string_db <- STRINGdb$new( version="10", species=organism_table$taxon[organism_table$name == organism],score_threshold=0)
+string_db <- STRINGdb$new( version="11", species=organism_table$taxon[organism_table$name == organism],score_threshold=0)
 string_map <- string_db$map(annot,"SYMBOL",removeUnmappedRows = FALSE, takeFirst = TRUE)[,c(1,6)]
 string_map <- string_map[!duplicated(string_map$SYMBOL),]
 
