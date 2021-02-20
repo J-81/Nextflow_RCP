@@ -9,7 +9,7 @@
 // TODO: REMOVE HARD CODED CONDA PATH
 
 process DGE_BY_DESEQ2 {
-  conda "${baseDir}/envs/RNAseq_Rtools"
+  conda "${baseDir}/envs/RNAseq_Rtools.yml"
   publishDir "${params.publishDirPath}/${params.deseq2NormPath}", pattern: "norm_counts_output/*"
   publishDir "${params.publishDirPath}/${params.deseq2DgePath}", pattern: "dge_output/*"
 
