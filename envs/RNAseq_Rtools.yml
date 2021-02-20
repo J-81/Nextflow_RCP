@@ -333,4 +333,3 @@ dependencies:
   - zstd=1.4.8=ha95c52a_1
   - r-textshaping=0.1.2
   - r-ragg=0.4.0
-prefix: /data1/conda/envs/RNAseq_Rtools
