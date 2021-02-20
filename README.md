@@ -1,3 +1,13 @@
+# FORKED FROM J-81/masterProject
+
+This repo includes the nextflow implemention of the RNASeq pipeline.  Note: the default output paths are designed to match the ones found in GLDS-194 as prepared on Oberyn.
+
+---
+
+############### Original README.md below ###############
+
+
+
 # NASA Pipeline: GL-DPPD-7101-C
 
 This is a nextflow implementation of a NASA bioinformatics pipeline for Jonathan Oribello's Bioinformatics Master's Project.  
