@@ -159,7 +159,7 @@ library(PANTHER.db) # for GOSLIM annotations
 ann.dbi <- organism_table$annotations[organism_table$name == organism] # Organism specific gene annotation database
 ann.dbi=as.character(ann.dbi)
 if(!require(ann.dbi, character.only=TRUE)) {
-	#BiocManager::install(ann.dbi, ask = FALSE)
+	BiocManager::install(ann.dbi, ask = FALSE)
 	library(ann.dbi, character.only=TRUE)
 }
 

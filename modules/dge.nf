@@ -47,7 +47,7 @@ process DGE_BY_DESEQ2 {
 
     # run the script with R
     deseq2_normcounts_wERCC_DGE_vis_ISA.R \
-      ${ params.organism } \
+      ${ params.organism_nonsci } \
       $Isa_zip \
       norm_counts_output \
       dge_output \
