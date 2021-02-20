@@ -6,18 +6,15 @@
  * Script written by NASA, parameterized by dataset
  */
 
-// TODO: rewrite for general R script, including folder naming by params (see below)!
-//     # mkdir ${ params.deseq2NormPath }
-//    # mkdir ${ params.deseq2DgePath }
+// TODO: REMOVE HARD CODED CONDA PATH
 
 process DGE_BY_DESEQ2 {
-  conda "${baseDir}/envs/r_deseq2.yml"
+  conda "/data1/conda/envs/RNAseq_Rtools"
   publishDir "${params.publishDirPath}/${params.deseq2NormPath}", pattern: "norm_counts_output/*"
   publishDir "${params.publishDirPath}/${params.deseq2DgePath}", pattern: "dge_output/*"
 
-
   input:
-    tuple path(ISA_zip), path(organisms_csv), path(Rsem_gene_counts)
+    tuple path(Isa_zip), path(organisms_csv), path(Rsem_gene_counts)
   output:
     tuple path("norm_counts_output/Normalized_Counts.csv"),
           path("norm_counts_output/SampleTable.csv"),
@@ -43,19 +40,17 @@ process DGE_BY_DESEQ2 {
 
   script:
     """
-    # create rsem counts directory and move them into it
-    mkdir RSEM_GENE_COUNTS
-    mv $Rsem_gene_counts RSEM_GENE_COUNTS
-
-    # create metadata dir and move metadata to script expected places
-    mkdir metaDir
-    mv $ISA_zip metaDir
-
     # create output directories
     mkdir norm_counts_output
     mkdir dge_output
+    mkdir dge_output_ercc
 
     # run the script with R
-    GLDS-104-norm_DGE_analysis.R
+    deseq2_normcounts_wERCC_DGE_vis_ISA.R \
+      ${ params.organism } \
+      $Isa_zip \
+      norm_counts_output \
+      dge_output \
+      dge_output_ercc
     """
 }
