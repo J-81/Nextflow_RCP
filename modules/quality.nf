@@ -11,7 +11,8 @@ process FASTQC {
   if (params.fastQCLabel == "raw") {
       publishDir "${params.publishDirPath}/${params.rawDataPath}/FastQC_Reports"
     } else if (params.fastQCLabel == "trimmed") {
-      publishDir "${params.publishDirPath}/${params.trimmedDataPath}/FastQC_Reports"
+      publishDir "${params.publishDirPath}/${params.trimmedDataPath}/FastQC_Reports",
+        saveAs: { filename ->  filename.replaceAll("_raw_val_[12].fastq","_trimmed.fastq")}
     }
 
   input:
