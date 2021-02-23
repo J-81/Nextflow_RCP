@@ -10,8 +10,13 @@
 
 process DGE_BY_DESEQ2 {
   conda "${baseDir}/envs/RNAseq_Rtools.yml"
+<<<<<<< HEAD
   publishDir "${params.publishDirPath}/${params.deseq2NormPath}", pattern: "norm_counts_output/*", saveAs:{ "${file(it).getName()}"}
   publishDir "${params.publishDirPath}/${params.deseq2DgePath}", pattern: "dge_output/*", saveAs:{ "${file(it).getName()}"}
+=======
+  publishDir "${params.publishDirPath}/${params.deseq2NormPath}", pattern: "norm_counts_output/*", saveAs:{ filename -> File(filename.getName()) }
+  publishDir "${params.publishDirPath}/${params.deseq2DgePath}", pattern: "dge_output/*", saveAs:{ filename -> File(filename.getName()) }
+>>>>>>> 475a728c094d83ec142490b413d88e12ed04fec8
 
   input:
     tuple path(Isa_zip), path(organisms_csv), path(Rsem_gene_counts)
