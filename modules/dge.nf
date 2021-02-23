@@ -18,6 +18,7 @@ process DGE_BY_DESEQ2 {
   output:
     tuple path("norm_counts_output/Normalized_Counts.csv"),
           path("norm_counts_output/SampleTable.csv"),
+          path("norm_counts_output/ERCC_Normalized_Counts.csv"),
           path("norm_counts_output/Unnormalized_Counts.csv"), emit: norm_counts
     tuple path("dge_output/contrasts.csv"),
           path("dge_output/differential_expression.csv"),
