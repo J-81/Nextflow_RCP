@@ -17,6 +17,7 @@ include { BUILD_STAR;
           CONCAT_ERCC } from './modules/genome.nf'
 include { DGE_BY_DESEQ2 } from './modules/dge.nf'
 include { SAMPLES_FROM_ISA } from './modules/isa.nf'
+include { VV_RAW_READS } from './modules/vv.nf'
 
 /*
  * Starting point, includes downloads data from GeneLab
@@ -42,7 +43,23 @@ workflow {
       GET_DATA( samples_ch ) | set { raw_reads_ch }
     }
 
-     raw_reads_ch | RAW_FASTQC
+    // Set up VV output file as channel
+    vv_output_ch = Channel.fromPath( params.vv_output_file )
+
+    if ( params.vv_config_file ) {
+      raw_reads_ch | multiMap { it ->
+                      samples: it[0]
+                      input_files: it[1]
+                      }
+                   | set{ raw_reads_vv_input }
+
+      VV_RAW_READS( raw_reads_vv_input.samples | collect,
+                    raw_reads_vv_input.input_files | collect,
+                    params.vv_config_file,
+                    vv_output_ch )
+    }
+
+    raw_reads_ch | RAW_FASTQC
 
     RAW_FASTQC.out | map { it -> [ it[1], it[2] ] } \
                    | flatten \
@@ -82,7 +99,6 @@ workflow {
       CONCAT_ERCC( genome_annotations, ercc_annotations ) | set { genome_annotations }
     }
 
-    genome_annotations | view
     genome_annotations | BUILD_STAR
 
     TRIMGALORE.out.reads | combine( BUILD_STAR.out ) | ALIGN_STAR
@@ -98,7 +114,6 @@ workflow {
     external_ch = isa_ch.combine( organism_ch )
 
     external_ch | combine( rsem_ch ) | set { for_dge_ch }
-    for_dge_ch | view
     for_dge_ch | DGE_BY_DESEQ2
 
 }
