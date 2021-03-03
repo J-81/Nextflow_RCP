@@ -37,8 +37,6 @@ workflow {
 	main:
     DOWNLOAD_ISA | set{ isa_ch }
     SAMPLES_FROM_ISA( isa_ch ) | splitText { it.replaceAll("\\s","") } | set{ samples_ch }
-    //TMP
-    samples_ch | view
 
     if ( params.raw_reads ) {
       raw_reads_ch = Channel.from( params.raw_reads )
