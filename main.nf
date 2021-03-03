@@ -17,10 +17,7 @@ include { BUILD_STAR;
           CONCAT_ERCC } from './modules/genome.nf'
 include { DGE_BY_DESEQ2 } from './modules/dge.nf'
 include { SAMPLES_FROM_ISA } from './modules/isa.nf'
-/*
-samples_ch = Channel.fromList( params.samples )
-                    .take( params.limiter )
-*/
+
 /*
  * Starting point, includes downloads data from GeneLab
  */
