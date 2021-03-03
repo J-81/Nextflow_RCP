@@ -16,10 +16,11 @@ include { BUILD_STAR;
           SUBSAMPLE_GENOME;
           CONCAT_ERCC } from './modules/genome.nf'
 include { DGE_BY_DESEQ2 } from './modules/dge.nf'
-
+include { SAMPLES_FROM_ISA } from './modules/isa.nf'
+/*
 samples_ch = Channel.fromList( params.samples )
                     .take( params.limiter )
-
+*/
 /*
  * Starting point, includes downloads data from GeneLab
  */
@@ -34,13 +35,18 @@ workflow GET_DATA {
 
 workflow {
 	main:
+    DOWNLOAD_ISA | set{ isa_ch }
+    SAMPLES_FROM_ISA( isa_ch ) | splitText { it.replaceAll("\\s","") } | set{ samples_ch }
+    //TMP
+    samples_ch | view
+
     if ( params.raw_reads ) {
       raw_reads_ch = Channel.from( params.raw_reads )
                             .map { row -> [ row[0], [ file(row[1][0], checkIfExists: true), file(row[1][1], checkIfExists: true) ] ] }
     } else {
       GET_DATA( samples_ch ) | set { raw_reads_ch }
     }
-     raw_reads_ch | view
+
      raw_reads_ch | RAW_FASTQC
 
     RAW_FASTQC.out | map { it -> [ it[1], it[2] ] } \
@@ -93,7 +99,6 @@ workflow {
 
     COUNT_ALIGNED.out.countsPerGene | map { it[1] } | collect | toList | set { rsem_ch }
 
-    DOWNLOAD_ISA | set{ isa_ch }
     organism_ch = channel.fromPath( params.organismCSV )
     external_ch = isa_ch.combine( organism_ch )
 
