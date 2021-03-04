@@ -1,4 +1,7 @@
 nextflow.enable.dsl=2
+import java.text.SimpleDateFormat
+def date = new Date()
+def sdf = new SimpleDateFormat("MMddyyyy-HH_mm_ss")
 
 include { DOWNLOAD_RAW_READS;
           DOWNLOAD_GENOME_ANNOTATIONS;
@@ -17,7 +20,11 @@ include { BUILD_STAR;
           CONCAT_ERCC } from './modules/genome.nf'
 include { DGE_BY_DESEQ2 } from './modules/dge.nf'
 include { SAMPLES_FROM_ISA } from './modules/isa.nf'
-include { VV_RAW_READS } from './modules/vv.nf'
+include { VV_RAW_READS;
+          VV_TRIMMED_READS;
+          VV_RAW_READS_MULTIQC;
+          VV_TRIMMED_READS_MULTIQC;
+          VV_STAR_ALIGNMENTS } from './modules/vv.nf' addParams(timestamp: sdf.format(date))
 
 /*
  * Starting point, includes downloads data from GeneLab
@@ -43,9 +50,6 @@ workflow {
       GET_DATA( samples_ch ) | set { raw_reads_ch }
     }
 
-    // Set up VV output file as channel
-    vv_output_ch = Channel.fromPath( params.vv_output_file )
-
     if ( params.vv_config_file ) {
       raw_reads_ch | multiMap { it ->
                       samples: it[0]
@@ -55,8 +59,7 @@ workflow {
 
       VV_RAW_READS( raw_reads_vv_input.samples | collect,
                     raw_reads_vv_input.input_files | collect,
-                    params.vv_config_file,
-                    vv_output_ch )
+                    params.vv_config_file ) | set { vv_output_ch }
     }
 
     raw_reads_ch | RAW_FASTQC
@@ -67,7 +70,27 @@ workflow {
                    | collect \
                    | RAW_MULTIQC
 
+    if ( params.vv_config_file ) {
+      VV_RAW_READS_MULTIQC( samples_ch | collect,
+                            RAW_MULTIQC.out.data,
+                            params.vv_config_file,
+                            vv_output_ch ) | set { vv_output_ch }
+    }
+
     raw_reads_ch | map{ it -> [ it[0], it[1][0], it[1][1] ] } | TRIMGALORE
+
+    if ( params.vv_config_file ) {
+      TRIMGALORE.out.reads | multiMap { it ->
+                              samples: it[0]
+                              input_files: it[1]
+                              }
+                           | set{ trimmed_reads_vv_input }
+
+      VV_TRIMMED_READS( trimmed_reads_vv_input.samples | collect,
+                        trimmed_reads_vv_input.input_files | collect,
+                        params.vv_config_file,
+                        vv_output_ch ) | set { vv_output_ch }
+    }
 
     TRIMGALORE.out.reads | map{ it -> [ it[0], [ it[1], it[2] ] ]} | TRIM_FASTQC
 
@@ -76,6 +99,13 @@ workflow {
                     | unique \
                     | collect \
                     | TRIM_MULTIQC
+
+    if ( params.vv_config_file ) {
+      VV_TRIMMED_READS_MULTIQC( samples_ch | collect,
+                                TRIM_MULTIQC.out.data,
+                                params.vv_config_file,
+                                vv_output_ch ) | set { vv_output_ch }
+    }
 
     if ( params.genomeFasta && params.genomeGTF ) {
       genome_annotations = channel.fromPath([ params.genomeFasta, params.genomeGTF ])
@@ -102,6 +132,15 @@ workflow {
     genome_annotations | BUILD_STAR
 
     TRIMGALORE.out.reads | combine( BUILD_STAR.out ) | ALIGN_STAR
+
+    if ( params.vv_config_file ) {
+      VV_STAR_ALIGNMENTS( samples_ch | collect,
+                          ALIGN_STAR.out.genomeMapping | map{ it -> it[1] } | collect,
+                          ALIGN_STAR.out.transcriptomeMapping | map{ it -> it[1] } | collect,
+                          ALIGN_STAR.out.logs| map{ it -> it[1..it.size()-1] } | collect,
+                          params.vv_config_file,
+                          vv_output_ch ) | set { vv_output_ch }
+    }
 
     genome_annotations | BUILD_RSEM
 
