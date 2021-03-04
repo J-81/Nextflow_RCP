@@ -62,8 +62,8 @@ process MULTIQC {
   input:
     path(fastqc) // any number of fastqc files
   output:
-    path("${params.multiQCLabel}_multiqc_report/multiqc_report.html")
-    path("${params.multiQCLabel}_multiqc_report/multiqc_data")
+    path("${params.multiQCLabel}_multiqc_report/multiqc_report.html"), emit: html
+    path("${params.multiQCLabel}_multiqc_report/multiqc_data"), emit: data
 
   stub:
     """
