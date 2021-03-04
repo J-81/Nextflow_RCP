@@ -45,9 +45,13 @@ config = configparser.ConfigParser(interpolation=configparser.ExtendedInterpolat
 config.read(args.config)
 
 if __name__ == '__main__':
-    print("Validation Begin")
-    print(f"Config: {type(args.config)} {args.config}")
-    print(f"Samples: {type(args.samples)} {args.samples}")
-    print(f"Input: {type(args.input)} {args.input}")
-    print(f"Output: {type(args.output)} {args.output}")
-    print("Validation End")
+    with open(args.output, "a+") as f:
+        f.write("Raw_Reads\n")
+        f.write(f"{'='*60}\n")
+        f.write("Validation Begin\n")
+        f.write(f"Config: {type(args.config)} {args.config}\n")
+        f.write(f"Samples: {type(args.samples)} {args.samples}\n")
+        f.write(f"Input: {type(args.input)} {args.input}\n")
+        f.write(f"Output: {type(args.output)} {args.output}\n")
+        f.write("Validation End\n")
+        f.write(f"{'='*60}\n\n")
