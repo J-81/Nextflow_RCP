@@ -24,7 +24,9 @@ include { VV_RAW_READS;
           VV_TRIMMED_READS;
           VV_RAW_READS_MULTIQC;
           VV_TRIMMED_READS_MULTIQC;
-          VV_STAR_ALIGNMENTS } from './modules/vv.nf' addParams(timestamp: sdf.format(date))
+          VV_STAR_ALIGNMENTS;
+          VV_RSEM_COUNTS;
+          VV_DESEQ2_ANALYSIS } from './modules/vv.nf' addParams(timestamp: sdf.format(date))
 
 /*
  * Starting point, includes downloads data from GeneLab
@@ -147,6 +149,15 @@ workflow {
     ALIGN_STAR.out.transcriptomeMapping | combine( BUILD_RSEM.out ) | set { aligned_ch }
     aligned_ch | COUNT_ALIGNED
 
+    if ( params.vv_config_file ) {
+      VV_RSEM_COUNTS( samples_ch | collect,
+                      COUNT_ALIGNED.out.countsPerGene | map{ it -> it[1] } | collect,
+                      COUNT_ALIGNED.out.countsPerIsoform | map{ it -> it[1] } | collect,
+                      COUNT_ALIGNED.out.stats | map{ it -> it[1] } | collect,
+                      params.vv_config_file,
+                      vv_output_ch ) | set { vv_output_ch }
+    }
+
     COUNT_ALIGNED.out.countsPerGene | map { it[1] } | collect | toList | set { rsem_ch }
 
     organism_ch = channel.fromPath( params.organismCSV )
@@ -154,5 +165,13 @@ workflow {
 
     external_ch | combine( rsem_ch ) | set { for_dge_ch }
     for_dge_ch | DGE_BY_DESEQ2
+
+    if ( params.vv_config_file ) {
+      VV_DESEQ2_ANALYSIS( samples_ch | collect,
+                          DGE_BY_DESEQ2.out.norm_counts,
+                          DGE_BY_DESEQ2.out.dge,
+                          params.vv_config_file,
+                          vv_output_ch )
+    }
 
 }

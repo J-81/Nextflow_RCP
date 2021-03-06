@@ -95,8 +95,8 @@ process VV_TRIMMED_READS_MULTIQC {
 
 process VV_STAR_ALIGNMENTS {
   stageInMode "copy"
-  publishDir "${params.publishDirPath}/VV/${params.timestamp}",
-              mode: 'copy', saveAs: { "VV_RESULTS.txt" }
+  // publishDir "${params.publishDirPath}/VV/${params.timestamp}",
+  //             mode: 'copy', saveAs: { "VV_RESULTS.txt" }
 
 
   input:
@@ -119,5 +119,59 @@ process VV_STAR_ALIGNMENTS {
                           --l ${ logs } \
                           --output ${ vv_output }
     cp -L ${ vv_output } VV_log_star_alignments.txt
+    """
+}
+
+process VV_RSEM_COUNTS {
+  stageInMode "copy"
+  //publishDir "${params.publishDirPath}/VV/${params.timestamp}",
+  //            mode: 'copy', saveAs: { "VV_RESULTS.txt" }
+
+
+  input:
+    val(samples)
+    path(geneCounts)
+    path(transcriptCounts)
+    path(stats)
+    path(vv_config)
+    path(vv_output)
+
+  output:
+    path("VV_log_rsem_counts.txt")
+
+  script:
+    """
+    rsem_counts_VV.py --config ${ vv_config } \
+                      --samples ${ samples.join(' ') } \
+                      --g ${ geneCounts } \
+                      --t ${ transcriptCounts } \
+                      --stats ${ stats } \
+                      --output ${ vv_output }
+    cp -L ${ vv_output } VV_log_rsem_counts.txt
+    """
+}
+
+process VV_DESEQ2_ANALYSIS {
+  stageInMode "copy"
+  publishDir "${params.publishDirPath}/VV/${params.timestamp}", mode: 'copy'
+
+  input:
+    val(samples)
+    path(norm_countsDir), stageAs: 'counts/*'
+    path(dgeDir), stageAs: 'dge/*'
+    path(vv_config)
+    path(vv_output)
+
+  output:
+    path("VV_log_deseq2_script.txt")
+
+  script:
+    """
+    deseq2_script_VV.py --config ${ vv_config } \
+                        --samples ${ samples.join(' ') } \
+                        --normDir counts \
+                        --dgeDir dge \
+                        --output ${ vv_output }
+    cp -L ${ vv_output } VV_log_deseq2_script.txt
     """
 }
