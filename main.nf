@@ -53,14 +53,8 @@ workflow {
     }
 
     if ( params.vv_config_file ) {
-      raw_reads_ch | multiMap { it ->
-                      samples: it[0]
-                      input_files: it[1]
-                      }
-                   | set{ raw_reads_vv_input }
-
-      VV_RAW_READS( raw_reads_vv_input.samples | collect,
-                    raw_reads_vv_input.input_files | collect,
+      VV_RAW_READS( samples_ch | collectFile(name: "samples.txt", newLine: true),
+                    GET_DATA.out | map{ it -> it[1..it.size()-1] } | flatten | collect, // map use here: removes value sample from tuple
                     params.vv_config_file ) | set { vv_output_ch }
     }
 
