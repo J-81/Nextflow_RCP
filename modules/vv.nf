@@ -28,7 +28,7 @@ process VV_RAW_READS_MULTIQC {
   //publishDir "${params.publishDirPath}/VV/${params.timestamp}", mode: 'copy'
 
   input:
-    val(samples)
+    path(samples)
     path(multiqcDataDir)
     path(vv_config)
 
@@ -38,7 +38,7 @@ process VV_RAW_READS_MULTIQC {
   script:
     """
     raw_reads_multiqc_VV.py --config ${ vv_config } \
-                            --samples ${ samples.join(' ') } \
+                            --samples ${ samples } \
                             --input ${ multiqcDataDir } \
                             --output VV_out.tsv
     """
@@ -50,7 +50,7 @@ process VV_TRIMMED_READS {
   // publishDir "${params.publishDirPath}/VV/${params.timestamp}",
 
   input:
-    val(samples)
+    path(samples)
     path(trimmed_reads)
     path(vv_config)
 
@@ -60,7 +60,7 @@ process VV_TRIMMED_READS {
   script:
     """
     trimmed_reads_VV.py --config ${ vv_config } \
-                    --samples ${ samples.join(' ') } \
+                    --samples ${ samples } \
                     --input ${ trimmed_reads } \
                     --output VV_out.tsv
     """
@@ -71,7 +71,7 @@ process VV_TRIMMED_READS_MULTIQC {
   //publishDir "${params.publishDirPath}/VV/${params.timestamp}", mode: 'copy'
 
   input:
-    val(samples)
+    path(samples)
     path(multiqcDataDir)
     path(vv_config)
 
@@ -81,7 +81,7 @@ process VV_TRIMMED_READS_MULTIQC {
   script:
     """
     trimmed_reads_multiqc_VV.py --config ${ vv_config } \
-                                --samples ${ samples.join(' ') } \
+                                --samples ${ samples } \
                                 --input ${ multiqcDataDir } \
                                 --output VV_out.tsv
     """
@@ -94,7 +94,7 @@ process VV_STAR_ALIGNMENTS {
 
 
   input:
-    val(samples)
+    path(samples)
     path(genomeMapping)
     path(transcriptomeMapping)
     path(logs)
@@ -106,7 +106,7 @@ process VV_STAR_ALIGNMENTS {
   script:
     """
     star_alignments_VV.py --config ${ vv_config } \
-                          --samples ${ samples.join(' ') } \
+                          --samples ${ samples } \
                           --g ${ genomeMapping } \
                           --t ${ transcriptomeMapping } \
                           --l ${ logs } \
@@ -121,7 +121,7 @@ process VV_RSEM_COUNTS {
 
 
   input:
-    val(samples)
+    path(samples)
     path(geneCounts)
     path(transcriptCounts)
     path(stats)
@@ -133,7 +133,7 @@ process VV_RSEM_COUNTS {
   script:
     """
     rsem_counts_VV.py --config ${ vv_config } \
-                      --samples ${ samples.join(' ') } \
+                      --samples ${ samples } \
                       --g ${ geneCounts } \
                       --t ${ transcriptCounts } \
                       --stats ${ stats } \
@@ -146,7 +146,7 @@ process VV_DESEQ2_ANALYSIS {
   publishDir "${params.publishDirPath}/VV/${params.timestamp}", mode: 'copy'
 
   input:
-    val(samples)
+    path(samples)
     path(norm_countsDir), stageAs: 'counts/*'
     path(dgeDir), stageAs: 'dge/*'
     path(vv_config)
@@ -157,7 +157,7 @@ process VV_DESEQ2_ANALYSIS {
   script:
     """
     deseq2_script_VV.py --config ${ vv_config } \
-                        --samples ${ samples.join(' ') } \
+                        --samples ${ samples } \
                         --normDir counts \
                         --dgeDir dge \
                         --output VV_out.tsv

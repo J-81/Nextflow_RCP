@@ -121,31 +121,31 @@ workflow {
                     GET_DATA.out | map{ it -> it[1..it.size()-1] } | flatten | collect, // map use here: removes value sample from tuple
                     params.vv_config_file ) | mix(vv_output_ch) | set{ vv_output_ch }
 
-      VV_RAW_READS_MULTIQC( samples_ch | collect,
+      VV_RAW_READS_MULTIQC( samples_ch | collectFile(name: "samples.txt", newLine: true),
                             RAW_MULTIQC.out.data,
                             params.vv_config_file) | mix(vv_output_ch) | set{ vv_output_ch }
 
-      VV_TRIMMED_READS( samples_ch | collect,
+      VV_TRIMMED_READS( samples_ch | collectFile(name: "samples.txt", newLine: true),
                         TRIMGALORE.out.reads | map{ it -> it[1..it.size()-1] } | flatten | collect, // map use here: removes value sample from tuple
                         params.vv_config_file)  | mix(vv_output_ch) | set{ vv_output_ch }
 
-      VV_TRIMMED_READS_MULTIQC( samples_ch | collect,
+      VV_TRIMMED_READS_MULTIQC( samples_ch | collectFile(name: "samples.txt", newLine: true),
                                 TRIM_MULTIQC.out.data,
                                 params.vv_config_file)  | mix(vv_output_ch) | set{ vv_output_ch }
 
-      VV_STAR_ALIGNMENTS( samples_ch | collect,
+      VV_STAR_ALIGNMENTS( samples_ch | collectFile(name: "samples.txt", newLine: true),
                           ALIGN_STAR.out.genomeMapping | map{ it -> it[1] } | collect,
                           ALIGN_STAR.out.transcriptomeMapping | map{ it -> it[1] } | collect,
                           ALIGN_STAR.out.logs| map{ it -> it[1..it.size()-1] } | collect,
                           params.vv_config_file) | mix(vv_output_ch) | set{ vv_output_ch }
 
-      VV_RSEM_COUNTS( samples_ch | collect,
+      VV_RSEM_COUNTS( samples_ch | collectFile(name: "samples.txt", newLine: true),
                       COUNT_ALIGNED.out.countsPerGene | map{ it -> it[1] } | collect,
                       COUNT_ALIGNED.out.countsPerIsoform | map{ it -> it[1] } | collect,
                       COUNT_ALIGNED.out.stats | map{ it -> it[1] } | collect,
                       params.vv_config_file)  | mix(vv_output_ch) | set{ vv_output_ch }
 
-      VV_DESEQ2_ANALYSIS( samples_ch | collect,
+      VV_DESEQ2_ANALYSIS( samples_ch | collectFile(name: "samples.txt", newLine: true),
                           DGE_BY_DESEQ2.out.norm_counts,
                           DGE_BY_DESEQ2.out.dge,
                           params.vv_config_file) | mix(vv_output_ch) | set{ vv_output_ch }
