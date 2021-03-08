@@ -12,14 +12,14 @@ process VV_RAW_READS {
     path(vv_config)
 
   output:
-    path("VV_log_raw.txt")
+    path("VV_out.tsv")
 
   script:
     """
     raw_reads_VV.py --config ${ vv_config } \
                     --samples ${ samples } \
                     --input rawReads \
-                    --output VV_log_raw.txt
+                    --output VV_out.tsv
     """
 }
 
@@ -31,18 +31,16 @@ process VV_RAW_READS_MULTIQC {
     val(samples)
     path(multiqcDataDir)
     path(vv_config)
-    path(vv_output)
 
   output:
-    path("VV_log_raw_read_multiqc.txt")
+    path("VV_out.tsv")
 
   script:
     """
     raw_reads_multiqc_VV.py --config ${ vv_config } \
                             --samples ${ samples.join(' ') } \
                             --input ${ multiqcDataDir } \
-                            --output ${ vv_output }
-    cp -L ${ vv_output } VV_log_raw_read_multiqc.txt
+                            --output VV_out.tsv
     """
 }
 
@@ -55,18 +53,16 @@ process VV_TRIMMED_READS {
     val(samples)
     path(trimmed_reads)
     path(vv_config)
-    path(vv_output)
 
   output:
-    path("VV_log_trimmed.txt")
+    path("VV_out.tsv")
 
   script:
     """
     trimmed_reads_VV.py --config ${ vv_config } \
                     --samples ${ samples.join(' ') } \
                     --input ${ trimmed_reads } \
-                    --output ${ vv_output }
-    cp -L ${ vv_output } VV_log_trimmed.txt
+                    --output VV_out.tsv
     """
 }
 
@@ -78,18 +74,16 @@ process VV_TRIMMED_READS_MULTIQC {
     val(samples)
     path(multiqcDataDir)
     path(vv_config)
-    path(vv_output)
 
   output:
-    path("VV_log_trimmed_read_multiqc.txt")
+    path("VV_out.tsv")
 
   script:
     """
     trimmed_reads_multiqc_VV.py --config ${ vv_config } \
                                 --samples ${ samples.join(' ') } \
                                 --input ${ multiqcDataDir } \
-                                --output ${ vv_output }
-    cp -L ${ vv_output } VV_log_trimmed_read_multiqc.txt
+                                --output VV_out.tsv
     """
 }
 
@@ -105,10 +99,9 @@ process VV_STAR_ALIGNMENTS {
     path(transcriptomeMapping)
     path(logs)
     path(vv_config)
-    path(vv_output)
 
   output:
-    path("VV_log_star_alignments.txt")
+    path("VV_out.tsv")
 
   script:
     """
@@ -117,8 +110,7 @@ process VV_STAR_ALIGNMENTS {
                           --g ${ genomeMapping } \
                           --t ${ transcriptomeMapping } \
                           --l ${ logs } \
-                          --output ${ vv_output }
-    cp -L ${ vv_output } VV_log_star_alignments.txt
+                          --output VV_out.tsv
     """
 }
 
@@ -134,10 +126,9 @@ process VV_RSEM_COUNTS {
     path(transcriptCounts)
     path(stats)
     path(vv_config)
-    path(vv_output)
 
   output:
-    path("VV_log_rsem_counts.txt")
+    path("VV_out.tsv")
 
   script:
     """
@@ -146,8 +137,7 @@ process VV_RSEM_COUNTS {
                       --g ${ geneCounts } \
                       --t ${ transcriptCounts } \
                       --stats ${ stats } \
-                      --output ${ vv_output }
-    cp -L ${ vv_output } VV_log_rsem_counts.txt
+                      --output VV_out.tsv
     """
 }
 
@@ -160,10 +150,9 @@ process VV_DESEQ2_ANALYSIS {
     path(norm_countsDir), stageAs: 'counts/*'
     path(dgeDir), stageAs: 'dge/*'
     path(vv_config)
-    path(vv_output)
 
   output:
-    path("VV_log_deseq2_script.txt")
+    path("VV_out.tsv")
 
   script:
     """
@@ -171,7 +160,6 @@ process VV_DESEQ2_ANALYSIS {
                         --samples ${ samples.join(' ') } \
                         --normDir counts \
                         --dgeDir dge \
-                        --output ${ vv_output }
-    cp -L ${ vv_output } VV_log_deseq2_script.txt
+                        --output VV_out.tsv
     """
 }

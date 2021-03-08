@@ -52,10 +52,11 @@ workflow {
       GET_DATA( samples_ch ) | set { raw_reads_ch }
     }
 
+    vv_output_ch = Channel.empty()
     if ( params.vv_config_file ) {
       VV_RAW_READS( samples_ch | collectFile(name: "samples.txt", newLine: true),
                     GET_DATA.out | map{ it -> it[1..it.size()-1] } | flatten | collect, // map use here: removes value sample from tuple
-                    params.vv_config_file ) | set { vv_output_ch }
+                    params.vv_config_file ) | mix(vv_output_ch) | set{ vv_output_ch }
     }
 
     raw_reads_ch | RAW_FASTQC
@@ -69,23 +70,15 @@ workflow {
     if ( params.vv_config_file ) {
       VV_RAW_READS_MULTIQC( samples_ch | collect,
                             RAW_MULTIQC.out.data,
-                            params.vv_config_file,
-                            vv_output_ch ) | set { vv_output_ch }
+                            params.vv_config_file) | mix(vv_output_ch) | set{ vv_output_ch }
     }
 
     raw_reads_ch | map{ it -> [ it[0], it[1][0], it[1][1] ] } | TRIMGALORE
 
     if ( params.vv_config_file ) {
-      TRIMGALORE.out.reads | multiMap { it ->
-                              samples: it[0]
-                              input_files: it[1]
-                              }
-                           | set{ trimmed_reads_vv_input }
-
-      VV_TRIMMED_READS( trimmed_reads_vv_input.samples | collect,
-                        trimmed_reads_vv_input.input_files | collect,
-                        params.vv_config_file,
-                        vv_output_ch ) | set { vv_output_ch }
+      VV_TRIMMED_READS( samples_ch | collect,
+                        TRIMGALORE.out.reads | map{ it -> it[1..it.size()-1] } | flatten | collect, // map use here: removes value sample from tuple
+                        params.vv_config_file)  | mix(vv_output_ch) | set{ vv_output_ch }
     }
 
     TRIMGALORE.out.reads | map{ it -> [ it[0], [ it[1], it[2] ] ]} | TRIM_FASTQC
@@ -99,8 +92,7 @@ workflow {
     if ( params.vv_config_file ) {
       VV_TRIMMED_READS_MULTIQC( samples_ch | collect,
                                 TRIM_MULTIQC.out.data,
-                                params.vv_config_file,
-                                vv_output_ch ) | set { vv_output_ch }
+                                params.vv_config_file)  | mix(vv_output_ch) | set{ vv_output_ch }
     }
 
     if ( params.genomeFasta && params.genomeGTF ) {
@@ -134,8 +126,7 @@ workflow {
                           ALIGN_STAR.out.genomeMapping | map{ it -> it[1] } | collect,
                           ALIGN_STAR.out.transcriptomeMapping | map{ it -> it[1] } | collect,
                           ALIGN_STAR.out.logs| map{ it -> it[1..it.size()-1] } | collect,
-                          params.vv_config_file,
-                          vv_output_ch ) | set { vv_output_ch }
+                          params.vv_config_file) | mix(vv_output_ch) | set{ vv_output_ch }
     }
 
     genome_annotations | BUILD_RSEM
@@ -148,8 +139,7 @@ workflow {
                       COUNT_ALIGNED.out.countsPerGene | map{ it -> it[1] } | collect,
                       COUNT_ALIGNED.out.countsPerIsoform | map{ it -> it[1] } | collect,
                       COUNT_ALIGNED.out.stats | map{ it -> it[1] } | collect,
-                      params.vv_config_file,
-                      vv_output_ch ) | set { vv_output_ch }
+                      params.vv_config_file)  | mix(vv_output_ch) | set{ vv_output_ch }
     }
 
     COUNT_ALIGNED.out.countsPerGene | map { it[1] } | collect | toList | set { rsem_ch }
@@ -164,8 +154,8 @@ workflow {
       VV_DESEQ2_ANALYSIS( samples_ch | collect,
                           DGE_BY_DESEQ2.out.norm_counts,
                           DGE_BY_DESEQ2.out.dge,
-                          params.vv_config_file,
-                          vv_output_ch )
+                          params.vv_config_file) | mix(vv_output_ch) | set{ vv_output_ch }
+      vv_output_ch | map{ it.text } | collectFile(name: "${sdf.format(date)}_Final_VV.tsv") | view
     }
 
 }
