@@ -15,14 +15,7 @@ import argparse
 from pathlib import Path
 import gzip
 
-from VV.utils import max_median_mean_stdev, outlier_check
-
-FLAG_LEVELS = {
-    20:"Info-Only",
-    50:"Yellow-Warning",
-    60:"Red-Warning",
-    70:"Severe-Issue"
-    }
+from VV.utils import outlier_check, FLAG_LEVELS
 
 ##############################################################
 # Utility Functions To Handle Logging, Config and CLI Arguments
