@@ -7,8 +7,8 @@ process VV_RAW_READS {
   //publishDir "${params.publishDirPath}/VV/${params.timestamp}", mode: 'copy'
 
   input:
-    val(samples)
-    path(raw_reads)
+    path(samples)
+    path(raw_reads), stageAs: "rawReads/*"
     path(vv_config)
 
   output:
@@ -17,8 +17,8 @@ process VV_RAW_READS {
   script:
     """
     raw_reads_VV.py --config ${ vv_config } \
-                    --samples ${ samples.join(' ') } \
-                    --input ${ raw_reads } \
+                    --samples ${ samples } \
+                    --input rawReads \
                     --output VV_log_raw.txt
     """
 }
