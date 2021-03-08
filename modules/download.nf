@@ -12,18 +12,6 @@ process DOWNLOAD_RAW_READS {
   output:
     tuple val(sample), path("${sample}_R?_raw.fastq.gz"), emit: raw_reads
 
-  stub:
-    if ( params.pairedEnd ) {
-      """
-      touch ${sample}_R1_raw.fastq.gz
-      touch ${sample}_R2_raw.fastq.gz
-      """
-    } else {
-      """
-      touch ${sample}_R1_raw.fastq.gz
-      """
-    }
-
   script:
     """
     wget --no-check-certificate --quiet \

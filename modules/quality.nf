@@ -20,25 +20,6 @@ process FASTQC {
   output:
     tuple val(sample), path("*_fastqc.html"), path("*_fastqc.zip")
 
-  stub:
-    if ( params.pairedEnd ) {
-      """
-      # Forward Reads
-      touch ${sample}_R1_raw_fastqc.html
-      touch ${sample}_R1_raw_fastqc.zip
-
-      # Reverse Reads
-      touch ${sample}_R2_raw_fastqc.html
-      touch ${sample}_R2_raw_fastqc.zip
-      """
-    } else {
-      """
-      # Single Reads (labeled like forward reads)
-      touch ${sample}_R1_raw_fastqc.html
-      touch ${sample}_R1_raw_fastqc.zip
-      """
-    }
-
   script:
     """
     fastqc -o . \
@@ -65,11 +46,6 @@ process MULTIQC {
     path("${params.multiQCLabel}_multiqc_report/multiqc_report.html"), emit: html
     path("${params.multiQCLabel}_multiqc_report/multiqc_data"), emit: data
 
-  stub:
-    """
-    touch "${params.multiQCLabel}_multiqc_report.html"
-    """
-
   script:
     """
     multiqc -o ${params.multiQCLabel}_multiqc_report .
@@ -90,16 +66,6 @@ process TRIMGALORE {
                        path("Fastq/${ reverse_read.simpleName }_val_2.fq.gz"), emit: reads
     tuple val(sample), path("Trimming_Reports/${ forward_read }_trimming_report.txt"), \
                        path("Trimming_Reports/${ reverse_read }_trimming_report.txt"), emit: trim_reports
-
-  stub:
-  // TODO: add support for single end studies
-    """
-    touch "${ forward_read.simpleName }_val_1.fq.gz"
-    touch "${ reverse_read.simpleName }_val_2.fq.gz"
-
-    touch "${ forward_read }_trimming_report.txt"
-    touch "${ reverse_read }_trimming_report.txt"
-    """
 
   script:
     /*

@@ -56,17 +56,6 @@ process ALIGN_STAR {
           path("${ sampleID }_STARgenome"), \
           path("${ sampleID }_STARpass1"), emit: logs
 
-  stub:
-    """
-    touch "${ sampleID }Aligned.sortedByCoord.out.bam" "${ sampleID }Aligned.toTranscriptome.out.bam"
-    touch path("${ sampleID }Log.final.out"), \
-              path("${ sampleID }Log.out"), \
-              path("${ sampleID }Log.progress.out"), \
-              path("${ sampleID }SJ.out.tab"), \
-              path("${ sampleID }_STARgenome"), \
-              path("${ sampleID }_STARpass1"), emit: logs
-    """
-
   script:
     """
     STAR --twopassMode Basic \
@@ -123,13 +112,6 @@ process COUNT_ALIGNED {
     tuple val(sampleID), path("${ sampleID }.genes.results"), emit: countsPerGene
     tuple val(sampleID), path("${ sampleID }.isoforms.results"), emit: countsPerIsoform
     tuple val(sampleID), path("${ sampleID }.stat"), emit: stats
-
-  stub:
-    """
-    touch "${ sampleID }.genes.results" \
-          "${ sampleID }.isoforms.results" \
-          "${ sampleID }.stat"
-    """
 
   script:
     """

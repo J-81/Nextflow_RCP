@@ -25,20 +25,6 @@ process DGE_BY_DESEQ2 {
           path("dge_output/visualization_output_table.csv"),
           path("dge_output/visualization_PCA_table.csv"), emit: dge
 
-  stub:
-    """
-    mkdir norm_counts_output
-    touch "norm_counts_output/Normalized_Counts.csv" \
-          "norm_counts_output/SampleTable.csv" \
-          "norm_counts_output/Unnormalized_Counts.csv"
-
-    mkdir dge_output
-    touch "dge_output/contrasts.csv" \
-          "dge_output/differential_expression.csv" \
-          "dge_output/visualization_output_table.csv" \
-          "dge_output/visualization_PCA_table.csv"
-    """
-
   script:
     """
     # create output directories
