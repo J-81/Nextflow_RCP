@@ -2,14 +2,7 @@
 """ Validation/Verification for raw reads in RNASeq Concensus Pipeline
 """
 from __future__ import annotations
-import datetime
 from collections import namedtuple, defaultdict
-from typing import Tuple
-import hashlib
-import statistics
-import glob
-import os
-import sys
 import configparser
 import argparse
 from pathlib import Path
