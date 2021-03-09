@@ -115,6 +115,8 @@ def _compile_across_samples(data_mapping, key, samples, subset_name):
             aggregate = defaultdict(list) if not aggregate else aggregate
             for index, value in data.items():
                 aggregate[index].append(value)
+        else:
+            raise ValueError(f"For {key}, {type(data)} type for data is unexpected.  Aggregation not implemented.")
     # finally add aggregate data to the 'all' entry
     data_mapping[subset_name][key] = aggregate
     return data_mapping
@@ -135,7 +137,7 @@ def _extract_multiQC_data(json_file: Path, data_mapping, samples):
             else:
                 cur_read = "read"
             for key, value in data.items():
-                data_mapping[cur_sample][f"{cur_read}_{key}"] = value
+                data_mapping[cur_sample][f"{cur_read}-{key}"] = value
 
     ### extract plot data
 
@@ -165,11 +167,11 @@ def _extract_from_bar_graph(data, plot_name, data_mapping, samples):
         assert len(matching_samples) == 1
 
         sample = matching_samples[0]
-        if paired_end and "_R1" in mqc_sample:
+        if paired_end and "_R1_" in mqc_sample:
             mqc_samples_to_samples[i] = (sample, "forward")
-        elif paired_end and "_R2" in mqc_sample:
+        elif paired_end and "_R2_" in mqc_sample:
             mqc_samples_to_samples[i] = (sample, "reverse")
-        elif not paired_end and "_R1" in mqc_sample:
+        elif not paired_end and "_R1_" in mqc_sample:
             mqc_samples_to_samples[i] = (sample, "read")
         else:
             raise ValueError(
