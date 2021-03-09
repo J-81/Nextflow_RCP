@@ -55,11 +55,11 @@ def validate_verify(samples: list[str], multiQC_data_dir: Path):
     # First, data parsing
 
     # All samples are in one file for multiQC
-    file_mapping = defaultdict(dict)
+    file_mapping = defaultdict(lambda: defaultdict(dict))
     file_mapping["all"]["multiQC_json"] = multiQC_data_dir / "multiqc_data.json"
 
     # TODO: extract data and generate data mapping
-    data_mapping = defaultdict(dict)
+    data_mapping = defaultdict(lambda: defaultdict(dict))
     data_mapping = _extract_multiQC_data(file_mapping["all"]["multiQC_json"],
                                          data_mapping,
                                          samples)
@@ -92,7 +92,7 @@ def _extract_multiQC_data(json_file: Path, data_mapping, samples):
     with open(json_file, "r") as f:
         raw_data = json.load(f)
 
-    # extract general stats
+    ###  extract general stats
     for file_data in raw_data["report_general_stats_data"]:
         for file_name, data in file_data.items():
             cur_sample = [sample for sample in samples if sample in file_name][0]
@@ -102,6 +102,52 @@ def _extract_multiQC_data(json_file: Path, data_mapping, samples):
                 cur_read = "read"
             for key, value in data.items():
                 data_mapping[cur_sample][f"{cur_read}_{key}"] = value
+
+    ### extract plot data
+
+    # extract fastqc_sequence_counts_plot
+    for plot_name, data in raw_data["report_plot_data"].items():
+        # different kinds of plot data need to be extracted with different methods
+        plot_type = data["plot_type"]
+        if plot_type == "bar_graph":
+            data_mapping = _extract_from_bar_graph(data, data_mapping, samples)
+
+    return data_mapping
+
+def _extract_from_bar_graph(data, data_mapping, samples):
+    # determine data mapping for samples in multiqc (which are files)
+    # and samples in a dataset (which may have a forward and reverse read file)
+    paired_end = config["GLDS"].getboolean("PairedEnd")
+    mqc_samples_to_samples = dict()
+    # this should be a list with one entry
+    assert len(data["samples"]) == 1
+    for i, mqc_sample in enumerate(data["samples"][0]):
+        matching_samples = [sample for sample in samples if sample in mqc_sample]
+        # only one sample should map
+        assert len(matching_samples) == 1
+
+        sample = matching_samples[0]
+        if paired_end and "_R1" in mqc_sample:
+            mqc_samples_to_samples[i] = (sample, "forward")
+        elif paired_end and "_R2" in mqc_sample:
+            mqc_samples_to_samples[i] = (sample, "reverse")
+        elif not paired_end and "_R1" in mqc_sample:
+            mqc_samples_to_samples[i] = (sample, "read")
+        else:
+            raise ValueError(
+                        f"Unexpected file name format for {mqc_sample} "
+                        f"when paired end is {paired_end} and samples are {samples}"
+                        )
+
+    # iterate through data from datasets
+    # this should be a list with one entry
+    assert len(data["datasets"]) == 1
+    for sub_data in data["datasets"][0]:
+        name = sub_data["name"]
+        values = sub_data["data"]
+        for i, value in enumerate(values):
+            sample, sample_file = mqc_samples_to_samples[i]
+            data_mapping[sample][f"{sample_file}_{name}"] = values[i]
     return data_mapping
 
 # vv check functions
