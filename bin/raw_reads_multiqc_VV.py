@@ -424,7 +424,7 @@ if __name__ == '__main__':
     # it does not handle reporting
     # this is to ensure the analysis and reporting of results are decoupled
     # TODO: ensure input signature matches function
-    vv_mapping = validate_verify(samples, multiQC_data_dir = Path(args.input))
+    _, _, vv_mapping = validate_verify(samples, multiQC_data_dir = Path(args.input))
 
     # this writes the results to the tsv file
     # the function must be aware of what the vv_mapping will look like
