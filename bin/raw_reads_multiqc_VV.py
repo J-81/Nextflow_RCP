@@ -63,18 +63,26 @@ def validate_verify(samples: list[str], multiQC_data_dir: Path):
     data_mapping = _extract_multiQC_data(file_mapping["all"]["multiQC_json"],
                                          data_mapping,
                                          samples)
-    print(data_mapping)
+    #print(data_mapping)
     print("DATA EXTRACTED FOR EACH SAMPLE")
     [print(key) for key in data_mapping[samples[0]].keys()]
-    raise Exception("DEBUG: IMPLEMENTED UP TO HERE")
-
+    # create data mapping for 'all' samples entries
+    # this is used for outlier detection
+    for key in data_mapping[samples[0]].keys():
+        data_mapping = _compile_across_samples( data_mapping,
+                                                key = key,
+                                                samples = samples,
+                                                subset_name = "all")
+    [print(key, "="*90, value, "\n"*3) for key, value in data_mapping['all'].items()]
 
     # TODO: perform VV checking
     #   Note: the logging of the VV checks are handled by the write_results function
+    vv_mapping = defaultdict(lambda: defaultdict(dict))
     for sample in samples:
 
         # mapping to save results by sample
         sample_file_mapping = file_mapping[sample]
+        sample_data_mapping = data_mapping[sample]
         sample_vv_mapping = vv_mapping[sample]
 
         sample_vv_mapping["file_exists"] = _check_file_existence(sample_file_mapping)
@@ -84,6 +92,32 @@ def validate_verify(samples: list[str], multiQC_data_dir: Path):
                                                                 )
 
     return file_mapping, vv_mapping
+
+def _compile_across_samples(data_mapping, key, samples, subset_name):
+    """ Creates an entry for 'all' for value in key.
+
+    Automatically determines if the values are dict like {index: value}
+    or a single value per sample.
+    """
+    aggregate = None
+    for sample in samples:
+        data = data_mapping[sample][key]
+        if type(data) == float:
+            # initiate aggregate data type to match
+            # if already initiated, this does not affect aggregate
+            aggregate = list() if not aggregate else aggregate
+            aggregate.append(data)
+        elif type(data) == dict:
+            # these must be {index:value} dicts of length 1
+
+            # initiate aggregate data type to match
+            # if already initiated, this does not affect aggregate
+            aggregate = defaultdict(list) if not aggregate else aggregate
+            for index, value in data.items():
+                aggregate[index].append(value)
+    # finally add aggregate data to the 'all' entry
+    data_mapping[subset_name][key] = aggregate
+    return data_mapping
 
 # data extraction functions
 # TODO: These should return a value that will be assigned directly to the data mapping
@@ -161,10 +195,10 @@ def _extract_from_xy_line_graph(data, plot_name, data_mapping, samples):
 
     # Iterate through datasets (each typically representing one sample)
     # Nested list of list, top level list includes percentage and counts
-    # Note: only the percentage is parsed
-    print(plot_name)
+
     # plots with multiple value types are detected
     multiple_value_types = True if len(data["datasets"]) > 1 else False
+
     # plots with bins are detected
     if "categories" in data["config"].keys():
         bins = [str(bin) for bin in data["config"]["categories"]]
