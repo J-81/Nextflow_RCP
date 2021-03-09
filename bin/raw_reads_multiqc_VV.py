@@ -66,7 +66,7 @@ def validate_verify(samples: list[str], multiQC_data_dir: Path):
     print(data_mapping)
     print("DATA EXTRACTED FOR EACH SAMPLE")
     [print(key) for key in data_mapping[samples[0]].keys()]
-    raise Exception("DEBUG")
+    raise Exception("DEBUG: IMPLEMENTED UP TO HERE")
 
 
     # TODO: perform VV checking
@@ -110,11 +110,15 @@ def _extract_multiQC_data(json_file: Path, data_mapping, samples):
         # different kinds of plot data need to be extracted with different methods
         plot_type = data["plot_type"]
         if plot_type == "bar_graph":
-            data_mapping = _extract_from_bar_graph(data, data_mapping, samples)
+            data_mapping = _extract_from_bar_graph(data, plot_name, data_mapping, samples)
+        elif plot_type == "xy_line":
+            data_mapping = _extract_from_xy_line_graph(data, plot_name, data_mapping, samples)
+        else:
+            raise ValueError(f"Unknown plot type {plot_type}. Data parsing not implemented for multiQC {plot_type}")
 
     return data_mapping
 
-def _extract_from_bar_graph(data, data_mapping, samples):
+def _extract_from_bar_graph(data, plot_name, data_mapping, samples):
     # determine data mapping for samples in multiqc (which are files)
     # and samples in a dataset (which may have a forward and reverse read file)
     paired_end = config["GLDS"].getboolean("PairedEnd")
@@ -147,7 +151,64 @@ def _extract_from_bar_graph(data, data_mapping, samples):
         values = sub_data["data"]
         for i, value in enumerate(values):
             sample, sample_file = mqc_samples_to_samples[i]
-            data_mapping[sample][f"{sample_file}_{name}"] = values[i]
+            data_mapping[sample][f"{sample_file}-{plot_name}-{name}"] = values[i]
+    return data_mapping
+
+def _extract_from_xy_line_graph(data, plot_name, data_mapping, samples):
+    # determine data mapping for samples in multiqc (which are files)
+    # and samples in a dataset (which may have a forward and reverse read file)
+    paired_end = config["GLDS"].getboolean("PairedEnd")
+
+    # Iterate through datasets (each typically representing one sample)
+    # Nested list of list, top level list includes percentage and counts
+    # Note: only the percentage is parsed
+    print(plot_name)
+    # plots with multiple value types are detected
+    multiple_value_types = True if len(data["datasets"]) > 1 else False
+    # plots with bins are detected
+    if "categories" in data["config"].keys():
+        bins = [str(bin) for bin in data["config"]["categories"]]
+    else:
+        bins = False
+
+
+    # dataset represents an entire plot (i.e. all lines)
+    # Note: for xy plots with both percent and raw counts, there will be two datasets
+    for i, dataset in enumerate(data["datasets"]):
+        if multiple_value_types:
+            data_label = f"-{data['config']['data_labels'][i]['name']}"
+        else:
+            data_label = ""
+
+        # dataset entry represents one sample (i.e. one line from the line plot)
+        for dataset_entry in dataset:
+            file_name = dataset_entry["name"]
+
+            # values is a list of [index,value]
+            values = dataset_entry["data"]
+            matching_samples = [sample for sample in samples if sample in file_name]
+            # only one sample should map
+            assert len(matching_samples) == 1
+
+            sample = matching_samples[0]
+            if paired_end and "_R1" in file_name:
+                sample_file = "forward"
+            elif paired_end and "_R2" in file_name:
+                sample_file = "reverse"
+            elif not paired_end and "_R1" in file_name:
+                sample_file = "read"
+
+            # three level nested dict entries for xy graphs
+            # {sample: {sample_file-plot_type: {index: value}}}
+            data_key = f"{sample_file}-{plot_name}{data_label}"
+            data_mapping[sample][data_key] = dict()
+            cur_data_mapping_entry = data_mapping[sample][data_key]
+            # for plots with bins, add bin string to values iterable
+            if bins:
+                values = zip(bins, values)
+            # for non-categorical bins, each values should be an [index,value]
+            for j, value in values:
+                cur_data_mapping_entry[j] = value
     return data_mapping
 
 # vv check functions
