@@ -125,11 +125,12 @@ def write_results(output: Path, vv_mapping):
             results = vv_mapping[sample]
 
             # define report portions that are the same regardless of VV result
+            vv_key = 'TODO'
             flag_level = None # Overwritten depending on result
             entity = sample
-            details = results['header_check'][1]
+            details = results[vv_key][1]
             check_id = f"R_0001"
-            check_passed = results["header_check"][0]
+            check_passed = results[vv_key][0]
 
             # Many checks will report both issues and non-issue data
             #   Reminder: entries are tuples with (Pass: bool, Details: str)
@@ -141,7 +142,7 @@ def write_results(output: Path, vv_mapping):
             # No Issue detected
             else:
                 flag_level = FLAG_LEVELS[20]
-                f.write(f"{flag_level}\t{check_id}\t{entity}\t{file_checked}\t{details}\n")
+                f.write(f"{flag_level}\t{check_id}\t{entity}\t{step_checked}\t{details}\n")
 
 if __name__ == '__main__':
     # Basic comments to add to VV log for each major section
