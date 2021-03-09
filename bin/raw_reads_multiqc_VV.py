@@ -85,14 +85,64 @@ def validate_verify(samples: list[str], multiQC_data_dir: Path):
         sample_data_mapping = data_mapping[sample]
         sample_vv_mapping = vv_mapping[sample]
 
-        sample_vv_mapping["file_exists"] = _check_file_existence(sample_file_mapping)
-        sample_vv_mapping["header_check"] = _check_headers(sample_file_mapping.values(), config["Options"].getint("MaxFastQLinesToCheck"))
-        sample_vv_mapping["file_size_deviation"] = outlier_check(value = sample_vv_mapping["file_size"],
-                                                                 against = vv_mapping["all"]["file_sizes"]
-                                                                )
 
-    return file_mapping, vv_mapping
 
+        sample_vv_mapping["average_read_lengths_match"] = \
+            _check_average_read_lengths(sample_data_mapping,
+                                        data_mapping)
+
+
+        if config["GLDS"].getboolean("PairedEnd"):
+            sample_vv_mapping["paired_reads_counts_match"] = _check_paired_reads_counts_match(sample_data_mapping)
+
+    vv_mapping["all"]["file_exists"] = (file_mapping["all"]["multiQC_json"].exists(), f"Expected files exist: {file_mapping['all']['multiQC_json'].exists()} "
+                                                                        f"File: {file_mapping['all']['multiQC_json']}")
+
+    return file_mapping, data_mapping, vv_mapping
+
+def _check_read_lengths(paired_end, vv_mapping, sample_vv_mapping):
+    # TODO: implement with GLDS-104
+    if paired_end:
+        forward_avg_sequence_length_deviation = \
+                outlier_check(value = sample_data_mapping["forward-avg_sequence_length"],
+                              against = vv_mapping["all"]["forward-avg_sequence_length"])
+        reverse_avg_sequence_length_deviation = \
+                outlier_check(value = sample_data_mapping["reverse-avg_sequence_length"],
+                              against = vv_mapping["all"]["reverse-avg_sequence_length"])
+
+    else:
+        read_avg_sequence_length_deviation = \
+                outlier_check(value = sample_data_mapping["read-avg_sequence_length"],
+                              against = vv_mapping["all"]["read-avg_sequence_length"])
+
+def _check_average_read_lengths(sample_data_mapping, data_mapping):
+    tolerance = config["Raw"].getfloat("SequenceLengthVariationTolerance")
+    if  config["GLDS"].getboolean("PairedEnd"):
+        forward_deviation = outlier_check(sample_data_mapping["forward-avg_sequence_length"],
+                                          data_mapping['all']["forward-avg_sequence_length"])
+        reverse_deviation = outlier_check(sample_data_mapping["reverse-avg_sequence_length"],
+                                          data_mapping['all']["reverse-avg_sequence_length"])
+        if any([forward_deviation > tolerance,
+               reverse_deviation > tolerance]):
+           result =  (False, f"Average Read length deviation of "
+                             f"Forward:{forward_deviation} and Reverse:{reverse_deviation} "
+                             f"Greater than allowed ({tolerance})")
+        else:
+           result =  (True, f"Average Read length deviation of "
+                            f"Forward:{forward_deviation} and Reverse:{reverse_deviation} "
+                            f"does not exceed {tolerance}")
+    else:
+        read_deviation = outlier_check(sample_data_mapping["read-avg_sequence_length"],
+                                          data_mapping['all']["read-avg_sequence_length"])
+        if read_deviation > config["Raw"].getfloat("SequenceLengthVariationTolerance"):
+           result =  (False, f"Average Read length deviation of "
+                             f"Reads: {read_deviation} "
+                             f"Greater than allowed ({tolerance})")
+        else:
+           result =  (True, f"Average Read length deviation of "
+                            f"Reads: {read_deviation} "
+                            f"does not exceed {tolerance}")
+    return result
 def _compile_across_samples(data_mapping, key, samples, subset_name):
     """ Creates an entry for 'all' for value in key.
 
@@ -261,6 +311,15 @@ def _check_file_existence(sample_file_mapping):
         result = (True, f"All expected files present: {sample_file_mapping.items()}")
     return result
 
+def _check_paired_reads_counts_match(sample_data_mapping):
+    forward_count = sample_data_mapping["forward-total_sequences"]
+    reverse_count = sample_data_mapping["reverse-total_sequences"]
+    if forward_count == reverse_count:
+        result = (True, f"Paired reads counts match")
+    else:
+        result = (False, f"Paired reads do not match. Forward count: {forward_count} Reverse count: {reverse_count}")
+    return result
+
 # writes vv_mapping
 # TODO: Each line MUST conform to the example format to ensure the TSV file
 #   can be parsed and analysed downstream in a consistent manner
@@ -270,33 +329,78 @@ def write_results(output: Path, vv_mapping):
     Also formats for consistency across VV steps
     """
     # The step checked will be the same for all reports in a given vv script
-    step_checked = "Raw Reads"
+    step_checked = "Raw Reads By MultiQC"
     with open(output, "a+") as f:
 
         # while less efficient than iterating through samples once, iteration
         #    through samples for each kind of report will make the report more
         #    readable without needing any comment filtering and sorting
-        for sample in samples:
-            results = vv_mapping[sample]
+        all_vv_mapping = vv_mapping['all']
+        key = "file_exists"
+        # define report portions that are the same regardless of VV result
+        flag_level = None # Overwritten depending on result
+        entity = "All Samples"
+        details = all_vv_mapping[key][1]
+        check_id = f"R_1000"
+        check_passed = all_vv_mapping[key][0]
 
+        # Many checks will report both issues and non-issue data
+        #   Reminder: entries are tuples with (Pass: bool, Details: str)
+
+        # Issue detected
+        if not check_passed:
+            flag_level = FLAG_LEVELS[70]
+            f.write(f"{flag_level}\t{check_id}\t{entity}\t{step_checked}\t{details}\n")
+        # No Issue detected
+        else:
+            flag_level = FLAG_LEVELS[20]
+            f.write(f"{flag_level}\t{check_id}\t{entity}\t{step_checked}\t{details}\n")
+
+        for sample in samples:
+            sample_vv_mapping = vv_mapping[sample]
+
+            key = "paired_reads_counts_match"
             # define report portions that are the same regardless of VV result
             flag_level = None # Overwritten depending on result
             entity = sample
-            details = results['header_check'][1]
-            check_id = f"R_0001"
-            check_passed = results["header_check"][0]
+            details = sample_vv_mapping[key][1]
+            check_id = f"R_1001"
+            check_passed = sample_vv_mapping[key][0]
 
             # Many checks will report both issues and non-issue data
             #   Reminder: entries are tuples with (Pass: bool, Details: str)
 
             # Issue detected
             if not check_passed:
-                flag_level = FLAG_LEVELS[50]
+                flag_level = FLAG_LEVELS[70]
                 f.write(f"{flag_level}\t{check_id}\t{entity}\t{step_checked}\t{details}\n")
             # No Issue detected
             else:
                 flag_level = FLAG_LEVELS[20]
-                f.write(f"{flag_level}\t{check_id}\t{entity}\t{file_checked}\t{details}\n")
+                f.write(f"{flag_level}\t{check_id}\t{entity}\t{step_checked}\t{details}\n")
+
+        for sample in samples:
+            sample_vv_mapping = vv_mapping[sample]
+
+            key = "average_read_lengths_match"
+            # define report portions that are the same regardless of VV result
+            flag_level = None # Overwritten depending on result
+            entity = sample
+            details = sample_vv_mapping[key][1]
+            check_id = f"R_1002"
+            check_passed = sample_vv_mapping[key][0]
+
+            # Many checks will report both issues and non-issue data
+            #   Reminder: entries are tuples with (Pass: bool, Details: str)
+
+            # Issue detected
+            if not check_passed:
+                flag_level = FLAG_LEVELS[60]
+                f.write(f"{flag_level}\t{check_id}\t{entity}\t{step_checked}\t{details}\n")
+            # No Issue detected
+            else:
+                flag_level = FLAG_LEVELS[20]
+                f.write(f"{flag_level}\t{check_id}\t{entity}\t{step_checked}\t{details}\n")
 
 if __name__ == '__main__':
     # Basic comments to add to VV log for each major section
