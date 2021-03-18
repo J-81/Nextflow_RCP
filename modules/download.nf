@@ -72,15 +72,18 @@ process DOWNLOAD_ERCC {
 TODO: replace with ISA download via api
 */
 process DOWNLOAD_ISA {
-  publishDir "${params.publishDirPath}/${ params.metaDataPath }", saveAs: {"GLDS-${ params.GLDS }_metadata_GLDS-${ params.GLDS }-ISA.zip"}
+  conda "${baseDir}/envs/download_tools.yml"
+  publishDir "${params.publishDirPath}/${ params.metaDataPath }"
 
   input:
+    val(accession)
+
   output:
-    path("isa.zip")
+    path("*.zip")
 
   script:
     """
-    cp ${ params.isaZip } isa.zip
+    retrieve_isa_from_genelab.py --accession ${accession} --alternate_url
     """
 
 }
