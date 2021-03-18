@@ -31,27 +31,22 @@ process DOWNLOAD_RAW_READS {
  * Download and decompress genome and annotation files
  */
 
-process DOWNLOAD_GENOME_ANNOTATIONS {
+process DOWNLOAD_GENOME_ANNOTATIONS {\
+  conda "${baseDir}/envs/download_tools.yml"
   label 'networkBound'
-  storeDir "${params.storeDirPath}/ensembl/${params.ensembl_version}/${params.organism}"
+  storeDir "${params.storeDirPath}/ensembl/${params.ensemblVersion}/${params.organismSci}"
 
   input:
   output:
-    tuple path("Mus_musculus.GRCm38.dna.toplevel.fa"), path("Mus_musculus.GRCm38.${ params.ensembl_version }.gtf")
+    tuple path("*.dna.toplevel.fa"), path("*.${ params.ensemblVersion }.gtf")
   script:
     """
-    wget --no-check-certificate --quiet \
-    -O Mus_musculus.GRCm38.dna.toplevel.fa.gz \
-    ftp://ftp.ensembl.org/pub/release-${ params.ensembl_version }/fasta/mus_musculus/dna/Mus_musculus.GRCm38.dna.toplevel.fa.gz \
-    && \
-    gunzip Mus_musculus.GRCm38.dna.toplevel.fa.gz \
-    && \
-    wget --no-check-certificate --quiet \
-    -O Mus_musculus.GRCm38.${ params.ensembl_version }.gtf.gz \
-    ftp://ftp.ensembl.org/pub/release-${ params.ensembl_version }/gtf/mus_musculus/Mus_musculus.GRCm38.${ params.ensembl_version }.gtf.gz \
-    && \
-    gunzip Mus_musculus.GRCm38.${ params.ensembl_version }.gtf.gz \
+    retrieve_references.py --ensembl_version ${ params.ensemblVersion } \
+                           --organism        ${ params.organismSci}
 
+    # decompress files
+    gunzip *.fa.gz
+    gunzip *.gtf.gz
     """
 }
 
@@ -77,15 +72,15 @@ process DOWNLOAD_ERCC {
 TODO: replace with ISA download via api
 */
 process DOWNLOAD_ISA {
-  publishDir "${params.publishDirPath}/${ params.metaDataPath }"
+  publishDir "${params.publishDirPath}/${ params.metaDataPath }", saveAs: {"GLDS-${ params.GLDS }_metadata_GLDS-${ params.GLDS }-ISA.zip"}
 
   input:
   output:
-    path("GLDS-${ params.GLDS }_metadata_GLDS-${ params.GLDS }-ISA.zip")
+    path("isa.zip")
 
   script:
     """
-    cp ${ params.ISAZip } GLDS-${ params.GLDS }_metadata_GLDS-${ params.GLDS }-ISA.zip
+    cp ${ params.isaZip } isa.zip
     """
 
 }
