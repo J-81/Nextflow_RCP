@@ -42,9 +42,11 @@ workflow GET_DATA {
 
 workflow {
 	main:
-    DOWNLOAD_ISA | set{ isa_ch }
+    DOWNLOAD_ISA( params.datasetName ) | set{ isa_ch }
     PARSE_ISA( isa_ch )
-    PARSE_ISA.out.samples | splitText { it.replaceAll("\\s","") } | set{ samples_ch }
+    PARSE_ISA.out.samples | splitText { it.replaceAll("\\s","") }
+                          | take( params.limiter ) // Debug operator, set limiter to limit samples used
+                          | set{ samples_ch }
     PARSE_ISA.out.vv_results | set{ vv_output_ch }
 
     if ( params.raw_reads ) {
