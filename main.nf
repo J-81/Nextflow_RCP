@@ -19,7 +19,7 @@ include { BUILD_STAR;
           SUBSAMPLE_GENOME;
           CONCAT_ERCC } from './modules/genome.nf'
 include { DGE_BY_DESEQ2 } from './modules/dge.nf'
-include { SAMPLES_FROM_ISA } from './modules/isa.nf'
+include { PARSE_ISA } from './modules/isa.nf'
 include { VV_RAW_READS;
           VV_TRIMMED_READS;
           VV_RAW_READS_MULTIQC;
@@ -43,7 +43,9 @@ workflow GET_DATA {
 workflow {
 	main:
     DOWNLOAD_ISA | set{ isa_ch }
-    SAMPLES_FROM_ISA( isa_ch ) | splitText { it.replaceAll("\\s","") } | set{ samples_ch }
+    PARSE_ISA( isa_ch )
+    PARSE_ISA.out.samples | splitText { it.replaceAll("\\s","") } | set{ samples_ch }
+    PARSE_ISA.out.vv_results | set{ vv_output_ch }
 
     if ( params.raw_reads ) {
       raw_reads_ch = Channel.from( params.raw_reads )
@@ -115,10 +117,9 @@ workflow {
         execute VV tasks once the required input files are ready. i.e. VV is
         performed in parallel with task processing.
     */
-    vv_output_ch = Channel.empty()
     if ( params.vv_config_file ) {
       VV_RAW_READS( samples_ch | collectFile(name: "samples.txt", newLine: true),
-                    GET_DATA.out | map{ it -> it[1..it.size()-1] } | flatten | collect, // map use here: removes value sample from tuple
+                    raw_reads_ch | map{ it -> it[1..it.size()-1] } | flatten | collect, // map use here: removes value sample from tuple
                     params.vv_config_file ) | mix(vv_output_ch) | set{ vv_output_ch }
 
       VV_RAW_READS_MULTIQC( samples_ch | collectFile(name: "samples.txt", newLine: true),
