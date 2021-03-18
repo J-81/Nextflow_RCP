@@ -67,10 +67,6 @@ process DOWNLOAD_ERCC {
     """
 }
 
-
-/* Stub process
-TODO: replace with ISA download via api
-*/
 process DOWNLOAD_ISA {
   conda "${baseDir}/envs/download_tools.yml"
   publishDir "${params.publishDirPath}/${ params.metaDataPath }"
