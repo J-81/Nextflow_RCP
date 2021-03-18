@@ -1,4 +1,9 @@
 #! /usr/bin/env python
+"""
+WARNING: Testing with GLDS-194 implies the default url no longer works.
+Alternative url does work!
+"""
+
 from urllib.request import urlopen, quote, urlretrieve
 from json import loads
 from re import search
@@ -63,6 +68,8 @@ def download_isa(accession: str, alternate_url: bool = False):
     filename ,_, url, alt_url  = get_isa(accession)
     print(f"Successfully retrieved ISA file location from API.")
     use_url = url if not alternate_url else alt_url
+    if not alternate_url:
+        print("WARNING: The default URL did not work in tests.  If it still fails use the alternate url!")
     print(f"Downloading from {use_url}. Alternative URL used: {alternate_url}")
     r = requests.get(use_url)
     with open(filename, "wb") as f:
