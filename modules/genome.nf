@@ -3,8 +3,13 @@
  */
 
 process BUILD_STAR {
-  conda 'envs/star.yml'
+  conda "${baseDir}/envs/star.yml"
+  storeDir ( params.genomeSubsample ?
+              "${params.storeDirPath}/${ params.organism }/subsampled/${ params.genomeSubsample }/STAR_ensembl_${ params.ensembl_version }" :
+              "${params.storeDirPath}/${ params.organism }/STAR_ensembl_${ params.ensembl_version }"
+            )
   label 'maxCPU'
+  label 'big_mem'
 
   input:
     tuple path(genomeFasta), path(genomeGtf)
@@ -14,7 +19,7 @@ process BUILD_STAR {
     """
 STAR --runThreadN ${task.cpus} \
 --runMode genomeGenerate \
---limitGenomeGenerateRAM 35000000000 \
+--limitGenomeGenerateRAM ${ task.memory.toBytes() } \
 --genomeSAindexNbases 14 \
 --genomeDir STAR_REF \
 --genomeFastaFiles ${ genomeFasta } \
@@ -30,8 +35,11 @@ STAR --runThreadN ${task.cpus} \
 
 
 process ALIGN_STAR {
-  conda 'envs/star.yml'
+  conda "${baseDir}/envs/star.yml"
+  publishDir "${params.publishDirPath}/${params.starOutputPath}/${sampleID}",
+              saveAs: { filename -> filename.replaceAll("${sampleID}","${sampleID}_") }
   label 'maxCPU'
+  label 'big_mem'
 
   input:
     tuple val(sampleID), path(forward_read), path(reverse_read), path(STAR_INDEX_DIR)
@@ -40,10 +48,18 @@ process ALIGN_STAR {
           path("${ sampleID }Aligned.sortedByCoord.out.bam"), emit: genomeMapping
     tuple val(sampleID), \
           path("${ sampleID }Aligned.toTranscriptome.out.bam"), emit: transcriptomeMapping
+    tuple val(sampleID), \
+          path("${ sampleID }Log.final.out"), \
+          path("${ sampleID }Log.out"), \
+          path("${ sampleID }Log.progress.out"), \
+          path("${ sampleID }SJ.out.tab"), \
+          path("${ sampleID }_STARgenome"), \
+          path("${ sampleID }_STARpass1"), emit: logs
+
   script:
     """
     STAR --twopassMode Basic \
-    --limitBAMsortRAM 65000000000 \
+    --limitBAMsortRAM ${ task.memory.toBytes() } \
     --outFilterType BySJout \
     --outSAMunmapped Within \
     --genomeDir ${ STAR_INDEX_DIR } \
@@ -68,7 +84,11 @@ process ALIGN_STAR {
 }
 
 process BUILD_RSEM {
-  conda 'envs/rsem.yml'
+  conda "${baseDir}/envs/rsem.yml"
+  storeDir ( params.genomeSubsample ?
+              "${params.storeDirPath}/${ params.organism }/subsampled/${ params.genomeSubsample }/RSEM_ensembl_${ params.ensembl_version }" :
+              "${params.storeDirPath}/${ params.organism }/RSEM_ensembl_${ params.ensembl_version }"
+            )
 
   input:
     tuple path(genomeFasta), path(genomeGtf)
@@ -83,7 +103,8 @@ process BUILD_RSEM {
 }
 
 process COUNT_ALIGNED {
-  conda 'envs/rsem.yml'
+  conda "${baseDir}/envs/rsem.yml"
+  publishDir "${params.publishDirPath}/${params.rsemOutputPath}/${sampleID}"
 
   input:
     tuple val(sampleID), path(transcriptomeMapping), path(RSEM_REF)
@@ -91,6 +112,7 @@ process COUNT_ALIGNED {
     tuple val(sampleID), path("${ sampleID }.genes.results"), emit: countsPerGene
     tuple val(sampleID), path("${ sampleID }.isoforms.results"), emit: countsPerIsoform
     tuple val(sampleID), path("${ sampleID }.stat"), emit: stats
+
   script:
     """
     rsem-calculate-expression --num-threads $task.cpus \
@@ -106,4 +128,48 @@ process COUNT_ALIGNED {
       $sampleID
     """
 
+}
+
+
+/*
+ * Download and decompress genome and annotation files
+ */
+
+process SUBSAMPLE_GENOME {
+  conda "${baseDir}/envs/samtools.yml"
+  storeDir "${params.storeDirPath}/ensembl/${params.ensembl_version}/${params.organism}"
+
+  input:
+    tuple path(genome_fasta), path(genome_gtf)
+  output:
+    tuple path("subsampled/${params.genomeSubsample}/${genome_fasta}"), \
+          path("subsampled/${params.genomeSubsample}/${genome_gtf}")
+  script:
+    """
+    mkdir -p subsampled/${params.genomeSubsample}
+    grep -P "^#|^${params.genomeSubsample}\t" ${genome_gtf} > subsampled/${params.genomeSubsample}/${genome_gtf}
+
+    samtools faidx ${genome_fasta} ${params.genomeSubsample} > subsampled/${params.genomeSubsample}/${genome_fasta}
+
+    """
+}
+
+process CONCAT_ERCC {
+  storeDir ( params.genomeSubsample ?
+              "${params.storeDirPath}/ensembl/${params.ensembl_version}/${params.organism}/ERCC/subsampled" :
+              "${params.storeDirPath}/ensembl/${params.ensembl_version}/${params.organism}/ERCC"
+              )
+
+  input:
+    tuple path(genome_fasta), path(genome_gtf)
+    tuple path(ercc_fasta), path(ercc_gtf)
+  output:
+    tuple path("${params.organism}_and_ERCC.fa"), \
+          path("${params.organism}_and_ERCC.gtf")
+
+  script:
+  """
+  cat ${genome_fasta} ${ercc_fasta} > ${params.organism}_and_ERCC.fa
+  cat ${genome_gtf} ${ercc_gtf} > ${params.organism}_and_ERCC.gtf
+  """
 }

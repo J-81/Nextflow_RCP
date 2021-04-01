@@ -4,14 +4,22 @@
  */
 
 process FASTQC {
-  conda 'envs/fastqc.yml'
+  conda "${baseDir}/envs/fastqc.yml"
   cpus { read.size() } // number of read files to process
-  //storeDir "${params.storeDirPath}/fastqc"
+
+  // set publish directory based on raw vs trimmed
+  if (params.fastQCLabel == "raw") {
+      publishDir "${params.publishDirPath}/${params.rawDataPath}/FastQC_Reports"
+    } else if (params.fastQCLabel == "trimmed") {
+      publishDir "${params.publishDirPath}/${params.trimmedDataPath}/FastQC_Reports",
+        saveAs: { filename ->  filename.replaceAll("_raw_val_[12].fastq","_trimmed_fastq")}
+    }
 
   input:
     tuple val(sample), path(read)
   output:
     tuple val(sample), path("*_fastqc.html"), path("*_fastqc.zip")
+
   script:
     """
     fastqc -o . \
@@ -23,29 +31,42 @@ process FASTQC {
 
 process MULTIQC {
   label "fastLocal"
-  conda 'envs/multiqc.yml'
-  publishDir "${params.publishDirPath}/multiQC/${params.multiQCLabel}"
+  conda "${baseDir}/envs/multiqc.yml"
+
+  // set publish directory based on raw vs trimmed
+  if (params.multiQCLabel == "raw") {
+      publishDir "${params.publishDirPath}/${params.rawDataPath}/FastQC_Reports"
+    } else if (params.multiQCLabel == "trimmed") {
+      publishDir "${params.publishDirPath}/${params.trimmedDataPath}/FastQC_Reports"
+    }
 
   input:
     path(fastqc) // any number of fastqc files
   output:
-    path("raw_multiqc_report.html")
+    path("${params.multiQCLabel}_multiqc_report/multiqc_report.html"), emit: html
+    path("${params.multiQCLabel}_multiqc_report/multiqc_data"), emit: data
+
   script:
     """
-    multiqc -n raw_multiqc_report .
+    multiqc -o ${params.multiQCLabel}_multiqc_report .
     """
 
 }
 
 process TRIMGALORE {
-  conda 'envs/trim_galore.yml'
+  conda "${baseDir}/envs/trim_galore.yml"
+  publishDir "${params.publishDirPath}/${params.trimmedDataPath}",
+                saveAs: { filename ->  filename.replaceAll("_raw_val_[12].fq","_trimmed.fastq")}
   cpus 4
 
   input:
     tuple val(sample), path(forward_read), path(reverse_read)
   output:
-    tuple val(sample), path("${ forward_read.simpleName }_val_1.fq.gz"), path("${ reverse_read.simpleName }_val_2.fq.gz"), emit: reads
-    tuple val(sample), path("${ forward_read }_trimming_report.txt"), path("${ reverse_read }_trimming_report.txt"), emit: trim_reports
+    tuple val(sample), path("Fastq/${ forward_read.simpleName }_val_1.fq.gz"), \
+                       path("Fastq/${ reverse_read.simpleName }_val_2.fq.gz"), emit: reads
+    tuple val(sample), path("Trimming_Reports/${ forward_read }_trimming_report.txt"), \
+                       path("Trimming_Reports/${ reverse_read }_trimming_report.txt"), emit: trim_reports
+
   script:
     /*
      * comments -> --ilumina # if adapters are not illumina, replace with adapters
@@ -58,5 +79,11 @@ process TRIMGALORE {
     --phred33 \
     --paired $forward_read $reverse_read \
     --output_dir .
+
+    mkdir Fastq
+    mv *.fq.gz Fastq
+
+    mkdir Trimming_Reports
+    mv *_trimming_report.txt Trimming_Reports
     """
 }

@@ -1,0 +1,8 @@
+name: AST
+channels:
+dependencies:
+   - isatools
+   - peppy
+   - pip
+   - pip:
+     - git+https://github.com/J-81/Analysis_Staging.git
