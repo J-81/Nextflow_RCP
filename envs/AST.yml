@@ -1,5 +1,8 @@
 name: AST
 channels:
+   - bioconda
+   - conda-forge
+   - defaults
 dependencies:
    - isatools
    - peppy
