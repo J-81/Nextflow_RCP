@@ -23,7 +23,7 @@ include { RNASEQ_SAMPLESHEET_FROM_GLDS as GENERATE_SAMPLESHEET;
 **************************************************/
 if (params.help) {
   println("┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅")
-  println("┇ RNASeq Concensus Pipeline: Staging Workflow: 0.1.0-dev ┇")
+  println("┇ RNASeq Concensus Pipeline: Staging Workflow: $workflow.manifest.version ┇")
   println("┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅")
   println("usage: nextflow run J-81/Nextflow_RCP -main-script stage_analysis.nf [-h] [--limitSamplesTo n] [--truncateTo n] [--stageLocal] --gldsAccession GLDS-000")
   println()
