@@ -16,8 +16,8 @@ process RNASEQ_SAMPLESHEET_FROM_GLDS {
   script:
     """
     retrieve_isa_from_genelab.py --accession ${ glds_accession }\
-                                 --alternate_url\
-                                 --to_RNASeq_samplesheet
+                                 --alternate-url\
+                                 --to-RNASeq-samplesheet
     """
 
 }
