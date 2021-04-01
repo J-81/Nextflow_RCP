@@ -115,7 +115,6 @@ workflow {
     } else if ( params.stageLocal && !params.truncateTo ) {
       // download full raw reads
       ch_samples | map { it -> it[0].paired_end ? [it[0], [ it[1][0], it[1][1] ]] : [it[0], [it[1][0]]]}
-                 | view { it -> "EMITTED: $it"}
                  | set { ch_raw_reads }
 
       // Download the raw reads and publish them to expected raw read locations as per samplesheet
