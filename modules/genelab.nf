@@ -2,7 +2,7 @@
 */
 
 process RNASEQ_SAMPLESHEET_FROM_GLDS {
-  conda "${baseDir}/envs/AST"
+  conda "${baseDir}/envs/AST.yml"
   tag "${ glds_accession }"
   storeDir "${params.gldsAccession}/Metadata"
 
