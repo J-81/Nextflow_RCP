@@ -24,7 +24,7 @@ process RNASEQ_SAMPLESHEET_FROM_GLDS {
 
 
 process STAGE_SAMPLESHEET {
-  conda "/home/joribello/anaconda3/envs/AST"
+  conda "AST"
   tag "${ meta.id }"
   storeDir "${ params.gldsAccession }/00-RawData/Fastq"
 
