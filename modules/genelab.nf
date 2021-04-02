@@ -1,7 +1,7 @@
 /* Processes dealing with retrieving data from GeneLab
 */
 
-process RNASEQ_SAMPLESHEET_FROM_GLDS {
+process RNASEQ_RUNSHEET_FROM_GLDS {
   conda "${baseDir}/envs/AST.yml"
   tag "${ glds_accession }"
   storeDir "${params.gldsAccession}/Metadata"
@@ -10,14 +10,14 @@ process RNASEQ_SAMPLESHEET_FROM_GLDS {
     val(glds_accession)
 
   output:
-    path("AST_autogen_${ glds_accession }_RNASeq_samplesheet.csv"), emit: samplesheet
+    path("AST_autogen_${ glds_accession }_RNASeq_runsheet.csv"), emit: runsheet
     path("*.zip"), emit: isazip
 
   script:
     """
     retrieve_isa_from_genelab.py --accession ${ glds_accession }\
                                  --alternate-url\
-                                 --to-RNASeq-samplesheet
+                                 --to-RNASeq-runsheet
     """
 
 }
@@ -46,10 +46,29 @@ process STAGE_RAW_READS {
     }
 }
 
+
+process GENERATE_METASHEET {
+  tag "${ params.gldsAccession }"
+  storeDir "${ params.gldsAccession }/Metadata"
+
+  input:
+    path("isa.zip")
+
+  output:
+    path("${ params.gldsAccession }_metadata_table.txt")
+
+  script:
+    """
+    create_table_v2.py --accession ${ params.gldsAccession }  \
+                       --isa-zip isa.zip \
+                       --output-dir .
+    """
+}
+
 // Adapted from Function: https://github.com/nf-core/rnaseq/blob/master/modules/local/process/samplesheet_check.nf
 // Original Function Credit: Dr. Harshil Patel
 // Function to get list of [ meta, [ fastq_1, fastq_2 ] ]
-def get_samplesheet_paths(LinkedHashMap row) {
+def get_runsheet_paths(LinkedHashMap row) {
     def meta = [:]
     meta.id           = row.sample_name
     meta.paired_end   = row.paired_end.toBoolean()

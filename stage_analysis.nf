@@ -14,9 +14,10 @@ nextflow.enable.dsl=2
 
 
 // Import process from separate module file
-include { RNASEQ_SAMPLESHEET_FROM_GLDS as GENERATE_SAMPLESHEET;
+include { RNASEQ_RUNSHEET_FROM_GLDS as GENERATE_RUNSHEET;
+          GENERATE_METASHEET;
           STAGE_RAW_READS;
-          get_samplesheet_paths } from'./modules/genelab.nf'
+          get_runsheet_paths } from'./modules/genelab.nf'
 
 /**************************************************
 * HELP MENU  **************************************
@@ -78,12 +79,12 @@ workflow {
   main:
     sample_limit = params.limitSamplesTo ? params.limitSamplesTo : -1 // -1 in take means no limit
 
-    ch_glds_accession | GENERATE_SAMPLESHEET
+    ch_glds_accession | GENERATE_RUNSHEET
 
-    GENERATE_SAMPLESHEET.out.samplesheet | splitCsv(header: true)
-                                | map{ row -> get_samplesheet_paths(row) }
-                                | take( sample_limit )
-                                | set{ ch_samples }
+    GENERATE_RUNSHEET.out.runsheet | splitCsv(header: true)
+                                   | map{ row -> get_runsheet_paths(row) }
+                                   | take( sample_limit )
+                                   | set{ ch_samples }
 
     if ( params.stageLocal && params.truncateTo ) {
       // download truncated raw reads
@@ -125,4 +126,6 @@ workflow {
       // maybe print some nice data from the samplesheet
 
     }
+
+    GENERATE_RUNSHEET.out.isazip | GENERATE_METASHEET
 }
