@@ -64,7 +64,7 @@ colnames(contrasts) <- contrast.names
 rm(contrast.names)
 
 ##### Import Data
-files <- list.files(pattern = ".genes.results", full.names = TRUE)
+files <- list.files(path, "Rsem_gene_counts", pattern = ".genes.results", full.names = TRUE)
 # reorder the genes.results files to match the ordering of the ISA samples
 files <- files[sapply(rownames(study), function(x)grep(x, files, value=FALSE, fixed=TRUE))]
 names(files) <- rownames(study)
