@@ -10,7 +10,7 @@ include { DOWNLOAD_RAW_READS;
 include { RAW_FASTQC
           TRIMMED_FASTQC
           RAW_MULTIQC
-          TRIMMED_MULTIQC } from './modules/quality.nf' addParams(multiQCLabel: 'trimmed')
+          TRIMMED_MULTIQC } from './modules/quality.nf'
 include { TRIMGALORE } from './modules/quality.nf'
 include { BUILD_STAR;
           ALIGN_STAR;
@@ -29,7 +29,7 @@ include { VV_RAW_READS;
           VV_DESEQ2_ANALYSIS } from './modules/vv.nf' addParams(timestamp: sdf.format(date))
 
 include { staging as STAGING } from './stage_analysis.nf'
-
+println "PARAMS: $params"
 
 workflow {
 	main:
@@ -38,7 +38,7 @@ workflow {
     STAGING.out.raw_reads | set { raw_reads_ch }
     // meta only for dataset specific processes that don't use samples
     // e.g. downloading correct reference genome base on organism
-    STAGING.out.raw_reads | take(1) | map{it -> it[0]} | set { meta_ch }
+    STAGING.out.raw_reads | take(1) | map{it -> it[0]} | view {"META: $it"} | set { meta_ch }
     STAGING.out.isa | set { isa_ch }
 
     raw_reads_ch | RAW_FASTQC //| view {"POST_FASTQC: $it"}
