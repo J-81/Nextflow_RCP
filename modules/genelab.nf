@@ -76,7 +76,7 @@ def get_runsheet_paths(LinkedHashMap row) {
     def meta = [:]
     meta.id                         = row.sample_name
     meta.organism_sci               = row.organism.replaceAll(" ","_").toLowerCase()
-    meta.organism_non_sci           = ORGANISMS[row.organism]
+    meta.organism_non_sci           = ORGANISMS[meta.organism_sci]
     meta.read_length                = row.read_length
     meta.paired_end                 = row.paired_end.toBoolean()
     meta.has_ercc                   = row.has_ERCC.toBoolean()
