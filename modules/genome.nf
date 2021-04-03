@@ -4,6 +4,7 @@
 
 process BUILD_STAR {
   conda "${baseDir}/envs/star.yml"
+  tag "Organism: ${ meta.organism_sci }  Ensembl Version: ${params.ensemblVersion}"
   storeDir ( params.genomeSubsample ?
               "${ params.storeDirPath }/${ meta.organism_sci }/readlength_${ meta.read_length }/subsampled/${ params.genomeSubsample }/STAR_ensembl_${ params.ensemblVersion }" :
               "${ params.storeDirPath }/${ meta.organism_sci }/readlength_${ meta.read_length }/STAR_ensembl_${ params.ensemblVersion }"
