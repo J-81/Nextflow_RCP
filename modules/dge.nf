@@ -10,11 +10,14 @@
 
 process DGE_BY_DESEQ2 {
   conda "${baseDir}/envs/RNAseq_Rtools.yml"
-  publishDir "${params.publishDirPath}/${params.deseq2NormPath}", pattern: "norm_counts_output/*", saveAs: { "${file(it).getName()}" }
-  publishDir "${params.publishDirPath}/${params.deseq2DgePath}", pattern: "dge_output/*", saveAs: { "${file(it).getName()}"}
+  publishDir "${ params.gldsAccession }/${meta.DESeq2_NormCount}", pattern: "norm_counts_output/*", saveAs: { "${file(it).getName()}" }
+  publishDir "${ params.gldsAccession }/${meta.DESeq2_DGE}", pattern: "dge_output/*", saveAs: { "${file(it).getName()}"}
 
   input:
-    tuple path(Isa_zip), path(organisms_csv), path(Rsem_gene_counts)
+    path(Isa_zip)
+    path(organisms_csv)
+    path("Rsem_gene_counts/*")
+    val(meta)
   output:
     tuple path("norm_counts_output/Normalized_Counts.csv"),
           path("norm_counts_output/SampleTable.csv"),
@@ -34,7 +37,7 @@ process DGE_BY_DESEQ2 {
 
     # run the script with R
     deseq2_normcounts_wERCC_DGE_vis_ISA.R \
-      ${ params.organism_nonsci } \
+      ${ meta.organism_non_sci } \
       $Isa_zip \
       norm_counts_output \
       dge_output \

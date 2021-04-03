@@ -3,69 +3,95 @@
  *   quality control (e.g. trimming).
  */
 
-process FASTQC {
+process RAW_FASTQC {
   conda "${baseDir}/envs/fastqc.yml"
-  cpus { read.size() } // number of read files to process
-
-  // set publish directory based on raw vs trimmed
-  if (params.fastQCLabel == "raw") {
-      publishDir "${params.publishDirPath}/${params.rawDataPath}/FastQC_Reports"
-    } else if (params.fastQCLabel == "trimmed") {
-      publishDir "${params.publishDirPath}/${params.trimmedDataPath}/FastQC_Reports",
-        saveAs: { filename ->  filename.replaceAll("_raw_val_[12].fastq","_trimmed_fastq")}
-    }
+  tag "Sample: ${ meta.id }"
+  // cpus { read.size() } // BUGGED FOR SINGLE READS: number of read files to process
+  storeDir "${ params.gldsAccession }/${ meta.raw_read_fastQC }"
 
   input:
-    tuple val(sample), path(read)
+    tuple val(meta), path(reads)
   output:
-    tuple val(sample), path("*_fastqc.html"), path("*_fastqc.zip")
+    tuple val(meta), path("${ meta.id }*.html"), path("${ meta.id }*.zip")
 
   script:
     """
     fastqc -o . \
      -t $task.cpus \
-      $read
+      $reads
     """
-
 }
 
-process MULTIQC {
-  label "fastLocal"
-  conda "${baseDir}/envs/multiqc.yml"
+process TRIMMED_FASTQC {
+  conda "${baseDir}/envs/fastqc.yml"
+  tag "Sample: ${ meta.id }"
+  // cpus { read.size() } // BUGGED FOR SINGLE READS: number of read files to process
+  storeDir "${ params.gldsAccession }/${ meta.trimmed_read_fastQC }"
 
-  // set publish directory based on raw vs trimmed
-  if (params.multiQCLabel == "raw") {
-      publishDir "${params.publishDirPath}/${params.rawDataPath}/FastQC_Reports"
-    } else if (params.multiQCLabel == "trimmed") {
-      publishDir "${params.publishDirPath}/${params.trimmedDataPath}/FastQC_Reports"
-    }
+  input:
+  tuple val(meta), path(reads)
+  output:
+  tuple val(meta), path("${ meta.id }*.html"), path("${ meta.id }*.zip")
+
+  script:
+    """
+    fastqc -o . \
+     -t $task.cpus \
+      $reads
+    """
+}
+
+process RAW_MULTIQC {
+  label "fastLocal"
+  tag "Dataset: ${ params.gldsAccession }"
+  conda "${baseDir}/envs/multiqc.yml"
+  storeDir "${ params.gldsAccession }/00-RawData/FastQC_Reports"
+
+  input:
+    path("fastqc/*") // any number of fastqc files
+  output:
+    path("raw_multiqc_report/multiqc_report.html"), emit: html
+    path("raw_multiqc_report/multiqc_data"), emit: data
+
+  script:
+    """
+    multiqc -o raw_multiqc_report fastqc
+    """
+}
+
+process TRIMMED_MULTIQC {
+  label "fastLocal"
+  tag "Dataset: ${ params.gldsAccession }"
+  conda "${baseDir}/envs/multiqc.yml"
+  storeDir "${ params.gldsAccession }/01-TG_Preproc/FastQC_Reports"
+
 
   input:
     path(fastqc) // any number of fastqc files
   output:
-    path("${params.multiQCLabel}_multiqc_report/multiqc_report.html"), emit: html
-    path("${params.multiQCLabel}_multiqc_report/multiqc_data"), emit: data
+    path("trimmed_multiqc_report/multiqc_report.html"), emit: html
+    path("trimmed_multiqc_report/multiqc_data"), emit: data
 
   script:
     """
-    multiqc -o ${params.multiQCLabel}_multiqc_report .
+    multiqc -o trimmed_multiqc_report .
     """
-
 }
 
 process TRIMGALORE {
   conda "${baseDir}/envs/trim_galore.yml"
-  publishDir "${params.publishDirPath}/${params.trimmedDataPath}",
-                saveAs: { filename ->  filename.replaceAll("_raw_val_[12].fq","_trimmed.fastq")}
+  tag "Sample: ${ meta.id }"
+  // Handles paired end final file naming
+  storeDir "${ params.gldsAccession }/01-TG_Preproc/Fastq", pattern: "*trimmed.fastq.gz"
+  storeDir "${ params.gldsAccession }/01-TG_Preproc/Trimming_Reports", pattern: "*.txt"
+
   cpus 4
 
   input:
-    tuple val(sample), path(forward_read), path(reverse_read)
+    tuple val(meta), path(reads)
   output:
-    tuple val(sample), path("Fastq/${ forward_read.simpleName }_val_1.fq.gz"), \
-                       path("Fastq/${ reverse_read.simpleName }_val_2.fq.gz"), emit: reads
-    tuple val(sample), path("Trimming_Reports/${ forward_read }_trimming_report.txt"), \
-                       path("Trimming_Reports/${ reverse_read }_trimming_report.txt"), emit: trim_reports
+    tuple val(meta), path("${ meta.id }*trimmed.fastq.gz"), emit: reads
+    tuple val(meta), path("${ meta.id }*.txt"), emit: trim_reports
 
   script:
     /*
@@ -77,13 +103,14 @@ process TRIMGALORE {
     --cores $task.cpus \
     --illumina \
     --phred33 \
-    --paired $forward_read $reverse_read \
+    ${ meta.paired_end ? '--paired' : '' } \
+    $reads \
     --output_dir .
 
-    mkdir Fastq
-    mv *.fq.gz Fastq
-
-    mkdir Trimming_Reports
-    mv *_trimming_report.txt Trimming_Reports
+    # rename with _trimmed suffix
+    ${ meta.paired_end ? \
+      "cp ${ meta.id }_R1_raw_val_1.fq.gz ${ meta.trimmed_read1.name }; \
+      cp ${ meta.id }_R2_raw_val_2.fq.gz ${ meta.trimmed_read2.name }" : \
+      "cp ${ meta.id }_R1_raw_trimmed.fq.gz ${ meta.trimmed_read1.name }"}
     """
 }

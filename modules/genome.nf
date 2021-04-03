@@ -5,26 +5,27 @@
 process BUILD_STAR {
   conda "${baseDir}/envs/star.yml"
   storeDir ( params.genomeSubsample ?
-              "${params.storeDirPath}/${ params.organism }/subsampled/${ params.genomeSubsample }/STAR_ensembl_${ params.ensembl_version }" :
-              "${params.storeDirPath}/${ params.organism }/STAR_ensembl_${ params.ensembl_version }"
+              "${ params.storeDirPath }/${ meta.organism_sci }/readlength_${ meta.read_length }/subsampled/${ params.genomeSubsample }/STAR_ensembl_${ params.ensemblVersion }" :
+              "${ params.storeDirPath }/${ meta.organism_sci }/readlength_${ meta.read_length }/STAR_ensembl_${ params.ensemblVersion }"
             )
   label 'maxCPU'
   label 'big_mem'
 
   input:
     tuple path(genomeFasta), path(genomeGtf)
+    val(meta)
   output:
     path("STAR_REF")
   script:
     """
-STAR --runThreadN ${task.cpus} \
---runMode genomeGenerate \
---limitGenomeGenerateRAM ${ task.memory.toBytes() } \
---genomeSAindexNbases 14 \
---genomeDir STAR_REF \
---genomeFastaFiles ${ genomeFasta } \
---sjdbGTFfile ${ genomeGtf } \
---sjdbOverhang 149
+    STAR --runThreadN ${task.cpus} \
+    --runMode genomeGenerate \
+    --limitGenomeGenerateRAM ${ task.memory.toBytes() } \
+    --genomeSAindexNbases 14 \
+    --genomeDir STAR_REF \
+    --genomeFastaFiles ${ genomeFasta } \
+    --sjdbGTFfile ${ genomeGtf } \
+    --sjdbOverhang ${ meta.read_length - 1 }
     """
 
 }
@@ -36,25 +37,25 @@ STAR --runThreadN ${task.cpus} \
 
 process ALIGN_STAR {
   conda "${baseDir}/envs/star.yml"
-  publishDir "${params.publishDirPath}/${params.starOutputPath}/${sampleID}",
-              saveAs: { filename -> filename.replaceAll("${sampleID}","${sampleID}_") }
+  tag "Sample: ${ meta.id }"
+  publishDir "${ params.gldsAccession }/${ meta.STAR_Alignment_dir }"
   label 'maxCPU'
   label 'big_mem'
 
   input:
-    tuple val(sampleID), path(forward_read), path(reverse_read), path(STAR_INDEX_DIR)
+    tuple val( meta ), path( reads ), path(STAR_INDEX_DIR)
   output:
-    tuple val(sampleID), \
-          path("${ sampleID }Aligned.sortedByCoord.out.bam"), emit: genomeMapping
-    tuple val(sampleID), \
-          path("${ sampleID }Aligned.toTranscriptome.out.bam"), emit: transcriptomeMapping
-    tuple val(sampleID), \
-          path("${ sampleID }Log.final.out"), \
-          path("${ sampleID }Log.out"), \
-          path("${ sampleID }Log.progress.out"), \
-          path("${ sampleID }SJ.out.tab"), \
-          path("${ sampleID }_STARgenome"), \
-          path("${ sampleID }_STARpass1"), emit: logs
+    tuple val(meta), \
+          path("${ meta.id }_Aligned.sortedByCoord.out.bam"), emit: genomeMapping
+    tuple val(meta), \
+          path("${ meta.id }_Aligned.toTranscriptome.out.bam"), emit: transcriptomeMapping
+    tuple val(meta), \
+          path("${ meta.id }_Log.final.out"), \
+          path("${ meta.id }_Log.out"), \
+          path("${ meta.id }_Log.progress.out"), \
+          path("${ meta.id }_SJ.out.tab"), \
+          path("${ meta.id }__STARgenome"), \
+          path("${ meta.id }__STARpass1"), emit: logs
 
   script:
     """
@@ -77,21 +78,23 @@ process ALIGN_STAR {
     --runThreadN ${ task.cpus } \
     --readFilesCommand zcat \
     --quantMode TranscriptomeSAM \
-    --outFileNamePrefix ${ sampleID } \
-    --readFilesIn ${ forward_read } ${ reverse_read }
+    --outFileNamePrefix ${ meta.id }_ \
+    --readFilesIn ${ reads }
     """
 
 }
 
 process BUILD_RSEM {
   conda "${baseDir}/envs/rsem.yml"
+  tag "Organism: ${ meta.organism_sci }  Ensembl Version: ${params.ensemblVersion}"
   storeDir ( params.genomeSubsample ?
-              "${params.storeDirPath}/${ params.organism }/subsampled/${ params.genomeSubsample }/RSEM_ensembl_${ params.ensembl_version }" :
-              "${params.storeDirPath}/${ params.organism }/RSEM_ensembl_${ params.ensembl_version }"
+              "${params.storeDirPath}/${ meta.organism_sci }/subsampled/${ params.genomeSubsample }/RSEM_ensembl_${ params.ensemblVersion }" :
+              "${params.storeDirPath}/${ meta.organism_sci }/RSEM_ensembl_${ params.ensemblVersion }"
             )
 
   input:
     tuple path(genomeFasta), path(genomeGtf)
+    val(meta)
   output:
     path("RSEM_REF")
   script:
@@ -104,19 +107,20 @@ process BUILD_RSEM {
 
 process COUNT_ALIGNED {
   conda "${baseDir}/envs/rsem.yml"
-  publishDir "${params.publishDirPath}/${params.rsemOutputPath}/${sampleID}"
+  tag "Sample: ${ meta.id }"
+  storeDir "${ params.gldsAccession }/${ meta.RSEM_Counts_dir }"
 
   input:
-    tuple val(sampleID), path(transcriptomeMapping), path(RSEM_REF)
+    tuple val(meta), path(transcriptomeMapping), path(RSEM_REF)
   output:
-    tuple val(sampleID), path("${ sampleID }.genes.results"), emit: countsPerGene
-    tuple val(sampleID), path("${ sampleID }.isoforms.results"), emit: countsPerIsoform
-    tuple val(sampleID), path("${ sampleID }.stat"), emit: stats
+    tuple val(meta), path("${ meta.id }.genes.results"), emit: countsPerGene
+    tuple val(meta), path("${ meta.id }.isoforms.results"), emit: countsPerIsoform
+    tuple val(meta), path("${ meta.id }.stat"), emit: stats
 
   script:
     """
     rsem-calculate-expression --num-threads $task.cpus \
-      --paired-end \
+      ${ meta.paired_end ? '--paired-end' : '' } \
       --bam \
       --alignments \
       --no-bam-output \
@@ -125,7 +129,7 @@ process COUNT_ALIGNED {
       --strandedness reverse \
       $transcriptomeMapping \
       $RSEM_REF/ \
-      $sampleID
+      $meta.id
     """
 
 }
@@ -137,10 +141,11 @@ process COUNT_ALIGNED {
 
 process SUBSAMPLE_GENOME {
   conda "${baseDir}/envs/samtools.yml"
-  storeDir "${params.storeDirPath}/ensembl/${params.ensembl_version}/${params.organism}"
+  storeDir "${params.storeDirPath}/ensembl/${params.ensemblVersion}/${ meta.organism_sci }"
 
   input:
     tuple path(genome_fasta), path(genome_gtf)
+    val(meta)
   output:
     tuple path("subsampled/${params.genomeSubsample}/${genome_fasta}"), \
           path("subsampled/${params.genomeSubsample}/${genome_gtf}")
@@ -156,20 +161,21 @@ process SUBSAMPLE_GENOME {
 
 process CONCAT_ERCC {
   storeDir ( params.genomeSubsample ?
-              "${params.storeDirPath}/ensembl/${params.ensembl_version}/${params.organism}/ERCC/subsampled" :
-              "${params.storeDirPath}/ensembl/${params.ensembl_version}/${params.organism}/ERCC"
+              "${params.storeDirPath}/ensembl/${params.ensemblVersion}/${ meta.organism_sci }/ERCC/subsampled" :
+              "${params.storeDirPath}/ensembl/${params.ensemblVersion}/${  }/ERCC"
               )
 
   input:
     tuple path(genome_fasta), path(genome_gtf)
     tuple path(ercc_fasta), path(ercc_gtf)
+    val(meta)
   output:
-    tuple path("${params.organism}_and_ERCC.fa"), \
-          path("${params.organism}_and_ERCC.gtf")
+    tuple path("${ meta.organism_sci }_and_ERCC.fa"), \
+          path("${ meta.organism_sci }_and_ERCC.gtf")
 
   script:
   """
-  cat ${genome_fasta} ${ercc_fasta} > ${params.organism}_and_ERCC.fa
-  cat ${genome_gtf} ${ercc_gtf} > ${params.organism}_and_ERCC.gtf
+  cat ${genome_fasta} ${ercc_fasta} > ${ meta.organism_sci }_and_ERCC.fa
+  cat ${genome_gtf} ${ercc_gtf} > ${ meta.organism_sci }_and_ERCC.gtf
   """
 }

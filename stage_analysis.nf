@@ -75,7 +75,7 @@ if ( params.stageLocal && params.truncateTo ) {
 /**************************************************
 * ACTUAL WORKFLOW  ********************************
 **************************************************/
-workflow {
+workflow staging{
   main:
     sample_limit = params.limitSamplesTo ? params.limitSamplesTo : -1 // -1 in take means no limit
 
@@ -128,4 +128,9 @@ workflow {
     }
 
     GENERATE_RUNSHEET.out.isazip | GENERATE_METASHEET
+
+    emit:
+      raw_reads = STAGE_RAW_READS.out
+      isa = GENERATE_RUNSHEET.out.isazip
+      runsheet = GENERATE_RUNSHEET.out.runsheet
 }

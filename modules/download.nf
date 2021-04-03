@@ -33,16 +33,18 @@ process DOWNLOAD_RAW_READS {
 
 process DOWNLOAD_GENOME_ANNOTATIONS {\
   conda "${baseDir}/envs/download_tools.yml"
+  tag "Organism: ${ meta.organism_sci }  Ensembl Version: ${params.ensemblVersion}"
   label 'networkBound'
-  storeDir "${params.storeDirPath}/ensembl/${params.ensemblVersion}/${params.organismSci}"
+  storeDir "${params.storeDirPath}/ensembl/${params.ensemblVersion}/${ meta.organism_sci }"
 
   input:
+    val(meta)
   output:
     tuple path("*.dna.toplevel.fa"), path("*.${ params.ensemblVersion }.gtf")
   script:
     """
     retrieve_references.py --ensembl_version ${ params.ensemblVersion } \
-                           --organism        ${ params.organismSci}
+                           --organism        ${ meta.organism_sci}
 
     # decompress files
     gunzip *.fa.gz
@@ -66,7 +68,7 @@ process DOWNLOAD_ERCC {
     unzip ERCC92.zip
     """
 }
-
+// DEPRECATED
 process DOWNLOAD_ISA {
   conda "${baseDir}/envs/download_tools.yml"
   publishDir "${params.publishDirPath}/${ params.metaDataPath }"
