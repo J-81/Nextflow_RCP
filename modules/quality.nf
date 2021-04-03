@@ -81,11 +81,9 @@ process TRIMMED_MULTIQC {
 process TRIMGALORE {
   conda "${baseDir}/envs/trim_galore.yml"
   tag "Sample: ${ meta.id }"
-  // Handles paired end final file naming
-  storeDir "${ params.gldsAccession }/01-TG_Preproc/Fastq", pattern: "*trimmed.fastq.gz"
-  storeDir "${ params.gldsAccession }/01-TG_Preproc/Trimming_Reports", pattern: "*.txt"
-
-  cpus 4
+  // changing these to storeDir causes an error as pattern is not available for storeDir
+  publishDir "${ params.gldsAccession }/01-TG_Preproc/Fastq", pattern: "*trimmed.fastq.gz"
+  publishDir "${ params.gldsAccession }/01-TG_Preproc/Trimming_Reports", pattern: "*.txt"
 
   input:
     tuple val(meta), path(reads)
