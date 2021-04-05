@@ -3,12 +3,11 @@
 
 // NOTE: first VV step also creates inital VV file that is shared across all vv steps
 process VV_RAW_READS {
-  stageInMode "copy"
   //publishDir "${params.publishDirPath}/VV/${params.timestamp}", mode: 'copy'
 
   input:
-    path(samples)
-    path(raw_reads), stageAs: "rawReads/*"
+    val(meta)
+    path("${ meta.raw_read_root_dir }/*")
     path(vv_config)
 
   output:
@@ -16,10 +15,10 @@ process VV_RAW_READS {
 
   script:
     """
-    raw_reads_VV.py --config ${ vv_config } \
-                    --samples ${ samples } \
-                    --input rawReads \
-                    --output VV_out.tsv
+    echo  --config ${ vv_config } \
+          --samples ${ samples } \
+          --input rawReads \
+          --output VV_out.tsv
     """
 }
 
