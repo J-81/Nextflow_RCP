@@ -415,3 +415,4 @@ exp_raw <- log2(ERCCnormCounts)
 PCA_raw <- prcomp(t(exp_raw), scale = FALSE)
 write.csv(PCA_raw$x,file.path(DGE_output_ERCC, "visualization_PCA_table_ERCCnorm.csv"), row.names = TRUE)
 rm(exp_raw,PCA_raw)
+
