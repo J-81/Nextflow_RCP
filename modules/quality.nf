@@ -63,7 +63,7 @@ process TRIMMED_MULTIQC {
   label "fastLocal"
   tag "Dataset: ${ params.gldsAccession }"
   conda "${baseDir}/envs/multiqc.yml"
-  storeDir "${ params.gldsAccession }/01-TG_Preproc/FastQC_Reports"
+  publishDir "${ params.gldsAccession }/01-TG_Preproc/FastQC_Reports"
 
 
   input:
