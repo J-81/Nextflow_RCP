@@ -54,44 +54,51 @@ process VV_RAW_READS_MULTIQC {
 
 
 process VV_TRIMMED_READS {
-  stageInMode "copy"
-  // publishDir "${params.publishDirPath}/VV/${params.timestamp}",
+  conda "${baseDir}/envs/VV.yml"
+  publishDir "VV"
 
   input:
-    path(samples)
-    path(trimmed_reads)
-    path(vv_config)
+    val(meta)
+    path(runsheet)
+    path("${ meta.trimmed_read_root_dir }/*")
+    path("VV_in.tsv")
 
   output:
     path("VV_out.tsv")
 
   script:
     """
-    trimmed_reads_VV.py --config ${ vv_config } \
-                    --samples ${ samples } \
-                    --input ${ trimmed_reads } \
-                    --output VV_out.tsv
+    cp -L VV_in.tsv appendTo.tsv
+    trimmed_reads_VV.py --runsheet-path ${ runsheet } \
+                        --output appendTo.tsv \
+                        --halt-severity 90
+    cp appendTo.tsv VV_out.tsv
     """
 }
 
 process VV_TRIMMED_READS_MULTIQC {
-  stageInMode "copy"
-  //publishDir "${params.publishDirPath}/VV/${params.timestamp}", mode: 'copy'
+  conda "${baseDir}/envs/VV.yml"
+  publishDir "VV"
 
   input:
-    path(samples)
-    path(multiqcDataDir)
-    path(vv_config)
+    val(meta)
+    path(runsheet)
+    // resulted in nested staging:
+    // path("${ meta.raw_read_multiqc }/*")
+    path("01-TG_Preproc/FastQC_Reports/trimmed_multiqc_report/*")
+    path(multiqcHtmlPath)
+    path("VV_in.tsv")
 
   output:
     path("VV_out.tsv")
 
   script:
     """
-    trimmed_reads_multiqc_VV.py --config ${ vv_config } \
-                                --samples ${ samples } \
-                                --input ${ multiqcDataDir } \
-                                --output VV_out.tsv
+    cp -L VV_in.tsv appendTo.tsv
+    trimmed_reads_multiqc_VV.py --runsheet-path ${ runsheet } \
+                                --output appendTo.tsv \
+                                --halt-severity 90
+    cp appendTo.tsv VV_out.tsv
     """
 }
 

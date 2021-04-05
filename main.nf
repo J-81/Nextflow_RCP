@@ -100,9 +100,22 @@ workflow {
                   STAGING.out.runsheet,
                   raw_reads_ch | map{ it -> it[1..it.size()-1] } | flatten | collect, // map use here: removes value sample from tuple
                   ch_vv_log_00 ) | set { ch_vv_log_01 }
+
     VV_RAW_READS_MULTIQC( meta_ch,
                           STAGING.out.runsheet,
                           RAW_MULTIQC.out.data,
                           RAW_MULTIQC.out.html,
                           ch_vv_log_01 ) | set { ch_vv_log_02 }
+
+    VV_TRIMMED_READS( meta_ch,
+                      STAGING.out.runsheet,
+                      TRIMGALORE.out.reads | map{ it -> it[1..it.size()-1] } | flatten | collect, // map use here: removes value sample from tuple
+                      ch_vv_log_02 ) | set { ch_vv_log_03 }
+
+    VV_TRIMMED_READS_MULTIQC( meta_ch,
+                              STAGING.out.runsheet,
+                              TRIMMED_MULTIQC.out.data,
+                              TRIMMED_MULTIQC.out.html,
+                              ch_vv_log_03 ) | set { ch_vv_log_04 }
+
 }
