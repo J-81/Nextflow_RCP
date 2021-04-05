@@ -4,7 +4,7 @@
 process RNASEQ_RUNSHEET_FROM_GLDS {
   conda "${baseDir}/envs/AST.yml"
   tag "${ glds_accession }"
-  storeDir "${ params.gldsAccession }/Metadata"
+  publishDir "${ params.gldsAccession }/Metadata"
 
   input:
     val(glds_accession)
@@ -25,7 +25,7 @@ process RNASEQ_RUNSHEET_FROM_GLDS {
 
 process STAGE_RAW_READS {
   tag "${ meta.id }"
-  storeDir "${ params.gldsAccession }/${ meta.raw_read_root_dir }"
+  publishDir "${ params.gldsAccession }/${ meta.raw_read_root_dir }"
 
   input:
     tuple val(meta), path("?.gz")
@@ -49,7 +49,7 @@ process STAGE_RAW_READS {
 
 process GENERATE_METASHEET {
   tag "${ params.gldsAccession }"
-  storeDir "${ params.gldsAccession }/Metadata"
+  publishDir "${ params.gldsAccession }/Metadata"
 
   input:
     path("isa.zip")
