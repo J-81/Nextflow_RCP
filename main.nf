@@ -31,7 +31,7 @@ include { VV_RAW_READS;
 include { staging as STAGING } from './stage_analysis.nf'
 println "PARAMS: $params"
 
-workflow RNASEQ {
+workflow {
 	main:
     STAGING()
     STAGING.out.runsheet
@@ -94,46 +94,15 @@ workflow RNASEQ {
 
     DGE_BY_DESEQ2( isa_ch, organism_ch, rsem_ch, meta_ch  )
 
-    /*
-    // Validation and Verification Block
-    // - Nextflow Note: Even though this is defined at the end, Nextflow will
-    //     execute VV tasks once the required input files are ready. i.e. VV is
-    //     performed in parallel with task processing.
-    if ( params.vv_config_file ) {
-      VV_RAW_READS( samples_ch | collectFile(name: "samples.txt", newLine: true),
-                    raw_reads_ch | map{ it -> it[1..it.size()-1] } | flatten | collect, // map use here: removes value sample from tuple
-                    params.vv_config_file ) | mix(vv_output_ch) | set{ vv_output_ch }
-
-      VV_RAW_READS_MULTIQC( samples_ch | collectFile(name: "samples.txt", newLine: true),
-                            RAW_MULTIQC.out.data,
-                            params.vv_config_file) | mix(vv_output_ch) | set{ vv_output_ch }
-
-      VV_TRIMMED_READS( samples_ch | collectFile(name: "samples.txt", newLine: true),
-                        TRIMGALORE.out.reads | map{ it -> it[1..it.size()-1] } | flatten | collect, // map use here: removes value sample from tuple
-                        params.vv_config_file)  | mix(vv_output_ch) | set{ vv_output_ch }
-
-      VV_TRIMMED_READS_MULTIQC( samples_ch | collectFile(name: "samples.txt", newLine: true),
-                                TRIM_MULTIQC.out.data,
-                                params.vv_config_file)  | mix(vv_output_ch) | set{ vv_output_ch }
-
-      VV_STAR_ALIGNMENTS( samples_ch | collectFile(name: "samples.txt", newLine: true),
-                          ALIGN_STAR.out.genomeMapping | map{ it -> it[1] } | collect,
-                          ALIGN_STAR.out.transcriptomeMapping | map{ it -> it[1] } | collect,
-                          ALIGN_STAR.out.logs| map{ it -> it[1..it.size()-1] } | collect,
-                          params.vv_config_file) | mix(vv_output_ch) | set{ vv_output_ch }
-
-      VV_RSEM_COUNTS( samples_ch | collectFile(name: "samples.txt", newLine: true),
-                      COUNT_ALIGNED.out.countsPerGene | map{ it -> it[1] } | collect,
-                      COUNT_ALIGNED.out.countsPerIsoform | map{ it -> it[1] } | collect,
-                      COUNT_ALIGNED.out.stats | map{ it -> it[1] } | collect,
-                      params.vv_config_file)  | mix(vv_output_ch) | set{ vv_output_ch }
-
-      VV_DESEQ2_ANALYSIS( samples_ch | collectFile(name: "samples.txt", newLine: true),
-                          DGE_BY_DESEQ2.out.norm_counts,
-                          DGE_BY_DESEQ2.out.dge,
-                          params.vv_config_file) | mix(vv_output_ch) | set{ vv_output_ch }
-      vv_output_ch | map{ it.text } | collectFile(name: "${sdf.format(date)}_Final_VV.tsv", storeDir: workflow.launchDir) | view
-
-    }
-    */
+    // VV processes
+    ch_vv_log_00 = Channel.fromPath("nextflow_vv_log.tsv")
+    VV_RAW_READS( meta_ch,
+                  STAGING.out.runsheet,
+                  raw_reads_ch | map{ it -> it[1..it.size()-1] } | flatten | collect, // map use here: removes value sample from tuple
+                  ch_vv_log_00 ) | set { ch_vv_log_01 }
+    VV_RAW_READS_MULTIQC( meta_ch,
+                          STAGING.out.runsheet,
+                          RAW_MULTIQC.out.data,
+                          RAW_MULTIQC.out.html,
+                          ch_vv_log_01 ) | set { ch_vv_log_02 }
 }

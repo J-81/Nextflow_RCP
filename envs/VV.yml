@@ -1,0 +1,11 @@
+name: VV
+channels:
+   - bioconda
+   - conda-forge
+   - defaults
+dependencies:
+   - python=3.8
+   - pandas
+   - pip
+   - pip:
+     - git+https://github.com/J-81/JDO_V-V.git@dev

@@ -3,43 +3,52 @@
 
 // NOTE: first VV step also creates inital VV file that is shared across all vv steps
 process VV_RAW_READS {
-  //publishDir "${params.publishDirPath}/VV/${params.timestamp}", mode: 'copy'
+  conda "${baseDir}/envs/VV.yml"
+  publishDir "VV"
 
   input:
     val(meta)
+    path(runsheet)
     path("${ meta.raw_read_root_dir }/*")
-    path(vv_config)
+    path(vv_log)
 
   output:
     path("VV_out.tsv")
 
   script:
     """
-    echo  --config ${ vv_config } \
-          --samples ${ samples } \
-          --input rawReads \
-          --output VV_out.tsv
+    # Not needed for first VV process
+    # cp -L ${vv_log} appendTo.tsv
+    raw_reads_VV.py  --runsheet-path ${ runsheet } \
+                     --output appendTo.tsv \
+                     --halt-severity 90
+    mv appendTo.tsv VV_out.tsv
     """
 }
 
 process VV_RAW_READS_MULTIQC {
-  stageInMode "copy"
-  //publishDir "${params.publishDirPath}/VV/${params.timestamp}", mode: 'copy'
+  conda "${baseDir}/envs/VV.yml"
+  publishDir "VV"
 
   input:
-    path(samples)
-    path(multiqcDataDir)
-    path(vv_config)
+    val(meta)
+    path(runsheet)
+    // resulted in nested staging:
+    // path("${ meta.raw_read_multiqc }/*")
+    path("00-RawData/FastQC_Reports/raw_multiqc_report/*")
+    path(multiqcHtmlPath)
+    path("VV_in.tsv")
 
   output:
     path("VV_out.tsv")
 
   script:
     """
-    raw_reads_multiqc_VV.py --config ${ vv_config } \
-                            --samples ${ samples } \
-                            --input ${ multiqcDataDir } \
-                            --output VV_out.tsv
+    cp -L VV_in.tsv appendTo.tsv
+    raw_reads_multiqc_VV.py --runsheet-path ${ runsheet } \
+                            --output appendTo.tsv \
+                            --halt-severity 90
+    cp appendTo.tsv VV_out.tsv
     """
 }
 
