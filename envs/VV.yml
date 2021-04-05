@@ -6,6 +6,7 @@ channels:
 dependencies:
    - python=3.8
    - pandas
+   - samtools
    - pip
    - pip:
      - git+https://github.com/J-81/JDO_V-V.git@dev

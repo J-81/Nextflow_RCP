@@ -89,6 +89,7 @@ def get_runsheet_paths(LinkedHashMap row) {
     meta.trimmed_read_fastQC        = new File(row.trimmed_read_fastQC) //points to directory
     meta.trimmed_read_multiqc       = new File(row.trimmed_read_multiqc).parent //points to file, parent is directory to store Trimmed Read MultiQC output to
     meta.STAR_Alignment_dir         = new File(row.STAR_Alignment) //points to sample directory
+    meta.STAR_Alignment_root_dir    = new File(row.STAR_Alignment).parent //points to sample directory
     meta.RSEM_Counts_dir            = new File(row.RSEM_Counts) //points to sample directory
     meta.DESeq2_NormCount           = new File(row.DESeq2_NormCount) //points to dataset directory, same for all samples
     meta.DESeq2_DGE                 = new File(row.DESeq2_DGE) //points to dataset directory, same for all samples

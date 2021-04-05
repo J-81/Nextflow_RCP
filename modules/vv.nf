@@ -103,29 +103,25 @@ process VV_TRIMMED_READS_MULTIQC {
 }
 
 process VV_STAR_ALIGNMENTS {
-  stageInMode "copy"
-  // publishDir "${params.publishDirPath}/VV/${params.timestamp}",
-  //             mode: 'copy', saveAs: { "VV_RESULTS.txt" }
-
+  conda "${baseDir}/envs/VV.yml"
+  publishDir "VV"
 
   input:
-    path(samples)
-    path(genomeMapping)
-    path(transcriptomeMapping)
-    path(logs)
-    path(vv_config)
+    val(meta)
+    path(runsheet)
+    path("${ meta.STAR_Alignment_root_dir }/*")
+    path("VV_in.tsv")
 
   output:
     path("VV_out.tsv")
 
   script:
     """
-    star_alignments_VV.py --config ${ vv_config } \
-                          --samples ${ samples } \
-                          --g ${ genomeMapping } \
-                          --t ${ transcriptomeMapping } \
-                          --l ${ logs } \
-                          --output VV_out.tsv
+    cp -L VV_in.tsv appendTo.tsv
+    star_alignments_VV.py  --runsheet-path ${ runsheet } \
+                           --output appendTo.tsv \
+                           --halt-severity 90
+    cp appendTo.tsv VV_out.tsv
     """
 }
 

@@ -39,24 +39,14 @@ process BUILD_STAR {
 process ALIGN_STAR {
   conda "${baseDir}/envs/star.yml"
   tag "Sample: ${ meta.id }"
-  publishDir "${ params.gldsAccession }/${ meta.STAR_Alignment_dir }"
+  publishDir "${ params.gldsAccession }"
   label 'maxCPU'
   label 'big_mem'
 
   input:
     tuple val( meta ), path( reads ), path(STAR_INDEX_DIR)
   output:
-    tuple val(meta), \
-          path("${ meta.id }_Aligned.sortedByCoord.out.bam"), emit: genomeMapping
-    tuple val(meta), \
-          path("${ meta.id }_Aligned.toTranscriptome.out.bam"), emit: transcriptomeMapping
-    tuple val(meta), \
-          path("${ meta.id }_Log.final.out"), \
-          path("${ meta.id }_Log.out"), \
-          path("${ meta.id }_Log.progress.out"), \
-          path("${ meta.id }_SJ.out.tab"), \
-          path("${ meta.id }__STARgenome"), \
-          path("${ meta.id }__STARpass1"), emit: logs
+    tuple val(meta), path("${ meta.STAR_Alignment_dir }")
 
   script:
     """
@@ -79,7 +69,7 @@ process ALIGN_STAR {
     --runThreadN ${ task.cpus } \
     --readFilesCommand zcat \
     --quantMode TranscriptomeSAM \
-    --outFileNamePrefix ${ meta.id }_ \
+    --outFileNamePrefix '${ meta.STAR_Alignment_dir }/${ meta.id }_' \
     --readFilesIn ${ reads }
     """
 
@@ -112,7 +102,7 @@ process COUNT_ALIGNED {
   publishDir "${ params.gldsAccession }/${ meta.RSEM_Counts_dir }"
 
   input:
-    tuple val(meta), path(transcriptomeMapping), path(RSEM_REF)
+    tuple val(meta), path("starOutput/*"), path(RSEM_REF)
   output:
     tuple val(meta), path("${ meta.id }.genes.results"), emit: countsPerGene
     tuple val(meta), path("${ meta.id }.isoforms.results"), emit: countsPerIsoform
@@ -128,11 +118,10 @@ process COUNT_ALIGNED {
       --estimate-rspd \
       --seed 12345 \
       --strandedness reverse \
-      $transcriptomeMapping \
+      starOutput/${meta.id}/${meta.id}_Aligned.toTranscriptome.out.bam \
       $RSEM_REF/ \
       $meta.id
     """
-
 }
 
 

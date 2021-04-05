@@ -85,7 +85,7 @@ workflow {
 
     BUILD_RSEM( genome_annotations, meta_ch)
 
-    ALIGN_STAR.out.transcriptomeMapping | combine( BUILD_RSEM.out ) | set { aligned_ch }
+    ALIGN_STAR.out | combine( BUILD_RSEM.out ) | set { aligned_ch }
     aligned_ch | COUNT_ALIGNED
 
     COUNT_ALIGNED.out.countsPerGene | map { it[1] } | collect | set { rsem_ch }
@@ -98,7 +98,7 @@ workflow {
     ch_vv_log_00 = Channel.fromPath("nextflow_vv_log.tsv")
     VV_RAW_READS( meta_ch,
                   STAGING.out.runsheet,
-                  raw_reads_ch | map{ it -> it[1..it.size()-1] } | flatten | collect, // map use here: removes value sample from tuple
+                  raw_reads_ch | map{ it -> it[1..it.size()-1] } | flatten | collect, // map use here: removes val(meta) from tuple
                   ch_vv_log_00 ) | set { ch_vv_log_01 }
 
     VV_RAW_READS_MULTIQC( meta_ch,
@@ -109,7 +109,7 @@ workflow {
 
     VV_TRIMMED_READS( meta_ch,
                       STAGING.out.runsheet,
-                      TRIMGALORE.out.reads | map{ it -> it[1..it.size()-1] } | flatten | collect, // map use here: removes value sample from tuple
+                      TRIMGALORE.out.reads | map{ it -> it[1..it.size()-1] } | flatten | collect, // map use here: removes val(meta) from tuple
                       ch_vv_log_02 ) | set { ch_vv_log_03 }
 
     VV_TRIMMED_READS_MULTIQC( meta_ch,
@@ -117,5 +117,10 @@ workflow {
                               TRIMMED_MULTIQC.out.data,
                               TRIMMED_MULTIQC.out.html,
                               ch_vv_log_03 ) | set { ch_vv_log_04 }
+
+    VV_STAR_ALIGNMENTS( meta_ch,
+                        STAGING.out.runsheet,
+                        ALIGN_STAR.out | map{ it -> it[1..it.size()-1] } | collect, // map use here: removes val(meta) from tuple
+                        ch_vv_log_04 ) | set { ch_vv_log_05 }
 
 }
