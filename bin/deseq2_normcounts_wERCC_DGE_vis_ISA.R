@@ -99,31 +99,61 @@ keep <- rowSums(counts(dds)) > 10
 dds <- dds[keep,]
 summary(dds)
 
-##### make a DESeqDataSet object using only ERCC genes
+## Make a DESeqDataSet object using only filtered ERCC genes, which will be used to generate ERCC counts table
+
 ercc_rows <- grep("ERCC-",rownames(dds))
+
 ercc_dds <- dds[ercc_rows,]
 
-### print samples that do not contain ERCC counts
-cat("Samples that do not have detectable ERCC spike-ins: ", colnames(ercc_dds[,colSums(counts(ercc_dds)) == 0]), sep="\n")
 
-### print ERCC raw counts table
+## Create list of rows containing ERCC group B genes to use for ERCC-normalization
+
+## Note: ERCC group B genes should be the same concentration in all samples
+ercc_rows_gpB <- grep("ERCC-00096|ERCC-00171|ERCC-00009|ERCC-00042|ERCC-00060|ERCC-00035|ERCC-00025|ERCC-00051|ERCC-00053|ERCC-00148|ERCC-00126|ERCC-00034|ERCC-00150|ERCC-00067|ERCC-00031|ERCC-00109|ERCC-00073|ERCC-00158|ERCC-00104|ERCC-00142|ERCC-00138|ERCC-00117|ERCC-00075",rownames(dds))
+
+
+## Identify and list samples that do not contain counts for ERCC genes
+
+## This is to make sure all samples indeed contain ERCC spike-in
+
+cat("Samples that do not have detectable ERCC spike-ins: ", colnames(ercc_dds[,colSums(counts(ercc_dds)) = 0]), sep="\n")
+
+
+## Print ERCC filtered raw counts table
+## Note: These data are used internally at GeneLab for QC
+
 ERCC_rawCounts = as.data.frame(counts(ercc_dds))
-write.csv(ERCC_rawCounts,file='ERCC_rawCounts.csv')
 
-### remove samples that do not contain ERCC counts
+write.csv(ERCC_rawCounts,file='ERCC_rawCounts_filtered.csv')
+
+
+## Remove samples that do not contain ERCC counts
+
+## Note: All samples should contain ERCC spike-in and thus ERCC counts, if some samples do not contain ERCC counts, those samples should be removed and not used for downstream analysis
+
 ercc_dds <- ercc_dds[,colSums(counts(ercc_dds)) > 0]
 
-##### generate a DESeqDataSet object using only non-ERCC genes
+
+
+##### Generate a DESeqDataSet object using only non-ERCC genes #####
+
+
+## dds_1 will be used to generate data without considering ERCC genes
+
 dds_1 <- dds[-c(ercc_rows),] # remove ERCCs from full counts table
+
+
+## dds_2 will be used to generate data with considering ERCC genes
 dds_2 <- dds
 
 
 
-# replace size factor object with ERCC size factors for rescaling
-dds_2 <- estimateSizeFactors(dds_2, controlGenes=ercc_rows)
-dds_2 <- dds_2[-c(ercc_rows),] # remove ERCCs from counts table after ERCC normalization
+##### Perform DESeq analysis with and without considering ERCC genes #####
 
-#### Perform DESeq analysis
+
+## Run DESeq analysis with ERCC-normalization by replacing size factor object with ERCC size factors for rescaling
+dds_2 <- estimateSizeFactors(dds_2, controlGenes=ercc_rows_gpB)
+dds_2 <- dds_2[-c(ercc_rows),] # remove ERCCs from counts table after normalization
 dds_2 <- estimateDispersions(dds_2)
 dds_2 <- nbinomWaldTest(dds_2)
 dds_1 <- DESeq(dds_1)
