@@ -88,7 +88,7 @@ workflow {
     ALIGN_STAR.out | combine( BUILD_RSEM.out ) | set { aligned_ch }
     aligned_ch | COUNT_ALIGNED
 
-    COUNT_ALIGNED.out.countsPerGene | map { it[1] } | collect | set { rsem_ch }
+    COUNT_ALIGNED.out | map { it[1] } | collect | set { rsem_ch }
 
     organism_ch = channel.fromPath( params.organismCSV )
 
@@ -122,5 +122,10 @@ workflow {
                         STAGING.out.runsheet,
                         ALIGN_STAR.out | map{ it -> it[1..it.size()-1] } | collect, // map use here: removes val(meta) from tuple
                         ch_vv_log_04 ) | set { ch_vv_log_05 }
+
+    VV_RSEM_COUNTS( meta_ch,
+                    STAGING.out.runsheet,
+                    COUNT_ALIGNED.out | map{ it -> it[1..it.size()-1] } | collect, // map use here: removes val(meta) from tuple
+                    ch_vv_log_05 ) | set { ch_vv_log_06 }
 
 }

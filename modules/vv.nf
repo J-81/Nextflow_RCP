@@ -126,29 +126,25 @@ process VV_STAR_ALIGNMENTS {
 }
 
 process VV_RSEM_COUNTS {
-  stageInMode "copy"
-  //publishDir "${params.publishDirPath}/VV/${params.timestamp}",
-  //            mode: 'copy', saveAs: { "VV_RESULTS.txt" }
-
+  conda "${baseDir}/envs/VV.yml"
+  publishDir "VV"
 
   input:
-    path(samples)
-    path(geneCounts)
-    path(transcriptCounts)
-    path(stats)
-    path(vv_config)
+    val(meta)
+    path(runsheet)
+    path("${ meta.RSEM_Counts_root_dir }/*")
+    path("VV_in.tsv")
 
   output:
     path("VV_out.tsv")
 
   script:
     """
-    rsem_counts_VV.py --config ${ vv_config } \
-                      --samples ${ samples } \
-                      --g ${ geneCounts } \
-                      --t ${ transcriptCounts } \
-                      --stats ${ stats } \
-                      --output VV_out.tsv
+    cp -L VV_in.tsv appendTo.tsv
+    rsem_counts_VV.py  --runsheet-path ${ runsheet } \
+                       --output appendTo.tsv \
+                       --halt-severity 90
+    cp appendTo.tsv VV_out.tsv
     """
 }
 

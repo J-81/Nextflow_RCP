@@ -104,9 +104,8 @@ process COUNT_ALIGNED {
   input:
     tuple val(meta), path("starOutput/*"), path(RSEM_REF)
   output:
-    tuple val(meta), path("${ meta.id }.genes.results"), emit: countsPerGene
-    tuple val(meta), path("${ meta.id }.isoforms.results"), emit: countsPerIsoform
-    tuple val(meta), path("${ meta.id }.stat"), emit: stats
+
+    tuple val(meta), path("${ meta.RSEM_Counts_dir }/*")
 
   script:
     """
@@ -121,6 +120,11 @@ process COUNT_ALIGNED {
       starOutput/${meta.id}/${meta.id}_Aligned.toTranscriptome.out.bam \
       $RSEM_REF/ \
       $meta.id
+
+    # move into output directory
+    mkdir tmp
+    mv ${meta.id}* tmp
+    mv tmp ${ meta.RSEM_Counts_dir }
     """
 }
 

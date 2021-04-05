@@ -91,6 +91,7 @@ def get_runsheet_paths(LinkedHashMap row) {
     meta.STAR_Alignment_dir         = new File(row.STAR_Alignment) //points to sample directory
     meta.STAR_Alignment_root_dir    = new File(row.STAR_Alignment).parent //points to sample directory
     meta.RSEM_Counts_dir            = new File(row.RSEM_Counts) //points to sample directory
+    meta.RSEM_Counts_root_dir       = new File(row.RSEM_Counts).parent //points to sample directory
     meta.DESeq2_NormCount           = new File(row.DESeq2_NormCount) //points to dataset directory, same for all samples
     meta.DESeq2_DGE                 = new File(row.DESeq2_DGE) //points to dataset directory, same for all samples
 
