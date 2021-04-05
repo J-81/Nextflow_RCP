@@ -116,7 +116,7 @@ ercc_rows_gpB <- grep("ERCC-00096|ERCC-00171|ERCC-00009|ERCC-00042|ERCC-00060|ER
 
 ## This is to make sure all samples indeed contain ERCC spike-in
 
-cat("Samples that do not have detectable ERCC spike-ins: ", colnames(ercc_dds[,colSums(counts(ercc_dds)) = 0]), sep="\n")
+cat("Samples that do not have detectable ERCC spike-ins: ", colnames(ercc_dds[,colSums(counts(ercc_dds)) == 0]), sep="\n")
 
 
 ## Print ERCC filtered raw counts table
