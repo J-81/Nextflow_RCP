@@ -124,7 +124,8 @@ process COUNT_ALIGNED {
     # move into output directory
     mkdir tmp
     mv ${meta.id}* tmp
-    mv tmp ${ meta.RSEM_Counts_dir }
+    mkdir -p ${ meta.RSEM_Counts_dir }
+    mv tmp/* ${ meta.RSEM_Counts_dir }
     """
 }
 
