@@ -7,7 +7,7 @@ process RAW_FASTQC {
   conda "${baseDir}/envs/fastqc.yml"
   tag "Sample: ${ meta.id }"
   // cpus { read.size() } // BUGGED FOR SINGLE READS: number of read files to process
-  storeDir "${ params.gldsAccession }/${ meta.raw_read_fastQC }"
+  publishDir "${ params.gldsAccession }/${ meta.raw_read_fastQC }"
 
   input:
     tuple val(meta), path(reads)
@@ -26,7 +26,7 @@ process TRIMMED_FASTQC {
   conda "${baseDir}/envs/fastqc.yml"
   tag "Sample: ${ meta.id }"
   // cpus { read.size() } // BUGGED FOR SINGLE READS: number of read files to process
-  storeDir "${ params.gldsAccession }/${ meta.trimmed_read_fastQC }"
+  publishDir "${ params.gldsAccession }/${ meta.trimmed_read_fastQC }"
 
   input:
   tuple val(meta), path(reads)
@@ -45,7 +45,7 @@ process RAW_MULTIQC {
   label "fastLocal"
   tag "Dataset: ${ params.gldsAccession }"
   conda "${baseDir}/envs/multiqc.yml"
-  storeDir "${ params.gldsAccession }/00-RawData/FastQC_Reports"
+  publishDir "${ params.gldsAccession }/00-RawData/FastQC_Reports"
 
   input:
     path("fastqc/*") // any number of fastqc files
