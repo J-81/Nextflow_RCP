@@ -31,7 +31,7 @@ process DGE_BY_DESEQ2 {
     tuple path("dge_output_ercc/contrasts.csv"),
           path("dge_output_ercc/differential_expression.csv"),
           path("dge_output_ercc/visualization_output_table.csv"),
-          path("dge_output_ercc/visualization_PCA_table.csv"), optional: "${ !params.ERCC }", emit: dge_ercc, 
+          path("dge_output_ercc/visualization_PCA_table.csv"), optional: "${ !meta.has_ercc }", emit: dge_ercc
 
   script:
     """
