@@ -181,6 +181,6 @@ process VV_DESEQ2_ANALYSIS {
 
     # move back to work dir and mv tsv into work dir
     cd -
-    mv ${workflow.launchDir}/${ params.gldsAccession }/VV_Log VV_log # signals end of VV
+    mv ${workflow.launchDir}/${ params.gldsAccession }/VV_Log VV_Log # signals end of VV
     """
 }
