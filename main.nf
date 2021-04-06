@@ -96,36 +96,25 @@ workflow {
 
     // VV processes
     ch_vv_log_00 = Channel.fromPath("nextflow_vv_log.tsv")
-    VV_RAW_READS( meta_ch,
-                  STAGING.out.runsheet,
-                  raw_reads_ch | map{ it -> it[1..it.size()-1] } | flatten | collect, // map use here: removes val(meta) from tuple
+    VV_RAW_READS( raw_reads_ch | map{ it -> it[1..it.size()-1] } | flatten | collect, // map use here: removes val(meta) from tuple
                   ch_vv_log_00 ) | set { ch_vv_log_01 }
 
-    VV_RAW_READS_MULTIQC( meta_ch,
-                          STAGING.out.runsheet,
-                          RAW_MULTIQC.out.data,
-                          RAW_MULTIQC.out.html,
+    VV_RAW_READS_MULTIQC( RAW_MULTIQC.out.data,
                           ch_vv_log_01 ) | set { ch_vv_log_02 }
 
-    VV_TRIMMED_READS( meta_ch,
-                      STAGING.out.runsheet,
-                      TRIMGALORE.out.reads | map{ it -> it[1..it.size()-1] } | flatten | collect, // map use here: removes val(meta) from tuple
+    VV_TRIMMED_READS( TRIMGALORE.out.reads | map{ it -> it[1..it.size()-1] } | flatten | collect, // map use here: removes val(meta) from tuple
                       ch_vv_log_02 ) | set { ch_vv_log_03 }
 
-    VV_TRIMMED_READS_MULTIQC( meta_ch,
-                              STAGING.out.runsheet,
-                              TRIMMED_MULTIQC.out.data,
-                              TRIMMED_MULTIQC.out.html,
+    VV_TRIMMED_READS_MULTIQC( TRIMMED_MULTIQC.out.data,
                               ch_vv_log_03 ) | set { ch_vv_log_04 }
 
-    VV_STAR_ALIGNMENTS( meta_ch,
-                        STAGING.out.runsheet,
-                        ALIGN_STAR.out | map{ it -> it[1..it.size()-1] } | collect, // map use here: removes val(meta) from tuple
+    VV_STAR_ALIGNMENTS( ALIGN_STAR.out | map{ it -> it[1..it.size()-1] } | collect, // map use here: removes val(meta) from tuple
                         ch_vv_log_04 ) | set { ch_vv_log_05 }
 
-    VV_RSEM_COUNTS( meta_ch,
-                    STAGING.out.runsheet,
-                    COUNT_ALIGNED.out | map{ it -> it[1..it.size()-1] } | collect, // map use here: removes val(meta) from tuple
+    VV_RSEM_COUNTS( COUNT_ALIGNED.out | map{ it -> it[1..it.size()-1] } | collect, // map use here: removes val(meta) from tuple
                     ch_vv_log_05 ) | set { ch_vv_log_06 }
+
+    VV_DESEQ2_ANALYSIS( COUNT_ALIGNED.out | map{ it -> it[1..it.size()-1] } | collect, // map use here: removes val(meta) from tuple
+                        ch_vv_log_06 ) | set { ch_vv_log_07 }
 
 }
