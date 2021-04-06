@@ -166,23 +166,21 @@ process VV_DESEQ2_ANALYSIS {
     path("VV_in.tsv")
 
   output:
-    path("VV_out.tsv")
+    path("VV_DONE_MARKER")
 
   script:
     """
     # copy to processed data directory
-    cp -L VV_in.tsv ${workflow.launchDir}/${ params.gldsAccession }/appendTo.tsv
+    mkdir ${workflow.launchDir}/${ params.gldsAccession }/VV_Log
+    cp -L VV_in.tsv ${workflow.launchDir}/${ params.gldsAccession }/VV_Log/VV_FULL_OUT.tsv
     # cd into processed data directory
     cd ${workflow.launchDir}/${ params.gldsAccession }
     deseq2_script_VV.py --runsheet-path Metadata/*runsheet.csv \
-                        --output appendTo.tsv \
+                        --output VV_Log/VV_FULL_OUT.tsv \
                         --halt-severity 90
-    # remove temporary log used by null flagger
-    rm tmp_remove.tsv
-
 
     # move back to work dir and mv tsv into work dir
     cd -
-    mv ${workflow.launchDir}/${ params.gldsAccession }/appendTo.tsv VV_out.tsv
+    touch VV_DONE_MARKER # signal successful finish
     """
 }
