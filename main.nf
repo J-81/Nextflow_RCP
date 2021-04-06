@@ -111,10 +111,10 @@ workflow {
     VV_STAR_ALIGNMENTS( ALIGN_STAR.out | map{ it -> it[1..it.size()-1] } | collect, // map use here: removes val(meta) from tuple
                         ch_vv_log_04 ) | set { ch_vv_log_05 }
 
-    VV_RSEM_COUNTS( COUNT_ALIGNED.out | map{ it -> it[1..it.size()-1] } | collect, // map use here: removes val(meta) from tuple
+    VV_RSEM_COUNTS( COUNT_ALIGNED.out | map{ it -> it[1..it.size()-1] } | flatten | collect, // map use here: removes val(meta) from tuple
                     ch_vv_log_05 ) | set { ch_vv_log_06 }
 
-    VV_DESEQ2_ANALYSIS( COUNT_ALIGNED.out | map{ it -> it[1..it.size()-1] } | collect, // map use here: removes val(meta) from tuple
+    VV_DESEQ2_ANALYSIS( DGE_BY_DESEQ2.out.dge | map{ it -> it[1..it.size()-1] } | collect, // map use here: removes val(meta) from tuple
                         ch_vv_log_06 ) | set { ch_vv_log_07 }
 
 }
