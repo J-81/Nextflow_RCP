@@ -171,7 +171,7 @@ process VV_DESEQ2_ANALYSIS {
   script:
     """
     # copy to processed data directory
-    mkdir ${workflow.launchDir}/${ params.gldsAccession }/VV_Log
+    mkdir -p ${workflow.launchDir}/${ params.gldsAccession }/VV_Log
     cp -L VV_in.tsv ${workflow.launchDir}/${ params.gldsAccession }/VV_Log/VV_FULL_OUT.tsv
     # cd into processed data directory
     cd ${workflow.launchDir}/${ params.gldsAccession }
