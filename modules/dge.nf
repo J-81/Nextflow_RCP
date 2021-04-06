@@ -11,8 +11,8 @@
 process DGE_BY_DESEQ2 {
   conda "${baseDir}/envs/RNAseq_Rtools.yml"
   publishDir "${ params.gldsAccession }/${meta.DESeq2_NormCount}", pattern: "norm_counts_output/*", saveAs: { "${file(it).getName()}" }
-  publishDir "${ params.gldsAccession }/${meta.DESeq2_DGE}", pattern: "dge_output/*", saveAs: { "${file(it).getName()}"}
-  publishDir "${ params.gldsAccession }/${meta.DESeq2_DGE}/ERCC_NormDGE", pattern: "dge_output_ercc/*", saveAs: { "${file(it).getName()}"}
+  publishDir "${ params.gldsAccession }/${meta.DESeq2_DGE}", pattern: "dge_output/*", saveAs: { "${file(it).getName()}" }
+  publishDir "${ params.gldsAccession }/${meta.DESeq2_DGE}/ERCC_NormDGE", pattern: "dge_output_ercc/*", saveAs: { "${file(it).getName()}" }
 
   input:
     path(Isa_zip)
@@ -31,7 +31,7 @@ process DGE_BY_DESEQ2 {
     tuple path("dge_output_ercc/contrasts.csv"),
           path("dge_output_ercc/differential_expression.csv"),
           path("dge_output_ercc/visualization_output_table.csv"),
-          path("dge_output_ercc/visualization_PCA_table.csv"), optional: "${ !params.ERCC }", emit: dge_ercc
+          path("dge_output_ercc/visualization_PCA_table.csv"), emit: dge_ercc
 
   script:
     """
