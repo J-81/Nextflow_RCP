@@ -177,6 +177,10 @@ process VV_DESEQ2_ANALYSIS {
     deseq2_script_VV.py --runsheet-path Metadata/*runsheet.csv \
                         --output appendTo.tsv \
                         --halt-severity 90
+    # remove temporary log used by null flagger
+    rm tmp_remove.tsv
+
+
     # move back to work dir and mv tsv into work dir
     cd -
     mv ${workflow.launchDir}/${ params.gldsAccession }/appendTo.tsv VV_out.tsv

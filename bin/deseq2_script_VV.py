@@ -84,7 +84,7 @@ if __name__ == '__main__':
                       halt_level = int(args.halt_severity))
 
     null_flagger = Flagger(script = __file__,
-                           log_to = Path(tempfile.TemporaryFile()),
+                           log_to = Path("tmp_remove.tsv"),
                            halt_level = int(args.halt_severity))
 
     cutoffs = load_cutoffs(None, "DEFAULT")
