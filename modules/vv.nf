@@ -4,7 +4,7 @@
 // NOTE: first VV step also creates inital VV file that is shared across all vv steps
 process VV_RAW_READS {
   conda "${baseDir}/envs/VV.yml"
-  publishDir "VV"
+  //publishDir "VV"
 
   input:
     path("NULL") // While files from processing are staged, we instead want to use the files located in the publishDir for QC
@@ -28,7 +28,7 @@ process VV_RAW_READS {
 
 process VV_RAW_READS_MULTIQC {
   conda "${baseDir}/envs/VV.yml"
-  publishDir "VV"
+  //publishDir "VV"
 
   input:
     path("NULL") // While files from processing are staged, we instead want to use the files located in the publishDir for QC
@@ -55,7 +55,7 @@ process VV_RAW_READS_MULTIQC {
 
 process VV_TRIMMED_READS {
   conda "${baseDir}/envs/VV.yml"
-  publishDir "VV"
+  //publishDir "VV"
 
   input:
     path("NULL") // While files from processing are staged, we instead want to use the files located in the publishDir for QC
@@ -81,7 +81,7 @@ process VV_TRIMMED_READS {
 
 process VV_TRIMMED_READS_MULTIQC {
   conda "${baseDir}/envs/VV.yml"
-  publishDir "VV"
+  //publishDir "VV"
 
   input:
     path("NULL") // While files from processing are staged, we instead want to use the files located in the publishDir for QC
@@ -107,7 +107,7 @@ process VV_TRIMMED_READS_MULTIQC {
 
 process VV_STAR_ALIGNMENTS {
   conda "${baseDir}/envs/VV.yml"
-  publishDir "VV"
+  //publishDir "VV"
 
   input:
     path("NULL") // While files from processing are staged, we instead want to use the files located in the publishDir for QC
@@ -133,7 +133,7 @@ process VV_STAR_ALIGNMENTS {
 
 process VV_RSEM_COUNTS {
   conda "${baseDir}/envs/VV.yml"
-  publishDir "VV"
+  //publishDir "VV"
 
   input:
     path("NULL") // While files from processing are staged, we instead want to use the files located in the publishDir for QC
@@ -159,7 +159,7 @@ process VV_RSEM_COUNTS {
 
 process VV_DESEQ2_ANALYSIS {
   conda "${baseDir}/envs/VV.yml"
-  publishDir "VV"
+  publishDir "${ params.gldsAccession }-VV"
 
   input:
     path("NULL") // While files from processing are staged, we instead want to use the files located in the publishDir for QC
