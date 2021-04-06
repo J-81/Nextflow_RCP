@@ -3,6 +3,9 @@ import java.text.SimpleDateFormat
 def date = new Date()
 def sdf = new SimpleDateFormat("MMddyyyy-HH_mm_ss")
 
+c_bright_green = "\u001b[32;1m";
+c_reset = "\033[0m";
+
 include { DOWNLOAD_RAW_READS;
           DOWNLOAD_GENOME_ANNOTATIONS;
           DOWNLOAD_ERCC;
@@ -120,6 +123,8 @@ workflow {
 }
 
 workflow.onComplete {
-    println "Pipeline completed at: $workflow.complete"
+    println "${c_bright_green}Pipeline completed at: $workflow.complete"
     println "Execution status: ${ workflow.success ? 'OK' : 'failed' }"
+    println "Raw and Processed data location: ${ params.gldsAccession }"
+    println "V&V logs location: ${ params.gldsAccession }-VV/VV_Log${c_reset}"
 }
