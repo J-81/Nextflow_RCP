@@ -64,12 +64,7 @@ workflow {
                        | collect \
                        | TRIMMED_MULTIQC
 
-    if ( params.genomeFasta && params.genomeGTF ) {
-      genome_annotations = channel.fromPath([ params.genomeFasta, params.genomeGTF ])
-                                  .toList()
-    } else {
-      meta_ch | DOWNLOAD_GENOME_ANNOTATIONS | set { genome_annotations }
-    }
+    meta_ch | DOWNLOAD_GENOME_ANNOTATIONS | set { genome_annotations }
 
     // SUBSAMPLING STEP : USED FOR DEBUG/TEST RUNS
     if ( params.genomeSubsample ) {
