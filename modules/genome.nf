@@ -99,7 +99,7 @@ process BUILD_RSEM {
 process COUNT_ALIGNED {
   conda "${baseDir}/envs/rsem.yml"
   tag "Sample: ${ meta.id }"
-  publishDir "${ params.gldsAccession }/${ meta.RSEM_Counts_dir }"
+  publishDir "${ params.gldsAccession }"
 
   input:
     tuple val(meta), path("starOutput/*"), path(RSEM_REF)
