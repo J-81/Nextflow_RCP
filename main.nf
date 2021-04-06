@@ -117,4 +117,9 @@ workflow {
     VV_DESEQ2_ANALYSIS( DGE_BY_DESEQ2.out.dge | map{ it -> it[1..it.size()-1] } | collect, // map use here: removes val(meta) from tuple
                         ch_vv_log_06 ) | set { ch_vv_log_07 }
 
+  workflow.onComplete {
+      println "Pipeline completed at: $workflow.complete"
+      println "Execution status: ${ workflow.success ? 'OK' : 'failed' }"
+  }
+
 }
