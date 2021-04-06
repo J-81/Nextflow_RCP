@@ -41,7 +41,7 @@ workflow {
     STAGING.out.raw_reads | set { raw_reads_ch }
     // meta only for dataset specific processes that don't use samples
     // e.g. downloading correct reference genome base on organism
-    STAGING.out.raw_reads | take(1) | map{it -> it[0]} | view {"META: $it"} | set { meta_ch }
+    STAGING.out.raw_reads | take(1) | map{it -> it[0]} | set { meta_ch }
     STAGING.out.isa | set { isa_ch }
 
     raw_reads_ch | RAW_FASTQC //| view {"POST_FASTQC: $it"}
