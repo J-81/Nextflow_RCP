@@ -166,7 +166,7 @@ process VV_DESEQ2_ANALYSIS {
     path("VV_in.tsv")
 
   output:
-    path("VV_DONE_MARKER")
+    path("VV_Log")
 
   script:
     """
@@ -181,6 +181,6 @@ process VV_DESEQ2_ANALYSIS {
 
     # move back to work dir and mv tsv into work dir
     cd -
-    touch VV_DONE_MARKER # signal successful finish
+    mv ${workflow.launchDir}/${ params.gldsAccession }/VV_Log VV_log # signals end of VV
     """
 }
