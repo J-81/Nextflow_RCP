@@ -69,7 +69,8 @@ process GENERATE_METASHEET {
 // Original Function Credit: Dr. Harshil Patel
 // Function to get list of [ meta, [ fastq_1, fastq_2 ] ]
 def get_runsheet_paths(LinkedHashMap row) {
-    def ORGANISMS = ["mus_musculus":"MOUSE"]
+    def ORGANISMS = ["mus_musculus":"MOUSE",
+                     "danio_rerio":"ZEBRAFISH"]
 
 
 
@@ -77,7 +78,7 @@ def get_runsheet_paths(LinkedHashMap row) {
     meta.id                         = row.sample_name
     meta.organism_sci               = row.organism.replaceAll(" ","_").toLowerCase()
     meta.organism_non_sci           = ORGANISMS[meta.organism_sci]
-    meta.read_length                = row.read_length
+    meta.read_length                = row.read_length.toInteger()
     meta.paired_end                 = row.paired_end.toBoolean()
     meta.has_ercc                   = row.has_ERCC.toBoolean()
     meta.raw_read1                  = new File(row.raw_read1) //points to file
