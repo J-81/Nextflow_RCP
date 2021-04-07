@@ -365,7 +365,9 @@ def a_file_parse(a_file, i_file, metadata_directory):
         file_found = 0
         filename = ""
         for file in i_file.assay_file_names:
-            if device_type in file:
+            # compare case insensitively
+            # compare with '-' matching '_'
+            if device_type.lower().replace("-","_") in file.lower().replace("-","_"):
                 filename = file
                 file_found = 1
             else:
