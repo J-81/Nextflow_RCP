@@ -18,7 +18,7 @@ process BUILD_STAR {
   output:
     path("STAR_REF")
   script:
-    max_read_length = meta.paired_end ? meta.read_length_R1 : max(meta.read_length_R1, meta.read_length_R1)
+    def max_read_length = "${meta.paired_end}" ? "${meta.read_length_R1}" : max("${meta.read_length_R1}", "${meta.read_length_R2}")
     """
     STAR --runThreadN ${task.cpus} \
     --runMode genomeGenerate \
