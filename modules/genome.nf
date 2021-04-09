@@ -6,8 +6,8 @@ process BUILD_STAR {
   conda "${baseDir}/envs/star.yml"
   tag "Organism: ${ meta.organism_sci }  Ensembl Version: ${params.ensemblVersion}"
   storeDir ( params.genomeSubsample ?
-              "${ params.storeDirPath }/${ meta.organism_sci }/readlength_${ meta.read_length }/subsampled/${ params.genomeSubsample }/STAR_ensembl_${ params.ensemblVersion }" :
-              "${ params.storeDirPath }/${ meta.organism_sci }/readlength_${ meta.read_length }/STAR_ensembl_${ params.ensemblVersion }"
+              "${ params.storeDirPath }/${ meta.organism_sci }/readlength_${ max_read_length }/subsampled/${ params.genomeSubsample }/STAR_ensembl_${ params.ensemblVersion }" :
+              "${ params.storeDirPath }/${ meta.organism_sci }/readlength_${ max_read_length }/STAR_ensembl_${ params.ensemblVersion }"
             )
   label 'maxCPU'
   label 'big_mem'
@@ -18,6 +18,7 @@ process BUILD_STAR {
   output:
     path("STAR_REF")
   script:
+    max_read_length = meta.paired_end ? meta.read_length_R1 : max(meta.read_length_R1, meta.read_length_R1)
     """
     STAR --runThreadN ${task.cpus} \
     --runMode genomeGenerate \
@@ -26,7 +27,7 @@ process BUILD_STAR {
     --genomeDir STAR_REF \
     --genomeFastaFiles ${ genomeFasta } \
     --sjdbGTFfile ${ genomeGtf } \
-    --sjdbOverhang ${ meta.read_length - 1 }
+    --sjdbOverhang ${ max_read_length - 1 }
     """
 
 }
