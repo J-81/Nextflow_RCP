@@ -121,5 +121,5 @@ workflow.onComplete {
     println "${c_bright_green}Pipeline completed at: $workflow.complete"
     println "Execution status: ${ workflow.success ? 'OK' : 'failed' }"
     println "Raw and Processed data location: ${ params.gldsAccession }"
-    println "V&V logs location: ${ params.gldsAccession }-VV/VV_Log${c_reset}"
+    println "V&V logs location: ${ params.gldsAccession }/VV_Log${c_reset}"
 }

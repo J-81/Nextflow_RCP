@@ -160,7 +160,7 @@ process VV_RSEM_COUNTS {
 process VV_DESEQ2_ANALYSIS {
   conda "${baseDir}/envs/VV.yml"
   tag "Dataset: ${ params.gldsAccession }"
-  publishDir "${ params.gldsAccession }-VV"
+  //publishDir "${ params.gldsAccession }-VV"
 
   input:
     path("NULL") // While files from processing are staged, we instead want to use the files located in the publishDir for QC
@@ -182,6 +182,7 @@ process VV_DESEQ2_ANALYSIS {
 
     # move back to work dir and mv tsv into work dir
     cd -
-    mv ${workflow.launchDir}/${ params.gldsAccession }/VV_Log VV_Log # signals end of VV
+    # mv ${workflow.launchDir}/${ params.gldsAccession }/VV_Log
+    touch VV_Log # signals end of VV
     """
 }
