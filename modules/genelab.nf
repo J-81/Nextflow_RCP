@@ -70,9 +70,12 @@ process GENERATE_METASHEET {
 // Function to get list of [ meta, [ fastq_1, fastq_2 ] ]
 def get_runsheet_paths(LinkedHashMap row) {
     def ORGANISMS = ["mus_musculus":"MOUSE",
-                     "danio_rerio":"ZEBRAFISH"]
-
-
+                     "danio_rerio":"ZEBRAFISH",
+                     "rattus_norvegicus":"RAT",
+                     "homo_sapiens":"HUMAN",
+                     "drosophila_melanogaster":"FLY",
+                     "caenorhabditis_elegans":"WORM",
+                     "arabidopsis_thaliana":"ARABIDOPSIS"]
 
     def meta = [:]
     meta.id                         = row.sample_name
