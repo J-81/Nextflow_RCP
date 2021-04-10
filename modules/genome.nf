@@ -16,7 +16,9 @@ process BUILD_STAR {
     tuple path(genomeFasta), path(genomeGtf)
     val(meta)
   output:
-    path("STAR_REF")
+    path("STAR_REF"), emit: build
+    path("versions.txt"), emit: version
+
   script:
     def max_read_length = "${meta.paired_end}" ? "${meta.read_length_R1}" : max("${meta.read_length_R1}", "${meta.read_length_R2}")
     """
@@ -28,6 +30,8 @@ process BUILD_STAR {
     --genomeFastaFiles ${ genomeFasta } \
     --sjdbGTFfile ${ genomeGtf } \
     --sjdbOverhang ${ max_read_length - 1 }
+
+    echo STAR_version: `STAR --version` > versions.txt
     """
 
 }
@@ -88,11 +92,16 @@ process BUILD_RSEM {
     tuple path(genomeFasta), path(genomeGtf)
     val(meta)
   output:
-    path("RSEM_REF")
+    path("RSEM_REF"), emit: build
+    path("versions.txt"), emit: version
+
+
   script:
     """
     mkdir RSEM_REF
     rsem-prepare-reference --gtf $genomeGtf $genomeFasta RSEM_REF/
+
+    rsem-calculate-expression --version > versions.txt
     """
 
 }
@@ -144,7 +153,9 @@ process SUBSAMPLE_GENOME {
     val(meta)
   output:
     tuple path("subsampled/${params.genomeSubsample}/${genome_fasta}"), \
-          path("subsampled/${params.genomeSubsample}/${genome_gtf}")
+          path("subsampled/${params.genomeSubsample}/${genome_gtf}"), emit: build
+    path("versions.txt"), emit: version
+
   script:
     """
     mkdir -p subsampled/${params.genomeSubsample}
@@ -152,6 +163,7 @@ process SUBSAMPLE_GENOME {
 
     samtools faidx ${genome_fasta} ${params.genomeSubsample} > subsampled/${params.genomeSubsample}/${genome_fasta}
 
+    samtools --version > versions.txt
     """
 }
 

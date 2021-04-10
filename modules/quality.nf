@@ -12,13 +12,16 @@ process RAW_FASTQC {
   input:
     tuple val(meta), path(reads)
   output:
-    tuple val(meta), path("${ meta.id }*.html"), path("${ meta.id }*.zip")
+    tuple val(meta), path("${ meta.id }*.html"), path("${ meta.id }*.zip"), emit: fastqc
+    path("versions.txt"), emit: version
 
   script:
     """
     fastqc -o . \
      -t $task.cpus \
       $reads
+
+    fastqc -v > versions.txt
     """
 }
 
@@ -31,13 +34,16 @@ process TRIMMED_FASTQC {
   input:
   tuple val(meta), path(reads)
   output:
-  tuple val(meta), path("${ meta.id }*.html"), path("${ meta.id }*.zip")
+  tuple val(meta), path("${ meta.id }*.html"), path("${ meta.id }*.zip"), emit: fastqc
+  path("versions.txt"), emit: version
 
   script:
     """
     fastqc -o . \
      -t $task.cpus \
       $reads
+
+    fastqc -v > versions.txt
     """
 }
 
@@ -52,10 +58,13 @@ process RAW_MULTIQC {
   output:
     path("raw_multiqc_report/multiqc_report.html"), emit: html
     path("raw_multiqc_report/multiqc_data"), emit: data
+    path("versions.txt"), emit: version
 
   script:
     """
     multiqc -o raw_multiqc_report fastqc
+
+    multiqc --version > versions.txt
     """
 }
 
@@ -71,10 +80,13 @@ process TRIMMED_MULTIQC {
   output:
     path("trimmed_multiqc_report/multiqc_report.html"), emit: html
     path("trimmed_multiqc_report/multiqc_data"), emit: data
+    path("versions.txt"), emit: version
 
   script:
     """
     multiqc -o trimmed_multiqc_report .
+
+    multiqc --version > versions.txt
     """
 }
 
@@ -90,6 +102,7 @@ process TRIMGALORE {
   output:
     tuple val(meta), path("${ meta.id }*trimmed.fastq.gz"), emit: reads
     tuple val(meta), path("${ meta.id }*.txt"), emit: trim_reports
+    path("versions.txt"), emit: version
 
   script:
     /*
@@ -110,5 +123,7 @@ process TRIMGALORE {
       "cp ${ meta.id }_R1_raw_val_1.fq.gz ${ meta.trimmed_read1.name }; \
       cp ${ meta.id }_R2_raw_val_2.fq.gz ${ meta.trimmed_read2.name }" : \
       "cp ${ meta.id }_R1_raw_trimmed.fq.gz ${ meta.trimmed_read1.name }"}
+
+    trim_galore -v > versions.txt
     """
 }

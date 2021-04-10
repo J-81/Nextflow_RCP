@@ -44,31 +44,34 @@ workflow {
     STAGING.out.raw_reads | take(1) | map{it -> it[0]} | set { meta_ch }
     STAGING.out.isa | set { isa_ch }
 
+    println (meta_ch)
+
     raw_reads_ch | RAW_FASTQC //| view {"POST_FASTQC: $it"}
 
-    RAW_FASTQC.out | map { it -> [ it[1], it[2] ] }
-                   //| view {"POST_MAP: $it"}
-                   | flatten
-                   | unique
-                   | collect
-                   //| view {"PRE_RAW_MULTIQC: $it"}
-                   | RAW_MULTIQC
+    RAW_FASTQC.out.fastqc | map { it -> [ it[1], it[2] ] }
+                          //| view {"POST_MAP: $it"}
+                          | flatten
+                          | unique
+                          | collect
+                          //| view {"PRE_RAW_MULTIQC: $it"}
+                          | RAW_MULTIQC
 
     raw_reads_ch |  TRIMGALORE
 
     TRIMGALORE.out.reads | TRIMMED_FASTQC
 
-    TRIMMED_FASTQC.out | map { it -> [ it[1], it[2] ] } \
-                       | flatten \
-                       | unique \
-                       | collect \
-                       | TRIMMED_MULTIQC
+    TRIMMED_FASTQC.out.fastqc | map { it -> [ it[1], it[2] ] } \
+                              | flatten \
+                              | unique \
+                              | collect \
+                              | TRIMMED_MULTIQC
 
     meta_ch | DOWNLOAD_GENOME_ANNOTATIONS | set { genome_annotations }
 
     // SUBSAMPLING STEP : USED FOR DEBUG/TEST RUNS
     if ( params.genomeSubsample ) {
-      SUBSAMPLE_GENOME( genome_annotations, meta_ch ) | set { genome_annotations }
+      SUBSAMPLE_GENOME( genome_annotations, meta_ch )
+      SUBSAMPLE_GENOME.out.build | set { genome_annotations }
     }
 
     // ERCC STEP : ADD ERCC Fasta and GTF to genome files
@@ -79,11 +82,11 @@ workflow {
 
     BUILD_STAR( genome_annotations, meta_ch)
 
-    TRIMGALORE.out.reads | combine( BUILD_STAR.out ) | ALIGN_STAR
+    TRIMGALORE.out.reads | combine( BUILD_STAR.out.build ) | ALIGN_STAR
 
     BUILD_RSEM( genome_annotations, meta_ch)
 
-    ALIGN_STAR.out | combine( BUILD_RSEM.out ) | set { aligned_ch }
+    ALIGN_STAR.out | combine( BUILD_RSEM.out.build ) | set { aligned_ch }
     aligned_ch | COUNT_ALIGNED
 
     COUNT_ALIGNED.out | map { it[1] } | collect | set { rsem_ch }
@@ -91,6 +94,19 @@ workflow {
     organism_ch = channel.fromPath( params.organismCSV )
 
     DGE_BY_DESEQ2( isa_ch, organism_ch, rsem_ch, meta_ch  )
+
+
+    // Software Version Capturing
+    ch_software_versions = Channel.empty()
+    RAW_FASTQC.out.version.ifEmpty(null) | mix(ch_software_versions) | set{ch_software_versions}
+    RAW_MULTIQC.out.version.ifEmpty(null) | mix(ch_software_versions) | set{ch_software_versions}
+    TRIMGALORE.out.version.ifEmpty(null) | mix(ch_software_versions) | set{ch_software_versions}
+    TRIMMED_FASTQC.out.version.ifEmpty(null) | mix(ch_software_versions) | set{ch_software_versions}
+    TRIMMED_MULTIQC.out.version.ifEmpty(null) | mix(ch_software_versions) | set{ch_software_versions}
+    BUILD_STAR.out.version.ifEmpty(null) | mix(ch_software_versions) | set{ch_software_versions}
+    BUILD_RSEM.out.version.ifEmpty(null) | mix(ch_software_versions) | set{ch_software_versions}
+    DGE_BY_DESEQ2.out.version.ifEmpty(null) | mix(ch_software_versions) | set{ch_software_versions}
+    ch_software_versions | collectFile(name: "${params.gldsAccession}/software_versions.txt", newLine: true)
 
     // VV processes
     ch_vv_log_00 = Channel.fromPath("nextflow_vv_log.tsv")
