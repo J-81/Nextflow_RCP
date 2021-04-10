@@ -35,7 +35,7 @@ process DGE_BY_DESEQ2 {
 
     path("versions.txt"), emit: version
   script:
-    def deseq2_script = meta.has_ercc ? "deseq2_normcounts_wERCC_DGE_vis_ISA" : "deseq2_normcounts_noERCC_DGE_vis_ISA.R"
+    def deseq2_script = meta.has_ercc ? "deseq2_normcounts_wERCC_DGE_vis_ISA.R" : "deseq2_normcounts_noERCC_DGE_vis_ISA.R"
     """
     # create output directories
     mkdir norm_counts_output
