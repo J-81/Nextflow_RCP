@@ -50,12 +50,12 @@ process DGE_BY_DESEQ2 {
       dge_output \
       dge_output_ercc
 
-    Rscript -e "library(tximport); write(x=as.character(packageVersion('tximport')), file='version.txt')"
-    Rscript -e "library(DESeq2); write(x=as.character(packageVersion('DESeq2')), file='version.txt')"
-    Rscript -e "library(tidyverse); write(x=as.character(packageVersion('tidyverse')), file='version.txt')"
-    Rscript -e "library(Risa); write(x=as.character(packageVersion('Risa')), file='version.txt')"
-    Rscript -e "library(STRINGdb); write(x=as.character(packageVersion('STRINGdb')), file='version.txt')"
-    Rscript -e "library(PANTHER.db); write(x=as.character(packageVersion('PANTHER.db')), file='version.txt')"
+    Rscript -e "library(tximport); write(x=as.character(packageVersion('tximport')), file='versions.txt', append=TRUE)"
+    Rscript -e "library(DESeq2); write(x=as.character(packageVersion('DESeq2')), file='versions.txt', append=TRUE)"
+    Rscript -e "library(tidyverse); write(x=as.character(packageVersion('tidyverse')), file='versions.txt', append=TRUE)"
+    Rscript -e "library(Risa); write(x=as.character(packageVersion('Risa')), file='versions.txt', append=TRUE)"
+    Rscript -e "library(STRINGdb); write(x=as.character(packageVersion('STRINGdb')), file='versions.txt', append=TRUE)"
+    Rscript -e "library(PANTHER.db); write(x=as.character(packageVersion('PANTHER.db')), file='versions.txt', append=TRUE)"
     # TODO: add version for annotations db (organism dependent) Rscript -e "library(PANTHER.db); write(x=as.character(packageVersion('PANTHER.db')), file='version.txt')"
     """
 }
