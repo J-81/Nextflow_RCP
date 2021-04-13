@@ -56,15 +56,13 @@ process RAW_MULTIQC {
   input:
     path("fastqc/*") // any number of fastqc files
   output:
-    path("raw_multiqc_report/raw_multiqc_report.html"), emit: html
+    path("raw_multiqc_report/raw_multiqc.html"), emit: html
     path("raw_multiqc_report/raw_multiqc_data"), emit: data
     path("versions.txt"), emit: version
 
   script:
     """
-    multiqc -o raw_multiqc_report -n raw_multiqc_report fastqc
-    # move data directory to rename
-    mv raw_multiqc_report/raw_multiqc_report_data raw_multiqc_report/raw_multiqc_data
+    multiqc -o raw_multiqc_report -n raw_multiqc fastqc
 
     multiqc --version > versions.txt
     """
@@ -80,15 +78,13 @@ process TRIMMED_MULTIQC {
   input:
     path("fastqc/*") // any number of fastqc files
   output:
-    path("trimmed_multiqc_report/trimmed_multiqc_report.html"), emit: html
+    path("trimmed_multiqc_report/trimmed_multiqc.html"), emit: html
     path("trimmed_multiqc_report/trimmed_multiqc_data"), emit: data
     path("versions.txt"), emit: version
 
   script:
     """
-    multiqc -o trimmed_multiqc_report -n trimmed_multiqc_report fastqc
-    # move data directory to rename
-    mv trimmed_multiqc_report/trimmed_multiqc_report_data trimmed_multiqc_report/trimmed_multiqc_data
+    multiqc -o trimmed_multiqc_report -n trimmed_multiqc fastqc
 
     multiqc --version > versions.txt
     """
@@ -104,11 +100,13 @@ process ALIGN_MULTIQC {
     path("alignments/*")
 
   output:
-    path("align_multiqc_report")
+    path("align_multiqc_report/align_multiqc.html"), emit: html
+    path("align_multiqc_report/align_multiqc_data"), emit: data
+    path("versions.txt"), emit: version
 
   script:
     """
-    multiqc -n align_multiqc -o align_multiqc_report alignments
+    multiqc -o align_multiqc_report -n align_multiqc alignments
     """
 
 }
