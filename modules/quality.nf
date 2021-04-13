@@ -102,7 +102,6 @@ process ALIGN_MULTIQC {
   output:
     path("align_multiqc_report/align_multiqc.html"), emit: html
     path("align_multiqc_report/align_multiqc_data"), emit: data
-    path("versions.txt"), emit: version
 
   script:
     """
