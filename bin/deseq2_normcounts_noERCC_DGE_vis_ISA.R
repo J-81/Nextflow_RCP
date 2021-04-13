@@ -56,7 +56,7 @@ rownames(study) <- compare_csv[,1]
 
 
 # ## Set your working directory to the directory containing the organisms.csv file
-# 
+#
 # setwd(file.path(work_dir))
 
 
@@ -128,7 +128,7 @@ setwd(file.path(work_dir))
 
 ##### Generate F statistic p-value (similar to ANOVA p-value) using DESeq2 likelihood ratio test (LRT) design #####
 
-## Add 1 to all counts to avoid issues with log transformation 
+## Add 1 to all counts to avoid issues with log transformation
 normCounts <- normCounts +1
 
 dds_1_lrt <- DESeq(dds_1, test = "LRT", reduced = ~ 1)
@@ -298,3 +298,5 @@ rm(exp_raw,PCA_raw)
 ## print session info ##
 print("Session Info below: ")
 sessionInfo()
+## Log same info into versions.txt file """
+writeLines(capture.output(sessionInfo()), "versions.txt")
