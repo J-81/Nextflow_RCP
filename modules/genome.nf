@@ -140,6 +140,23 @@ process COUNT_ALIGNED {
     """
 }
 
+process QUANTIFY_GENES {
+  conda "${baseDir}/envs/RNAseq_Rtools.yml"
+  tag "Dataset: ${ params.gldsAccession }"
+
+  input:
+    tuple path("samples.txt"), path("03-RSEM_COUNTS/*.genes.results")
+
+  output:
+    tuple path("RSEM_Unnormalized_Counts.csv"), path("NumNonZeroGenes.csv")
+
+  script:
+    """
+    Quantitate_non-zero_genes_per_sample.R
+    """
+
+}
+
 
 /*
  * Download and decompress genome and annotation files
