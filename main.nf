@@ -94,7 +94,7 @@ workflow {
     ALIGN_STAR.out | map { it -> it[1] } | collect | ALIGN_MULTIQC
 
     COUNT_ALIGNED.out | map { it[0].id }
-                      | collectFile(name: "samples.txt", newline: true)
+                      | collectFile(name: "samples.txt", newLine: true)
                       | set { samples_ch }
 
     COUNT_ALIGNED.out | map { it[1] } | collect | set { rsem_ch }
