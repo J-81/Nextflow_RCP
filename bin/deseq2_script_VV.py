@@ -52,7 +52,7 @@ from pathlib import Path
 
 from VV import raw_reads
 from VV.utils import load_cutoffs
-from VV.flagging import Flagger
+from VV.flagging import Flagger, NullFlagger
 from VV.rnaseq_samplesheet import RNASeqSampleSheet
 
 ##############################################################
@@ -83,9 +83,9 @@ if __name__ == '__main__':
                       log_to = Path(args.output),
                       halt_level = int(args.halt_severity))
 
-    null_flagger = Flagger(script = __file__,
-                           log_to = Path("tmp_remove.tsv"),
-                           halt_level = int(args.halt_severity))
+    null_flagger = NullFlagger(script = __file__,
+                               log_to = Path("tmp_remove.tsv"),
+                               halt_level = int(args.halt_severity))
 
     cutoffs = load_cutoffs(None, "DEFAULT")
 
