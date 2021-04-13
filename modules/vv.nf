@@ -16,6 +16,8 @@ process VV_RAW_READS {
   script:
     """
     cd ${workflow.launchDir}/${ params.gldsAccession }
+    # ensure no existing VV_out.tsv file
+    rm -f VV_out.tsv
 
     raw_reads_VV.py  --runsheet-path Metadata/*runsheet.csv \
                      --output appendTo.tsv \
