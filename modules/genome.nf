@@ -145,7 +145,8 @@ process QUANTIFY_GENES {
   tag "Dataset: ${ params.gldsAccession }"
 
   input:
-    tuple path("samples.txt"), path("03-RSEM_COUNTS/*.genes.results")
+    path("samples.txt")
+    path("03-RSEM_COUNTS/*.genes.results")
 
   output:
     tuple path("RSEM_Unnormalized_Counts.csv"), path("NumNonZeroGenes.csv")
