@@ -1,10 +1,10 @@
 library(tximport)
 library(tidyverse)
 
-work_dir="/data2/JO_Internship_2021/V-V_scripts/GLDS-194/processing_scripts/03-Quant_non-zero_genes"
-counts_dir="/data2/JO_Internship_2021/V-V_scripts/GLDS-194/03-RSEM_Counts"
+#work_dir=""
+counts_dir="03-RSEM_Counts"
 
-setwd(file.path(work_dir))
+#setwd(file.path(work_dir))
 
 ### Pull in sample names ###
 samples <- read.csv(Sys.glob(file.path(work_dir,"samples.txt")), header = FALSE, row.names = 1, stringsAsFactors = TRUE)
