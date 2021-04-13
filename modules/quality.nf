@@ -72,7 +72,7 @@ process TRIMMED_MULTIQC {
   label "fastLocal"
   tag "Dataset: ${ params.gldsAccession }"
   conda "${baseDir}/envs/multiqc.yml"
-  storeDir "${ params.gldsAccession }/01-TG_Preproc/FastQC_Reports"
+  publishDir "${ params.gldsAccession }/01-TG_Preproc/FastQC_Reports"
 
 
   input:
@@ -92,9 +92,9 @@ process TRIMMED_MULTIQC {
 
 process ALIGN_MULTIQC {
   label "fastLocal"
-  tag "Dataset: ${ params.gldsAccession }"
+  //tag "Dataset: ${ params.gldsAccession }"
   conda "${baseDir}/envs/multiqc.yml"
-  storeDir "${ params.gldsAccession }/02-STAR_Alignment"
+  publishDir "${ params.gldsAccession }/02-STAR_Alignment"
 
   input:
     path("alignments/*")
@@ -107,7 +107,6 @@ process ALIGN_MULTIQC {
     """
     multiqc -o align_multiqc_report -n align_multiqc alignments
     """
-
 }
 
 process TRIMGALORE {
