@@ -71,6 +71,7 @@ process ALIGN_STAR {
     --alignSJDBoverhangMin 1 \
     --sjdbScore 1 \
     --outSAMtype BAM SortedByCoordinate \
+    --outSAMheaderHD @HD VN:1.4 SO:coordinate \
     --runThreadN ${ task.cpus } \
     --readFilesCommand zcat \
     --quantMode TranscriptomeSAM \
