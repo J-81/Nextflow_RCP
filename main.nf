@@ -90,7 +90,7 @@ workflow {
     ALIGN_STAR.out | combine( BUILD_RSEM.out.build ) | set { aligned_ch }
     aligned_ch | COUNT_ALIGNED
 
-    ALIGN_STAR.out | collect | ALIGN_MULTIQC
+    ALIGN_STAR.out | map { it -> it[1] } | collect | ALIGN_MULTIQC
 
     COUNT_ALIGNED.out | map { it[1] } | collect | set { rsem_ch }
 
