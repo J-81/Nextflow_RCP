@@ -21,8 +21,7 @@ include { BUILD_STAR;
           BUILD_RSEM;
           COUNT_ALIGNED;
           SUBSAMPLE_GENOME;
-          CONCAT_ERCC;
-          QUANTIFY_GENES } from './modules/genome.nf'
+          CONCAT_ERCC } from './modules/genome.nf'
 include { DGE_BY_DESEQ2 } from './modules/dge.nf'
 include { PARSE_ISA } from './modules/isa.nf'
 include { VV_RAW_READS;
@@ -99,7 +98,7 @@ workflow {
 
     COUNT_ALIGNED.out | map { it[1] } | collect | set { rsem_ch }
 
-    QUANTIFY_GENES( samples_ch, rsem_ch )
+    // TODO: Reintegrate QUANTIFY_GENES( samples_ch, rsem_ch )
 
     organism_ch = channel.fromPath( params.organismCSV )
 
