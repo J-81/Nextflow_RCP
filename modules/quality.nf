@@ -62,7 +62,7 @@ process RAW_MULTIQC {
 
   script:
     """
-    multiqc -o raw_multiqc_report -n raw_multiqc fastqc
+    multiqc -o raw_multiqc_report -n raw_multiqc_report fastqc
 
     multiqc --version > versions.txt
     """
@@ -84,7 +84,7 @@ process TRIMMED_MULTIQC {
 
   script:
     """
-    multiqc -o trimmed_multiqc_report -n trimmed_multiqc fastqc
+    multiqc -o trimmed_multiqc_report -n trimmed_multiqc_report fastqc
 
     multiqc --version > versions.txt
     """
