@@ -64,7 +64,7 @@ process RAW_MULTIQC {
     """
     multiqc -o raw_multiqc_report -n raw_multiqc_report fastqc
     # move data directory to rename
-    mv raw_multiqc_report/raw_multiqc_data raw_multiqc_report/raw_multiqc_data
+    mv raw_multiqc_report/raw_multiqc_report_data raw_multiqc_report/raw_multiqc_data
 
     multiqc --version > versions.txt
     """
@@ -88,7 +88,7 @@ process TRIMMED_MULTIQC {
     """
     multiqc -o trimmed_multiqc_report -n trimmed_multiqc_report fastqc
     # move data directory to rename
-    mv trimmed_multiqc_report/trimmed_multiqc_data trimmed_multiqc_report/trimmed_multiqc_data
+    mv trimmed_multiqc_report/trimmed_multiqc_report_data trimmed_multiqc_report/trimmed_multiqc_data
 
     multiqc --version > versions.txt
     """
