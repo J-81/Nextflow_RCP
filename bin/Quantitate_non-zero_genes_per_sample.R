@@ -8,7 +8,7 @@ counts_dir="03-RSEM_Counts"
 #setwd(file.path(work_dir))
 
 ### Pull in sample names ###
-samples <- read.csv(Sys.glob(file.path(work_dir,"samples.txt")), header = FALSE, row.names = 1, stringsAsFactors = TRUE)
+samples <- read.csv(Sys.glob("samples.txt"), header = FALSE, row.names = 1, stringsAsFactors = TRUE)
 
 ##### Import RSEM Gene Count Data
 files <- list.files(file.path(counts_dir),pattern = ".genes.results", full.names = TRUE)
