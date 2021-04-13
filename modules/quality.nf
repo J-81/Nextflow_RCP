@@ -62,7 +62,7 @@ process RAW_MULTIQC {
 
   script:
     """
-    multiqc -o raw_multiqc_report fastqc
+    multiqc -o raw_multiqc_report -n raw_multiqc fastqc
 
     multiqc --version > versions.txt
     """
@@ -76,7 +76,7 @@ process TRIMMED_MULTIQC {
 
 
   input:
-    path(fastqc) // any number of fastqc files
+    path("fastqc/*") // any number of fastqc files
   output:
     path("trimmed_multiqc_report/multiqc_report.html"), emit: html
     path("trimmed_multiqc_report/multiqc_data"), emit: data
@@ -84,7 +84,7 @@ process TRIMMED_MULTIQC {
 
   script:
     """
-    multiqc -o trimmed_multiqc_report .
+    multiqc -o trimmed_multiqc_report -n trimmed_multiqc fastqc
 
     multiqc --version > versions.txt
     """
