@@ -56,7 +56,7 @@ process RAW_MULTIQC {
   input:
     path("fastqc/*") // any number of fastqc files
   output:
-    path("raw_multiqc_report/multiqc_report.html"), emit: html
+    path("raw_multiqc_report/raw_multiqc_report.html"), emit: html
     path("raw_multiqc_report/multiqc_data"), emit: data
     path("versions.txt"), emit: version
 
@@ -78,7 +78,7 @@ process TRIMMED_MULTIQC {
   input:
     path("fastqc/*") // any number of fastqc files
   output:
-    path("trimmed_multiqc_report/multiqc_report.html"), emit: html
+    path("trimmed_multiqc_report/trimmed_multiqc_report.html"), emit: html
     path("trimmed_multiqc_report/multiqc_data"), emit: data
     path("versions.txt"), emit: version
 
