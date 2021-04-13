@@ -94,6 +94,25 @@ process TRIMMED_MULTIQC {
     """
 }
 
+process ALIGN_MULTIQC {
+  label "fastLocal"
+  tag "Dataset: ${ params.gldsAccession }"
+  conda "${baseDir}/envs/multiqc.yml"
+  storeDir "${ params.gldsAccession }/02-STAR_Alignment"
+
+  input:
+    path("alignments/*")
+
+  output:
+    path("align_multiqc_report")
+
+  script:
+    """
+    multiqc -n align_multiqc -o align_multiqc_report alignments
+    """
+
+}
+
 process TRIMGALORE {
   conda "${baseDir}/envs/trim_galore.yml"
   tag "Sample: ${ meta.id }"

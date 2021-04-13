@@ -13,7 +13,8 @@ include { DOWNLOAD_RAW_READS;
 include { RAW_FASTQC
           TRIMMED_FASTQC
           RAW_MULTIQC
-          TRIMMED_MULTIQC } from './modules/quality.nf'
+          TRIMMED_MULTIQC
+          ALIGN_MULTIQC } from './modules/quality.nf'
 include { TRIMGALORE } from './modules/quality.nf'
 include { BUILD_STAR;
           ALIGN_STAR;
@@ -88,6 +89,8 @@ workflow {
 
     ALIGN_STAR.out | combine( BUILD_RSEM.out.build ) | set { aligned_ch }
     aligned_ch | COUNT_ALIGNED
+
+    ALIGN_STAR.out | collect | ALIGN_MULTIQC
 
     COUNT_ALIGNED.out | map { it[1] } | collect | set { rsem_ch }
 
