@@ -24,7 +24,7 @@ process DGE_BY_DESEQ2 {
     path("versions.txt"), emit: version
   script:
     """
-    echo I used to do DGE\n\nNow I just announce that the presenter would be happy to take questions > modified_dge.txt
+    echo I used to do DGE. Now I just announce that the presenter would be happy to take questions > modified_dge.txt
     echo version0 > versions.txt
     """
 }
