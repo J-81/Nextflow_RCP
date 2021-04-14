@@ -31,6 +31,7 @@ include { VV_RAW_READS;
           VV_STAR_ALIGNMENTS;
           VV_RSEM_COUNTS;
           VV_DESEQ2_ANALYSIS } from './modules/vv.nf' addParams(timestamp: sdf.format(date))
+include { THANK_YOU_FOR_COMING_TO_MY_PRESENTATION } from './modules/thanks.nf'
 
 include { staging as STAGING } from './stage_analysis.nf'
 println "PARAMS: $params"
@@ -91,7 +92,7 @@ workflow {
     aligned_ch | COUNT_ALIGNED
 
     ALIGN_STAR.out | map { it -> it[1] } | collect | ALIGN_MULTIQC
-
+    aligned_ch | THANK_YOU_FOR_COMING_TO_MY_PRESENTATION
     COUNT_ALIGNED.out | map { it[0].id }
                       | collectFile(name: "samples.txt", newLine: true)
                       | set { samples_ch }
