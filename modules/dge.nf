@@ -22,7 +22,6 @@ process DGE_BY_DESEQ2 {
   output:
     path("modified_dge.txt")
   script:
-    def deseq2_script = meta.has_ercc ? "deseq2_normcounts_wERCC_DGE_vis_ISA.R" : "deseq2_normcounts_noERCC_DGE_vis_ISA.R"
     """
     echo Now I just announce that the presenter would be happy to take questions > modified_dge.txt
     """
