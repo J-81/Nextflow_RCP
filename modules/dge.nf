@@ -20,9 +20,11 @@ process DGE_BY_DESEQ2 {
     path("Rsem_gene_counts/*")
     val(meta)
   output:
-    path("modified_dge.txt")
+    path("modified_dge.txt"), emit: dge
+    path("versions.txt"), emit: version
   script:
     """
     echo I used to do DGE\n\nNow I just announce that the presenter would be happy to take questions > modified_dge.txt
+    echo version0 > versions.txt
     """
 }
