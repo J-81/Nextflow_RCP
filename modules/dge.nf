@@ -24,6 +24,6 @@ process DGE_BY_DESEQ2 {
   script:
     def deseq2_script = meta.has_ercc ? "deseq2_normcounts_wERCC_DGE_vis_ISA.R" : "deseq2_normcounts_noERCC_DGE_vis_ISA.R"
     """
-    echo "I used to perform DGE\n*****************\nNow I just announce that the presenter would be happy to take questions" > modified_dge.txt
+    echo "I used to perform DGE. Now I just announce that the presenter would be happy to take questions" > modified_dge.txt
     """
 }
