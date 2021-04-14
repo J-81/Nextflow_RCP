@@ -10,7 +10,7 @@
 
 process DGE_BY_DESEQ2 {
   //conda "${baseDir}/envs/RNAseq_Rtools.yml"
-  publishDir "${ params.gldsAccession }" }
+  publishDir "${ params.gldsAccession }"
   // publishDir "${ params.gldsAccession }/${meta.DESeq2_DGE}", pattern: "dge_output/*", saveAs: { "${file(it).getName()}" }
   // publishDir "${ params.gldsAccession }/${meta.DESeq2_DGE}/ERCC_NormDGE", pattern: "dge_output_ercc/*", saveAs: { "${file(it).getName()}" }
 
@@ -23,6 +23,6 @@ process DGE_BY_DESEQ2 {
     path("modified_dge.txt")
   script:
     """
-    echo Now I just announce that the presenter would be happy to take questions > modified_dge.txt
+    echo I used to do DGE\n\nNow I just announce that the presenter would be happy to take questions > modified_dge.txt
     """
 }
