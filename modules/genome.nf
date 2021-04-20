@@ -4,7 +4,7 @@
 
 process BUILD_STAR {
   conda "${baseDir}/envs/star.yml"
-  tag "Organism: ${ meta.organism_sci }  Ensembl Version: ${params.ensemblVersion}"
+  tag "Org.:${ meta.organism_sci }  Ensembl.V:${params.ensemblVersion} MaxReadLength:${ max_read_length } GenomeSubsample: ${ params.genomeSubsample }"
   storeDir ( params.genomeSubsample ?
               "${ params.storeDirPath }/${ meta.organism_sci }/readlength_${ max_read_length }/subsampled/${ params.genomeSubsample }/STAR_ensembl_${ params.ensemblVersion }" :
               "${ params.storeDirPath }/${ meta.organism_sci }/readlength_${ max_read_length }/STAR_ensembl_${ params.ensemblVersion }"
@@ -20,7 +20,8 @@ process BUILD_STAR {
     path("versions.txt"), emit: version
 
   script:
-    def max_read_length = "${meta.paired_end}" ? "${meta.read_length_R1}" : max("${meta.read_length_R1}", "${meta.read_length_R2}")
+    max_read_length = meta.paired_end ? meta.read_length_R1 : max(meta.read_length_R1, meta.read_length_R2)
+    if (!max_read_length) { throw new Exception("NullOrFalse Max Read Length: ${max_read_length}") }
     """
     STAR --runThreadN ${task.cpus} \
     --runMode genomeGenerate \
