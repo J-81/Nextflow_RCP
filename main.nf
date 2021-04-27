@@ -50,6 +50,7 @@ if (params.help) {
   println("                        Indicates whether ERCC spike-in has been added and should be used")
   println("optional arguments:")
   println("  --help                show this help message and exit")
+  println("  --ensemblVersion n    ensembl Version to use for the reference genome. Default: 96")
   println("  --limitSamplesTo n    limit the number of samples staged to a number.")
   println("  --genomeSubsample n   subsamples genome fasta and gtf files to the supplied chromosome.")
   println("  --truncateTo n        limit the number of records retrieved for each reads file.")
