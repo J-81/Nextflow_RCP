@@ -2,8 +2,10 @@ nextflow.enable.dsl=2
 import java.text.SimpleDateFormat
 def date = new Date()
 def sdf = new SimpleDateFormat("MMddyyyy-HH_mm_ss")
-
+// color defs
+c_back_bright_red = "\u001b[41;1m";
 c_bright_green = "\u001b[32;1m";
+c_blue = "\033[0;34m";
 c_reset = "\033[0m";
 
 include { DOWNLOAD_RAW_READS;
@@ -32,8 +34,59 @@ include { VV_RAW_READS;
           VV_RSEM_COUNTS;
           VV_DESEQ2_ANALYSIS } from './modules/vv.nf' addParams(timestamp: sdf.format(date))
 
-include { staging as STAGING } from './stage_analysis.nf'
+/**************************************************
+* HELP MENU  **************************************
+**************************************************/
+if (params.help) {
+  println("┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅")
+  println("┇ RNASeq Concensus Pipeline: $workflow.manifest.version  ┇")
+  println("┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅")
+  println("usage: nextflow run J-81/Nextflow_RCP -r help_menu_update --gldsAccession GLDS-000 --ERCC {true,false} [--stageLocal] [--limitSamplesTo n] [--truncateTo n] [--genomeSubsample n]")
+  println()
+  println("required arguments:")
+  println("  --gldsAccession GLDS-000")
+  println("                        the GLDS accession number to stage raw reads for the RNASeq Concensus Pipeline")
+  println("  --ERCC true")
+  println("                        Indicates whether ERCC spike-in has been added and should be used")
+  println("optional arguments:")
+  println("  --help                show this help message and exit")
+  println("  --limitSamplesTo n    limit the number of samples staged to a number.")
+  println("  --genomeSubsample n   subsamples genome fasta and gtf files to the supplied chromosome.")
+  println("  --truncateTo n        limit the number of records retrieved for each reads file.")
+  println("  --stageLocal          download the raw reads files to the path specifed in the RNASeq runsheet.")
+  exit 0
+  }
+
 println "PARAMS: $params"
+
+/**************************************************
+* DEBUG WARNING  **********************************
+**************************************************/
+if ( params.limitSamplesTo || params.truncateTo) {
+  println("${c_back_bright_red}WARNING WARNING: DEBUG OPTIONS ENABLED!")
+  params.limitSamplesTo ? println("Samples limited to ${params.limitSamplesTo}") : println("No Sample Limit Set")
+  params.truncateTo ? println("Truncating reads to first ${params.truncateTo} records") : println("No Truncation By Record Limit Set")
+  println("WARNING WARNING: DEBUG OPTIONS ENABLED!${c_reset}")
+} else {
+  params.limitSamplesTo ? println("Samples limited to ${params.limitSamplesTo}") : println("No Sample Limit Set")
+  params.truncateTo ? println("Truncating reads to first ${params.truncateTo} records") : println("No Truncation By Record Limit Set")
+}
+
+/**************************************************
+* WORKFLOW SPECIFIC PRINTOUTS  ********************
+**************************************************/
+if ( params.stageLocal && params.truncateTo ) {
+  // download truncated raw reads
+  println("${c_bright_green}Staging truncated raw reads for ${params.gldsAccession}${c_reset}")
+} else if ( params.stageLocal && !params.truncateTo ) {
+  // download full raw reads
+  println("${c_bright_green}Staging raw reads for ${params.gldsAccession}${c_reset}")
+} else {
+  // maybe print some nice data from the samplesheet
+  println("${c_bright_green}No Staging.  Only getting Metadata for ${params.gldsAccession}${c_reset}")
+}
+
+include { staging as STAGING } from './stage_analysis.nf'
 
 workflow {
 	main:
