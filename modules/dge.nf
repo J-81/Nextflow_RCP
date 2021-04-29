@@ -31,10 +31,11 @@ process DGE_BY_DESEQ2 {
     tuple path("dge_output_ercc/ERCCnorm_contrasts.csv"),
           path("dge_output_ercc/ERCCnorm_differential_expression.csv"),
           path("dge_output_ercc/visualization_output_table_ERCCnorm.csv"),
-          path("dge_output_ercc/visualization_PCA_table_ERCCnorm.csv"), optional: !meta.has_ercc, emit: dge_ercc
+          path("dge_output_ercc/visualization_PCA_table_ERCCnorm.csv"), optional: !has_ercc, emit: dge_ercc
 
     path("versions.txt"), emit: version
   script:
+    has_ercc = meta.has_ercc
     def deseq2_script = meta.has_ercc ? "deseq2_normcounts_wERCC_DGE_vis_ISA.R" : "deseq2_normcounts_noERCC_DGE_vis_ISA.R"
     """
     # create output directories
