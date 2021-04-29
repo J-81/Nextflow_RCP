@@ -121,19 +121,20 @@ workflow {
                               | collect \
                               | TRIMMED_MULTIQC
 
-    meta_ch | DOWNLOAD_GENOME_ANNOTATIONS | set { genome_annotations }
+    meta_ch | DOWNLOAD_GENOME_ANNOTATIONS | set { genome_annotations_pre_subsample }
 
     // SUBSAMPLING STEP : USED FOR DEBUG/TEST RUNS
     if ( params.genomeSubsample ) {
-      SUBSAMPLE_GENOME( genome_annotations, meta_ch )
-      SUBSAMPLE_GENOME.out.build | set { genome_annotations }
+      SUBSAMPLE_GENOME( genome_annotations_pre_subsample, meta_ch )
+      SUBSAMPLE_GENOME.out.build | first | set { genome_annotations_pre_ercc }
+    } else {
+      genome_annotations_pre_subsample | first | set { genome_annotations_pre_ercc }
     }
 
     // ERCC STEP : ADD ERCC Fasta and GTF to genome files
-    if ( params.ERCC ) {
-      DOWNLOAD_ERCC | set { ercc_annotations }
-      CONCAT_ERCC( genome_annotations, ercc_annotations, meta_ch ) | set { genome_annotations }
-    }
+    CONCAT_ERCC( genome_annotations_pre_ercc, DOWNLOAD_ERCC(), meta_ch )
+    .ifEmpty { genome_annotations_pre_ercc.value }  | view
+                                            | set { genome_annotations }
 
     BUILD_STAR( genome_annotations, meta_ch)
 

@@ -190,7 +190,7 @@ process SUBSAMPLE_GENOME {
 process CONCAT_ERCC {
   storeDir ( params.genomeSubsample ?
               "${params.storeDirPath}/ensembl/${params.ensemblVersion}/${ meta.organism_sci }/ERCC/subsampled" :
-              "${params.storeDirPath}/ensembl/${params.ensemblVersion}/${  }/ERCC"
+              "${params.storeDirPath}/ensembl/${params.ensemblVersion}/${ meta.organism_sci }/ERCC"
               )
 
   input:
@@ -200,6 +200,9 @@ process CONCAT_ERCC {
   output:
     tuple path("${ meta.organism_sci }_and_ERCC.fa"), \
           path("${ meta.organism_sci }_and_ERCC.gtf")
+
+  when:
+    meta.has_ercc
 
   script:
   """
