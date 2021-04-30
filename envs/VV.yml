@@ -10,4 +10,4 @@ dependencies:
    - isatools
    - pip
    - pip:
-     - git+https://github.com/J-81/JDO_V-V.git@0.4.8-dev
+     - git+https://github.com/J-81/JDO_V-V.git@0.4.9-dev
