@@ -50,6 +50,7 @@ if (params.help) {
   println("                        Indicates whether ERCC spike-in has been added and should be used")
   println("optional arguments:")
   println("  --help                show this help message and exit")
+  println("  --skipVV              skip automated V&V checks")
   println("  --ensemblVersion n    ensembl Version to use for the reference genome. Default: 96")
   println("  --limitSamplesTo n    limit the number of samples staged to a number.")
   println("  --genomeSubsample n   subsamples genome fasta and gtf files to the supplied chromosome.")
@@ -133,9 +134,8 @@ workflow {
 
     // ERCC STEP : ADD ERCC Fasta and GTF to genome files
     CONCAT_ERCC( genome_annotations_pre_ercc, DOWNLOAD_ERCC(), meta_ch )
-    .ifEmpty { genome_annotations_pre_ercc.value }  | view
-                                            | set { genome_annotations }
-
+    .ifEmpty { genome_annotations_pre_ercc.value }  | set { genome_annotations }
+    meta_ch | view
     BUILD_STAR( genome_annotations, meta_ch)
 
     TRIMGALORE.out.reads | combine( BUILD_STAR.out.build ) | ALIGN_STAR
@@ -173,27 +173,29 @@ workflow {
     ch_software_versions | collectFile(name: "${params.gldsAccession}/software_versions.txt", newLine: true)
 
     // VV processes
-    ch_vv_log_00 = Channel.fromPath("nextflow_vv_log.tsv")
-    VV_RAW_READS( raw_reads_ch | map{ it -> it[1..it.size()-1] } | flatten | collect, // map use here: removes val(meta) from tuple
-                  ch_vv_log_00 ) | set { ch_vv_log_01 }
+    if ( !params.skipVV ) {
+      ch_vv_log_00 =  Channel.fromPath("nextflow_vv_log.tsv")
+      VV_RAW_READS( raw_reads_ch | map{ it -> it[1..it.size()-1] } | flatten | collect, // map use here: removes val(meta) from tuple
+                    ch_vv_log_00 ) | set { ch_vv_log_01 }
 
-    VV_RAW_READS_MULTIQC( RAW_MULTIQC.out.data,
-                          ch_vv_log_01 ) | set { ch_vv_log_02 }
+      VV_RAW_READS_MULTIQC( RAW_MULTIQC.out.data,
+                            ch_vv_log_01 ) | set { ch_vv_log_02 }
 
-    VV_TRIMMED_READS( TRIMGALORE.out.reads | map{ it -> it[1..it.size()-1] } | flatten | collect, // map use here: removes val(meta) from tuple
-                      ch_vv_log_02 ) | set { ch_vv_log_03 }
+      VV_TRIMMED_READS( TRIMGALORE.out.reads | map{ it -> it[1..it.size()-1] } | flatten | collect, // map use here: removes val(meta) from tuple
+                        ch_vv_log_02 ) | set { ch_vv_log_03 }
 
-    VV_TRIMMED_READS_MULTIQC( TRIMMED_MULTIQC.out.data,
-                              ch_vv_log_03 ) | set { ch_vv_log_04 }
+      VV_TRIMMED_READS_MULTIQC( TRIMMED_MULTIQC.out.data,
+                                ch_vv_log_03 ) | set { ch_vv_log_04 }
 
-    VV_STAR_ALIGNMENTS( ALIGN_STAR.out | map{ it -> it[1..it.size()-1] } | collect, // map use here: removes val(meta) from tuple
-                        ch_vv_log_04 ) | set { ch_vv_log_05 }
+      VV_STAR_ALIGNMENTS( ALIGN_STAR.out | map{ it -> it[1..it.size()-1] } | collect, // map use here: removes val(meta) from tuple
+                          ch_vv_log_04 ) | set { ch_vv_log_05 }
 
-    VV_RSEM_COUNTS( COUNT_ALIGNED.out | map{ it -> it[1..it.size()-1] } | flatten | collect, // map use here: removes val(meta) from tuple
-                    ch_vv_log_05 ) | set { ch_vv_log_06 }
+      VV_RSEM_COUNTS( COUNT_ALIGNED.out | map{ it -> it[1..it.size()-1] } | flatten | collect, // map use here: removes val(meta) from tuple
+                      ch_vv_log_05 ) | set { ch_vv_log_06 }
 
-    VV_DESEQ2_ANALYSIS( DGE_BY_DESEQ2.out.dge | map{ it -> it[1..it.size()-1] } | collect, // map use here: removes val(meta) from tuple
-                        ch_vv_log_06 ) | set { ch_vv_log_07 }
+      VV_DESEQ2_ANALYSIS( DGE_BY_DESEQ2.out.dge | map{ it -> it[1..it.size()-1] } | collect, // map use here: removes val(meta) from tuple
+                          ch_vv_log_06 ) | set { ch_vv_log_07 }
+    }
 
 }
 
