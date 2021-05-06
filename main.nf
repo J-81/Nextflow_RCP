@@ -46,8 +46,6 @@ if (params.help) {
   println("required arguments:")
   println("  --gldsAccession GLDS-000")
   println("                        the GLDS accession number to stage raw reads for the RNASeq Concensus Pipeline")
-  println("  --ERCC true")
-  println("                        Indicates whether ERCC spike-in has been added and should be used")
   println("optional arguments:")
   println("  --help                show this help message and exit")
   println("  --skipVV              skip automated V&V checks")
