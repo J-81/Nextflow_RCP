@@ -16,17 +16,11 @@ include { RNASEQ_RUNSHEET_FROM_GLDS as GENERATE_RUNSHEET;
           get_runsheet_paths } from'./modules/genelab.nf'
 
 /**************************************************
-* CHECK REQUIRED PARAMS AND LOAD  *****************
-**************************************************/
-// Get all params sourced data into channels
-// Set up channel containing glds accession number
-if (params.gldsAccession) {ch_glds_accession = Channel.from( params.gldsAccession )} else { exit 1, "Missing Required Parameter: gldsAccession. Example for setting on CLI: --gldsAccession GLDS-194"}
-
-
-/**************************************************
 * ACTUAL WORKFLOW  ********************************
 **************************************************/
 workflow staging{
+  take:
+    ch_glds_accession
   main:
     sample_limit = params.limitSamplesTo ? params.limitSamplesTo : -1 // -1 in take means no limit
 
@@ -73,15 +67,13 @@ workflow staging{
     ch_raw_reads | STAGE_RAW_READS
 
     } else {
-      // download nothing, end of workflow
-      // maybe print some nice data from the samplesheet
-
+      // Don't download any raw reads
     }
 
     GENERATE_RUNSHEET.out.isazip | GENERATE_METASHEET
 
     emit:
-      raw_reads = STAGE_RAW_READS.out
+      raw_reads = params.stageLocal ? STAGE_RAW_READS.out : null
       isa = GENERATE_RUNSHEET.out.isazip
       runsheet = GENERATE_RUNSHEET.out.runsheet
 }
