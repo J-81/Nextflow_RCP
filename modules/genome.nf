@@ -144,10 +144,12 @@ process COUNT_ALIGNED {
 process QUANTIFY_GENES {
   conda "${baseDir}/envs/RNAseq_Rtools.yml"
   tag "Dataset: ${ params.gldsAccession }"
+  publishDir "${ params.gldsAccession }/${ meta.RSEM_Counts_dir.parent }"
 
   input:
+    val(meta)
     path("samples.txt")
-    path("03-RSEM_COUNTS/*.genes.results")
+    path("03-RSEM_Counts/*")
 
   output:
     tuple path("RSEM_Unnormalized_Counts.csv"), path("NumNonZeroGenes.csv")
