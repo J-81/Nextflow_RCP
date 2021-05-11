@@ -22,16 +22,16 @@ process DGE_BY_DESEQ2 {
   output:
     tuple path("norm_counts_output/Normalized_Counts.csv"),
           path("norm_counts_output/SampleTable.csv"),
-          path("norm_counts_output/ERCC_Normalized_Counts.csv"),
           path("norm_counts_output/Unnormalized_Counts.csv"), emit: norm_counts
     tuple path("dge_output/contrasts.csv"),
           path("dge_output/differential_expression.csv"),
           path("dge_output/visualization_output_table.csv"),
           path("dge_output/visualization_PCA_table.csv"), emit: dge
-    tuple path("dge_output_ercc/ERCCnorm_contrasts.csv"),
+    tuple path("norm_counts_output/ERCC_Normalized_Counts.csv"),
+          path("dge_output_ercc/ERCCnorm_contrasts.csv"),
           path("dge_output_ercc/ERCCnorm_differential_expression.csv"),
           path("dge_output_ercc/visualization_output_table_ERCCnorm.csv"),
-          path("dge_output_ercc/visualization_PCA_table_ERCCnorm.csv"), optional: !params.ERCC, emit: dge_ercc
+          path("dge_output_ercc/visualization_PCA_table_ERCCnorm.csv"), optional: true, emit: dge_ercc
 
     path("versions.txt"), emit: version
   script:

@@ -20,7 +20,7 @@ process BUILD_STAR {
     path("versions.txt"), emit: version
 
   script:
-    max_read_length = meta.paired_end ? meta.read_length_R1 : max(meta.read_length_R1, meta.read_length_R2)
+    max_read_length = meta.paired_end ? [meta.read_length_R1, meta.read_length_R2].max() : meta.read_length_R1
     if (!max_read_length) { throw new Exception("NullOrFalse Max Read Length: ${max_read_length}") }
     """
     STAR --runThreadN ${task.cpus} \
@@ -190,7 +190,7 @@ process SUBSAMPLE_GENOME {
 process CONCAT_ERCC {
   storeDir ( params.genomeSubsample ?
               "${params.storeDirPath}/ensembl/${params.ensemblVersion}/${ meta.organism_sci }/ERCC/subsampled" :
-              "${params.storeDirPath}/ensembl/${params.ensemblVersion}/${  }/ERCC"
+              "${params.storeDirPath}/ensembl/${params.ensemblVersion}/${ meta.organism_sci }/ERCC"
               )
 
   input:
@@ -200,6 +200,9 @@ process CONCAT_ERCC {
   output:
     tuple path("${ meta.organism_sci }_and_ERCC.fa"), \
           path("${ meta.organism_sci }_and_ERCC.gtf")
+
+  when:
+    meta.has_ercc
 
   script:
   """

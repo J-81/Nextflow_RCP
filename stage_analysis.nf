@@ -4,11 +4,7 @@
 * 2a. Downloads Raw Reads
 * 2b. Downloads Truncated Raw Reads (Useful for testing with limited resources)
 */
-// color defs
-c_back_bright_red = "\u001b[41;1m";
-c_bright_green = "\u001b[32;1m";
-c_blue = "\033[0;34m";
-c_reset = "\033[0m";
+
 // This ensures DSL2 syntax and process imports
 nextflow.enable.dsl=2
 
@@ -20,62 +16,11 @@ include { RNASEQ_RUNSHEET_FROM_GLDS as GENERATE_RUNSHEET;
           get_runsheet_paths } from'./modules/genelab.nf'
 
 /**************************************************
-* HELP MENU  **************************************
-**************************************************/
-if (params.help) {
-  println("┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅")
-  println("┇ RNASeq Concensus Pipeline: Staging Workflow: $workflow.manifest.version ┇")
-  println("┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅")
-  println("usage: nextflow run J-81/Nextflow_RCP -main-script stage_analysis.nf [-h] [--limitSamplesTo n] [--truncateTo n] [--stageLocal] --gldsAccession GLDS-000")
-  println()
-  println("required arguments:")
-  println("  --gldsAccession GLDS-000")
-  println("                        the GLDS accession number to stage raw reads for the RNASeq Concensus Pipeline")
-  println("optional arguments:")
-  println("  --help                show this help message and exit")
-  println("  --limitSamplesTo n    limit the number of samples staged to a number.")
-  println("  --truncateTo n        limit the number of records retrieved for each reads file.")
-  println("  --stageLocal          download the raw reads files to the path specifed in the RNASeq samplesheet.")
-  exit 0
-  }
-/**************************************************
-* CHECK REQUIRED PARAMS AND LOAD  *****************
-**************************************************/
-// Get all params sourced data into channels
-// Set up channel containing glds accession number
-if (params.gldsAccession) {ch_glds_accession = Channel.from( params.gldsAccession )} else { exit 1, "Missing Required Parameter: gldsAccession. Example for setting on CLI: --gldsAccession GLDS-194"}
-
-/**************************************************
-* DEBUG WARNING  **********************************
-**************************************************/
-if ( params.limitSamplesTo || params.truncateTo) {
-  println("${c_back_bright_red}WARNING WARNING: DEBUG OPTIONS ENABLED!")
-  params.limitSamplesTo ? println("Samples limited to ${params.limitSamplesTo}") : println("No Sample Limit Set")
-  params.truncateTo ? println("Truncating reads to first ${params.truncateTo} records") : println("No Truncation By Record Limit Set")
-  println("WARNING WARNING: DEBUG OPTIONS ENABLED!${c_reset}")
-} else {
-  params.limitSamplesTo ? println("Samples limited to ${params.limitSamplesTo}") : println("No Sample Limit Set")
-  params.truncateTo ? println("Truncating reads to first ${params.truncateTo} records") : println("No Truncation By Record Limit Set")
-}
-
-/**************************************************
-* WORKFLOW SPECIFIC PRINTOUTS  ********************
-**************************************************/
-if ( params.stageLocal && params.truncateTo ) {
-  // download truncated raw reads
-  println("${c_bright_green}Staging truncated raw reads for ${params.gldsAccession}${c_reset}")
-} else if ( params.stageLocal && !params.truncateTo ) {
-  // download full raw reads
-  println("${c_bright_green}Staging raw reads for ${params.gldsAccession}${c_reset}")
-} else {
-  // maybe print some nice data from the samplesheet
-  println("${c_bright_green}No Staging.  Only getting Metadata for ${params.gldsAccession}${c_reset}")
-}
-
-/**************************************************
 * ACTUAL WORKFLOW  ********************************
 **************************************************/
 workflow staging{
+  take:
+    ch_glds_accession
   main:
     sample_limit = params.limitSamplesTo ? params.limitSamplesTo : -1 // -1 in take means no limit
 
@@ -122,15 +67,13 @@ workflow staging{
     ch_raw_reads | STAGE_RAW_READS
 
     } else {
-      // download nothing, end of workflow
-      // maybe print some nice data from the samplesheet
-
+      // Don't download any raw reads
     }
 
     GENERATE_RUNSHEET.out.isazip | GENERATE_METASHEET
 
     emit:
-      raw_reads = STAGE_RAW_READS.out
+      raw_reads = params.stageLocal ? STAGE_RAW_READS.out : null
       isa = GENERATE_RUNSHEET.out.isazip
       runsheet = GENERATE_RUNSHEET.out.runsheet
 }
