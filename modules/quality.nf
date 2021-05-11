@@ -74,7 +74,6 @@ process TRIMMED_MULTIQC {
   conda "${baseDir}/envs/multiqc.yml"
   publishDir "${ params.gldsAccession }/01-TG_Preproc/FastQC_Reports"
 
-
   input:
     path("fastqc/*") // any number of fastqc files
   output:
@@ -85,7 +84,6 @@ process TRIMMED_MULTIQC {
   script:
     """
     multiqc -o trimmed_multiqc_report -n trimmed_multiqc fastqc
-
     multiqc --version > versions.txt
     """
 }
