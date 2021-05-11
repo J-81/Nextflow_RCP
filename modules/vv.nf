@@ -3,163 +3,188 @@
 
 // NOTE: first VV step also creates inital VV file that is shared across all vv steps
 process VV_RAW_READS {
-  stageInMode "copy"
-  //publishDir "${params.publishDirPath}/VV/${params.timestamp}", mode: 'copy'
+  conda "${baseDir}/envs/VV.yml"
+  tag "Dataset: ${ params.gldsAccession }"
 
   input:
-    path(samples)
-    path(raw_reads), stageAs: "rawReads/*"
-    path(vv_config)
+    path("NULL") // While files from processing are staged, we instead want to use the files located in the publishDir for QC
+    path(vv_log)
 
   output:
     path("VV_out.tsv")
 
   script:
     """
-    raw_reads_VV.py --config ${ vv_config } \
-                    --samples ${ samples } \
-                    --input rawReads \
-                    --output VV_out.tsv
+    cd ${workflow.launchDir}/${ params.gldsAccession }
+    # ensure no existing VV_out.tsv file
+    rm -rf VV_Log
+
+    raw_reads_VV.py  --runsheet-path Metadata/*runsheet.csv \
+                     --output appendTo.tsv \
+                     --halt-severity 90
+    # move back to work dir and mv tsv into work dir
+    cd -
+    mv ${workflow.launchDir}/${ params.gldsAccession }/appendTo.tsv VV_out.tsv
     """
 }
 
 process VV_RAW_READS_MULTIQC {
-  stageInMode "copy"
-  //publishDir "${params.publishDirPath}/VV/${params.timestamp}", mode: 'copy'
+  conda "${baseDir}/envs/VV.yml"
+  tag "Dataset: ${ params.gldsAccession }"
 
   input:
-    path(samples)
-    path(multiqcDataDir)
-    path(vv_config)
+    path("NULL") // While files from processing are staged, we instead want to use the files located in the publishDir for QC
+    path("VV_in.tsv")
 
   output:
     path("VV_out.tsv")
 
   script:
     """
-    raw_reads_multiqc_VV.py --config ${ vv_config } \
-                            --samples ${ samples } \
-                            --input ${ multiqcDataDir } \
-                            --output VV_out.tsv
+    # copy to processed data directory
+    cp -L VV_in.tsv ${workflow.launchDir}/${ params.gldsAccession }/appendTo.tsv
+    # cd into processed data directory
+    cd ${workflow.launchDir}/${ params.gldsAccession }
+    raw_reads_multiqc_VV.py --runsheet-path Metadata/*runsheet.csv \
+                            --output appendTo.tsv \
+                            --halt-severity 90
+    # move back to work dir and mv tsv into work dir
+    cd -
+    mv ${workflow.launchDir}/${ params.gldsAccession }/appendTo.tsv VV_out.tsv
     """
 }
 
 
 process VV_TRIMMED_READS {
-  stageInMode "copy"
-  // publishDir "${params.publishDirPath}/VV/${params.timestamp}",
+  conda "${baseDir}/envs/VV.yml"
+  tag "Dataset: ${ params.gldsAccession }"
 
   input:
-    path(samples)
-    path(trimmed_reads)
-    path(vv_config)
+    path("NULL") // While files from processing are staged, we instead want to use the files located in the publishDir for QC
+    path("VV_in.tsv")
 
   output:
     path("VV_out.tsv")
 
   script:
     """
-    trimmed_reads_VV.py --config ${ vv_config } \
-                    --samples ${ samples } \
-                    --input ${ trimmed_reads } \
-                    --output VV_out.tsv
+    # copy to processed data directory
+    cp -L VV_in.tsv ${workflow.launchDir}/${ params.gldsAccession }/appendTo.tsv
+    # cd into processed data directory
+    cd ${workflow.launchDir}/${ params.gldsAccession }
+    trimmed_reads_VV.py --runsheet-path Metadata/*runsheet.csv \
+                        --output appendTo.tsv \
+                        --halt-severity 90
+    # move back to work dir and mv tsv into work dir
+    cd -
+    mv ${workflow.launchDir}/${ params.gldsAccession }/appendTo.tsv VV_out.tsv
     """
 }
 
 process VV_TRIMMED_READS_MULTIQC {
-  stageInMode "copy"
-  //publishDir "${params.publishDirPath}/VV/${params.timestamp}", mode: 'copy'
+  conda "${baseDir}/envs/VV.yml"
+  tag "Dataset: ${ params.gldsAccession }"
 
   input:
-    path(samples)
-    path(multiqcDataDir)
-    path(vv_config)
+    path("NULL") // While files from processing are staged, we instead want to use the files located in the publishDir for QC
+    path("VV_in.tsv")
 
   output:
     path("VV_out.tsv")
 
   script:
-    """
-    trimmed_reads_multiqc_VV.py --config ${ vv_config } \
-                                --samples ${ samples } \
-                                --input ${ multiqcDataDir } \
-                                --output VV_out.tsv
-    """
+  """
+  # copy to processed data directory
+  cp -L VV_in.tsv ${workflow.launchDir}/${ params.gldsAccession }/appendTo.tsv
+  # cd into processed data directory
+  cd ${workflow.launchDir}/${ params.gldsAccession }
+  trimmed_reads_multiqc_VV.py --runsheet-path Metadata/*runsheet.csv \
+                              --output appendTo.tsv \
+                              --halt-severity 90
+  # move back to work dir and mv tsv into work dir
+  cd -
+  mv ${workflow.launchDir}/${ params.gldsAccession }/appendTo.tsv VV_out.tsv
+  """
 }
 
 process VV_STAR_ALIGNMENTS {
-  stageInMode "copy"
-  // publishDir "${params.publishDirPath}/VV/${params.timestamp}",
-  //             mode: 'copy', saveAs: { "VV_RESULTS.txt" }
-
+  conda "${baseDir}/envs/VV.yml"
+  tag "Dataset: ${ params.gldsAccession }"
 
   input:
-    path(samples)
-    path(genomeMapping)
-    path(transcriptomeMapping)
-    path(logs)
-    path(vv_config)
+    path("NULL") // While files from processing are staged, we instead want to use the files located in the publishDir for QC
+    path("VV_in.tsv")
 
   output:
     path("VV_out.tsv")
 
   script:
     """
-    star_alignments_VV.py --config ${ vv_config } \
-                          --samples ${ samples } \
-                          --g ${ genomeMapping } \
-                          --t ${ transcriptomeMapping } \
-                          --l ${ logs } \
-                          --output VV_out.tsv
+    # copy to processed data directory
+    cp -L VV_in.tsv ${workflow.launchDir}/${ params.gldsAccession }/appendTo.tsv
+    # cd into processed data directory
+    cd ${workflow.launchDir}/${ params.gldsAccession }
+    star_alignments_VV.py --runsheet-path Metadata/*runsheet.csv \
+                          --output appendTo.tsv \
+                          --halt-severity 90
+    # move back to work dir and mv tsv into work dir
+    cd -
+    mv ${workflow.launchDir}/${ params.gldsAccession }/appendTo.tsv VV_out.tsv
     """
 }
 
 process VV_RSEM_COUNTS {
-  stageInMode "copy"
-  //publishDir "${params.publishDirPath}/VV/${params.timestamp}",
-  //            mode: 'copy', saveAs: { "VV_RESULTS.txt" }
-
+  conda "${baseDir}/envs/VV.yml"
+  tag "Dataset: ${ params.gldsAccession }"
 
   input:
-    path(samples)
-    path(geneCounts)
-    path(transcriptCounts)
-    path(stats)
-    path(vv_config)
+    path("NULL") // While files from processing are staged, we instead want to use the files located in the publishDir for QC
+    path("VV_in.tsv")
 
   output:
     path("VV_out.tsv")
 
   script:
     """
-    rsem_counts_VV.py --config ${ vv_config } \
-                      --samples ${ samples } \
-                      --g ${ geneCounts } \
-                      --t ${ transcriptCounts } \
-                      --stats ${ stats } \
-                      --output VV_out.tsv
+    # copy to processed data directory
+    cp -L VV_in.tsv ${workflow.launchDir}/${ params.gldsAccession }/appendTo.tsv
+    # cd into processed data directory
+    cd ${workflow.launchDir}/${ params.gldsAccession }
+    rsem_counts_VV.py --runsheet-path Metadata/*runsheet.csv \
+                      --output appendTo.tsv \
+                      --halt-severity 90
+    # move back to work dir and mv tsv into work dir
+    cd -
+    mv ${workflow.launchDir}/${ params.gldsAccession }/appendTo.tsv VV_out.tsv
     """
 }
 
 process VV_DESEQ2_ANALYSIS {
-  stageInMode "copy"
-  publishDir "${params.publishDirPath}/VV/${params.timestamp}", mode: 'copy'
+  conda "${baseDir}/envs/VV.yml"
+  tag "Dataset: ${ params.gldsAccession }"
+  //publishDir "${ params.gldsAccession }-VV"
 
   input:
-    path(samples)
-    path(norm_countsDir), stageAs: 'counts/*'
-    path(dgeDir), stageAs: 'dge/*'
-    path(vv_config)
+    path("NULL") // While files from processing are staged, we instead want to use the files located in the publishDir for QC
+    path("VV_in.tsv")
 
   output:
-    path("VV_out.tsv")
+    path("VV_Log")
 
   script:
     """
-    deseq2_script_VV.py --config ${ vv_config } \
-                        --samples ${ samples } \
-                        --normDir counts \
-                        --dgeDir dge \
-                        --output VV_out.tsv
+    # copy to processed data directory
+    mkdir -p ${workflow.launchDir}/${ params.gldsAccession }/VV_Log
+    cp -L VV_in.tsv ${workflow.launchDir}/${ params.gldsAccession }/VV_Log/VV_FULL_OUT.tsv
+    # cd into processed data directory
+    cd ${workflow.launchDir}/${ params.gldsAccession }
+    deseq2_script_VV.py --runsheet-path Metadata/*runsheet.csv \
+                        --output VV_Log/VV_FULL_OUT.tsv \
+                        --halt-severity 90
+
+    # move back to work dir and mv tsv into work dir
+    cd -
+    # mv ${workflow.launchDir}/${ params.gldsAccession }/VV_Log
+    touch VV_Log # signals end of VV
     """
 }

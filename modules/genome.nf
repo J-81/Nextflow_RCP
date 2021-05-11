@@ -4,10 +4,10 @@
 
 process BUILD_STAR {
   conda "${baseDir}/envs/star.yml"
-  tag "Organism: ${ meta.organism_sci }  Ensembl Version: ${params.ensemblVersion}"
+  tag "Org.:${ meta.organism_sci }  Ensembl.V:${params.ensemblVersion} MaxReadLength:${ max_read_length } GenomeSubsample: ${ params.genomeSubsample }"
   storeDir ( params.genomeSubsample ?
-              "${ params.storeDirPath }/${ meta.organism_sci }/readlength_${ meta.read_length }/subsampled/${ params.genomeSubsample }/STAR_ensembl_${ params.ensemblVersion }" :
-              "${ params.storeDirPath }/${ meta.organism_sci }/readlength_${ meta.read_length }/STAR_ensembl_${ params.ensemblVersion }"
+              "${ params.storeDirPath }/${ meta.organism_sci }/readlength_${ max_read_length }/subsampled/${ params.genomeSubsample }/STAR_ensembl_${ params.ensemblVersion }" :
+              "${ params.storeDirPath }/${ meta.organism_sci }/readlength_${ max_read_length }/STAR_ensembl_${ params.ensemblVersion }"
             )
   label 'maxCPU'
   label 'big_mem'
@@ -16,8 +16,12 @@ process BUILD_STAR {
     tuple path(genomeFasta), path(genomeGtf)
     val(meta)
   output:
-    path("STAR_REF")
+    path("STAR_REF"), emit: build
+    path("versions.txt"), emit: version
+
   script:
+    max_read_length = meta.paired_end ? meta.read_length_R1 : max(meta.read_length_R1, meta.read_length_R2)
+    if (!max_read_length) { throw new Exception("NullOrFalse Max Read Length: ${max_read_length}") }
     """
     STAR --runThreadN ${task.cpus} \
     --runMode genomeGenerate \
@@ -26,7 +30,9 @@ process BUILD_STAR {
     --genomeDir STAR_REF \
     --genomeFastaFiles ${ genomeFasta } \
     --sjdbGTFfile ${ genomeGtf } \
-    --sjdbOverhang ${ meta.read_length - 1 }
+    --sjdbOverhang ${ max_read_length - 1 }
+
+    echo STAR_version: `STAR --version` > versions.txt
     """
 
 }
@@ -39,24 +45,14 @@ process BUILD_STAR {
 process ALIGN_STAR {
   conda "${baseDir}/envs/star.yml"
   tag "Sample: ${ meta.id }"
-  publishDir "${ params.gldsAccession }/${ meta.STAR_Alignment_dir }"
+  publishDir "${ params.gldsAccession }"
   label 'maxCPU'
   label 'big_mem'
 
   input:
     tuple val( meta ), path( reads ), path(STAR_INDEX_DIR)
   output:
-    tuple val(meta), \
-          path("${ meta.id }_Aligned.sortedByCoord.out.bam"), emit: genomeMapping
-    tuple val(meta), \
-          path("${ meta.id }_Aligned.toTranscriptome.out.bam"), emit: transcriptomeMapping
-    tuple val(meta), \
-          path("${ meta.id }_Log.final.out"), \
-          path("${ meta.id }_Log.out"), \
-          path("${ meta.id }_Log.progress.out"), \
-          path("${ meta.id }_SJ.out.tab"), \
-          path("${ meta.id }__STARgenome"), \
-          path("${ meta.id }__STARpass1"), emit: logs
+    tuple val(meta), path("${ meta.STAR_Alignment_dir }")
 
   script:
     """
@@ -76,10 +72,11 @@ process ALIGN_STAR {
     --alignSJDBoverhangMin 1 \
     --sjdbScore 1 \
     --outSAMtype BAM SortedByCoordinate \
+    --outSAMheaderHD @HD VN:1.4 SO:coordinate \
     --runThreadN ${ task.cpus } \
     --readFilesCommand zcat \
     --quantMode TranscriptomeSAM \
-    --outFileNamePrefix ${ meta.id }_ \
+    --outFileNamePrefix '${ meta.STAR_Alignment_dir }/${ meta.id }_' \
     --readFilesIn ${ reads }
     """
 
@@ -97,11 +94,16 @@ process BUILD_RSEM {
     tuple path(genomeFasta), path(genomeGtf)
     val(meta)
   output:
-    path("RSEM_REF")
+    path("RSEM_REF"), emit: build
+    path("versions.txt"), emit: version
+
+
   script:
     """
     mkdir RSEM_REF
     rsem-prepare-reference --gtf $genomeGtf $genomeFasta RSEM_REF/
+
+    rsem-calculate-expression --version > versions.txt
     """
 
 }
@@ -109,14 +111,13 @@ process BUILD_RSEM {
 process COUNT_ALIGNED {
   conda "${baseDir}/envs/rsem.yml"
   tag "Sample: ${ meta.id }"
-  publishDir "${ params.gldsAccession }/${ meta.RSEM_Counts_dir }"
+  publishDir "${ params.gldsAccession }"
 
   input:
-    tuple val(meta), path(transcriptomeMapping), path(RSEM_REF)
+    tuple val(meta), path("starOutput/*"), path(RSEM_REF)
   output:
-    tuple val(meta), path("${ meta.id }.genes.results"), emit: countsPerGene
-    tuple val(meta), path("${ meta.id }.isoforms.results"), emit: countsPerIsoform
-    tuple val(meta), path("${ meta.id }.stat"), emit: stats
+
+    tuple val(meta), path("${ meta.RSEM_Counts_dir }/*")
 
   script:
     """
@@ -128,9 +129,32 @@ process COUNT_ALIGNED {
       --estimate-rspd \
       --seed 12345 \
       --strandedness reverse \
-      $transcriptomeMapping \
+      starOutput/${meta.id}/${meta.id}_Aligned.toTranscriptome.out.bam \
       $RSEM_REF/ \
       $meta.id
+
+    # move into output directory
+    mkdir tmp
+    mv ${meta.id}* tmp
+    mkdir -p ${ meta.RSEM_Counts_dir }
+    mv tmp/* ${ meta.RSEM_Counts_dir }
+    """
+}
+
+process QUANTIFY_GENES {
+  conda "${baseDir}/envs/RNAseq_Rtools.yml"
+  tag "Dataset: ${ params.gldsAccession }"
+
+  input:
+    path("samples.txt")
+    path("03-RSEM_COUNTS/*.genes.results")
+
+  output:
+    tuple path("RSEM_Unnormalized_Counts.csv"), path("NumNonZeroGenes.csv")
+
+  script:
+    """
+    Quantitate_non-zero_genes_per_sample.R
     """
 
 }
@@ -149,7 +173,9 @@ process SUBSAMPLE_GENOME {
     val(meta)
   output:
     tuple path("subsampled/${params.genomeSubsample}/${genome_fasta}"), \
-          path("subsampled/${params.genomeSubsample}/${genome_gtf}")
+          path("subsampled/${params.genomeSubsample}/${genome_gtf}"), emit: build
+    path("versions.txt"), emit: version
+
   script:
     """
     mkdir -p subsampled/${params.genomeSubsample}
@@ -157,6 +183,7 @@ process SUBSAMPLE_GENOME {
 
     samtools faidx ${genome_fasta} ${params.genomeSubsample} > subsampled/${params.genomeSubsample}/${genome_fasta}
 
+    samtools --version > versions.txt
     """
 }
 

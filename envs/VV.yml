@@ -1,12 +1,13 @@
-name: AST
+name: VV
 channels:
    - bioconda
    - conda-forge
    - defaults
 dependencies:
    - python=3.8
+   - pandas
+   - samtools
    - isatools
-   - peppy
    - pip
    - pip:
-     - git+https://github.com/J-81/Analysis_Staging.git@0.3.0-dev
+     - git+https://github.com/J-81/JDO_V-V.git@0.4.5-dev
