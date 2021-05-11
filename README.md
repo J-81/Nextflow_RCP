@@ -33,7 +33,7 @@ nextflow run J-81/Nextflow_RCP -r test-awg-approved --help
 
 #### Truncated Read and Genome Subsample Run
 ```bash
-nextflow run J-81/Nextflow_RCP -r test-awg-approved --gldsAccession GLDS-194 --ensemblVersion=96 --truncateTo=300000 --genomeSubsample=19
+nextflow run J-81/Nextflow_RCP -r test-awg-approved -latest --gldsAccession GLDS-194 --ensemblVersion=96 --truncateTo=300000 --genomeSubsample=19
 ```
 
 ### Optional Recommended Parameters
@@ -64,6 +64,8 @@ nextflow run ... -resume
 nextflow run ... --storeDirPath='/data2/JO_Internship_2021/.References'
 ```
 
+## Additional Testing Notes
+- A bash script for testing multiple sets is available upon request.
 
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
