@@ -188,6 +188,8 @@ process SUBSAMPLE_GENOME {
 }
 
 process CONCAT_ERCC {
+  errorStrategy 'retry'
+  maxRetries 3
   storeDir ( params.genomeSubsample ?
               "${params.storeDirPath}/ensembl/${params.ensemblVersion}/${ meta.organism_sci }/ERCC/subsampled" :
               "${params.storeDirPath}/ensembl/${params.ensemblVersion}/${ meta.organism_sci }/ERCC"
