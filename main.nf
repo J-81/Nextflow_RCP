@@ -41,15 +41,16 @@ if (params.help) {
   println("┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅")
   println("┇ RNASeq Concensus Pipeline: $workflow.manifest.version  ┇")
   println("┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅")
-  println("usage: nextflow run J-81/Nextflow_RCP -r help_menu_update --gldsAccession GLDS-000 --ensemblVersion 96  [--stageLocal] [--limitSamplesTo n] [--truncateTo n] [--genomeSubsample n]")
+  println("usage: nextflow run J-81/Nextflow_RCP -r $workflow.revision --gldsAccession GLDS-000 --ensemblVersion 96  [--skipVV] [--outputDir] [--stageLocal] [--limitSamplesTo n] [--truncateTo n] [--genomeSubsample n]")
   println()
   println("required arguments:")
   println("  --gldsAccession GLDS-000")
   println("                        the GLDS accession number to stage raw reads for the RNASeq Concensus Pipeline")
-  println("  --ensemblVersion n    ensembl Version to use for the reference genome. Default: 96")
+  println("  --ensemblVersion n    ensembl Version to use for the reference genome.")
   println("optional arguments:")
   println("  --help                show this help message and exit")
   println("  --skipVV              skip automated V&V checks")
+  println("  --outputDir           directory to save staged raw files and processed files. Default: <launch directory>")
   println("  --limitSamplesTo n    limit the number of samples staged to a number.")
   println("  --genomeSubsample n   subsamples genome fasta and gtf files to the supplied chromosome.")
   println("  --truncateTo n        limit the number of records retrieved for each reads file.")
@@ -66,6 +67,8 @@ println "PARAMS: $params"
 // Set up channel containing glds accession number
 if ( params.gldsAccession ) {ch_glds_accession = Channel.from( params.gldsAccession )} else { exit 1, "Missing Required Parameter: gldsAccession. Example for setting on CLI: --gldsAccession GLDS-194"}
 if ( !params.ensemblVersion ) { exit 1, "Missing Required Parameter: ensemblVersion. Example for setting on CLI: --ensemblVersion 96" }
+
+if ( !params.outputDir ) {  params.outputDir = "$workflow.launchDir" }
 
 /**************************************************
 * DEBUG WARNING  **********************************
@@ -177,7 +180,7 @@ workflow {
       BUILD_STAR.out.version.ifEmpty(null) | mix(ch_software_versions) | set{ch_software_versions}
       BUILD_RSEM.out.version.ifEmpty(null) | mix(ch_software_versions) | set{ch_software_versions}
       DGE_BY_DESEQ2.out.version.ifEmpty(null) | mix(ch_software_versions) | set{ch_software_versions}
-      ch_software_versions | collectFile(name: "${params.gldsAccession}/software_versions.txt", newLine: true)
+      ch_software_versions | collectFile(name: "${ params.outputDir }/${params.gldsAccession}/software_versions.txt", newLine: true)
 
       // VV processes
       if ( !params.skipVV ) {

@@ -7,7 +7,7 @@ process RAW_FASTQC {
   conda "${baseDir}/envs/fastqc.yml"
   tag "Sample: ${ meta.id }"
   // cpus { read.size() } // BUGGED FOR SINGLE READS: number of read files to process
-  publishDir "${ params.gldsAccession }/${ meta.raw_read_fastQC }"
+  publishDir "${ params.outputDir }/${ params.gldsAccession }/${ meta.raw_read_fastQC }"
 
   input:
     tuple val(meta), path(reads)
@@ -29,7 +29,7 @@ process TRIMMED_FASTQC {
   conda "${baseDir}/envs/fastqc.yml"
   tag "Sample: ${ meta.id }"
   // cpus { read.size() } // BUGGED FOR SINGLE READS: number of read files to process
-  publishDir "${ params.gldsAccession }/${ meta.trimmed_read_fastQC }"
+  publishDir "${ params.outputDir }/${ params.gldsAccession }/${ meta.trimmed_read_fastQC }"
 
   input:
   tuple val(meta), path(reads)
@@ -51,7 +51,7 @@ process RAW_MULTIQC {
   label "fastLocal"
   tag "Dataset: ${ params.gldsAccession }"
   conda "${baseDir}/envs/multiqc.yml"
-  publishDir "${ params.gldsAccession }/00-RawData/FastQC_Reports"
+  publishDir "${ params.outputDir }/${ params.gldsAccession }/00-RawData/FastQC_Reports"
 
   input:
     path("fastqc/*") // any number of fastqc files
@@ -72,7 +72,7 @@ process TRIMMED_MULTIQC {
   label "fastLocal"
   tag "Dataset: ${ params.gldsAccession }"
   conda "${baseDir}/envs/multiqc.yml"
-  publishDir "${ params.gldsAccession }/01-TG_Preproc/FastQC_Reports"
+  publishDir "${ params.outputDir }/${ params.gldsAccession }/01-TG_Preproc/FastQC_Reports"
 
   input:
     path("fastqc/*") // any number of fastqc files
@@ -92,7 +92,7 @@ process ALIGN_MULTIQC {
   label "fastLocal"
   //tag "Dataset: ${ params.gldsAccession }"
   conda "${baseDir}/envs/multiqc.yml"
-  publishDir "${ params.gldsAccession }/02-STAR_Alignment"
+  publishDir "${ params.outputDir }/${ params.gldsAccession }/02-STAR_Alignment"
 
   input:
     path("alignments/*")
@@ -111,8 +111,8 @@ process TRIMGALORE {
   conda "${baseDir}/envs/trim_galore.yml"
   tag "Sample: ${ meta.id }"
   // changing these to storeDir causes an error as pattern is not available for storeDir
-  publishDir "${ params.gldsAccession }/01-TG_Preproc/Fastq", pattern: "*trimmed.fastq.gz"
-  publishDir "${ params.gldsAccession }/01-TG_Preproc/Trimming_Reports", pattern: "*.txt"
+  publishDir "${ params.outputDir }/${ params.gldsAccession }/01-TG_Preproc/Fastq", pattern: "*trimmed.fastq.gz"
+  publishDir "${ params.outputDir }/${ params.gldsAccession }/01-TG_Preproc/Trimming_Reports", pattern: "*.txt"
 
   input:
     tuple val(meta), path(reads)

@@ -45,7 +45,7 @@ process BUILD_STAR {
 process ALIGN_STAR {
   conda "${baseDir}/envs/star.yml"
   tag "Sample: ${ meta.id }"
-  publishDir "${ params.gldsAccession }"
+  publishDir "${ params.outputDir }/${ params.gldsAccession }"
   label 'maxCPU'
   label 'big_mem'
 
@@ -111,7 +111,7 @@ process BUILD_RSEM {
 process COUNT_ALIGNED {
   conda "${baseDir}/envs/rsem.yml"
   tag "Sample: ${ meta.id }"
-  publishDir "${ params.gldsAccession }"
+  publishDir "${ params.outputDir }/${ params.gldsAccession }"
 
   input:
     tuple val(meta), path("starOutput/*"), path(RSEM_REF)
