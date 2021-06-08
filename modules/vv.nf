@@ -171,6 +171,23 @@ process VV_DESEQ2_ANALYSIS {
   output:
     path("VV_Log")
 
+  stub:
+    """
+    # copy to processed data directory
+    mkdir -p ${workflow.launchDir}/${ params.outputDir }/${ params.gldsAccession }/VV_Log
+    cp -L VV_in.tsv ${workflow.launchDir}/${ params.outputDir }/${ params.gldsAccession }/VV_Log/VV_FULL_OUT.tsv
+    # cd into processed data directory
+    cd ${workflow.launchDir}/${ params.outputDir }/${ params.gldsAccession }
+    deseq2_script_VV.py --runsheet-path Metadata/*runsheet.csv \
+                        --output VV_Log/VV_FULL_OUT.tsv \
+                        --halt-severity 91
+
+    # move back to work dir and mv tsv into work dir
+    cd -
+    # mv ${workflow.launchDir}/${ params.outputDir }/${ params.gldsAccession }/VV_Log
+    touch VV_Log # signals end of VV
+    """
+
   script:
     """
     # copy to processed data directory
