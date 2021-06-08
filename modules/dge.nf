@@ -34,6 +34,24 @@ process DGE_BY_DESEQ2 {
           path("dge_output_ercc/visualization_PCA_table_ERCCnorm.csv"), optional: true, emit: dge_ercc
 
     path("versions.txt"), emit: version
+
+  stub:
+    def deseq2_debug_script = meta.has_ercc ? "DEBUG_deseq2_normcounts_wERCC_DGE_vis_ISA.R" : "DEBUG_deseq2_normcounts_noERCC_DGE_vis_ISA.R"
+    """
+    # create output directories
+    mkdir norm_counts_output
+    mkdir dge_output
+    mkdir dge_output_ercc
+
+    # run the script with R
+    ${deseq2_debug_script} \
+      ${ meta.organism_non_sci } \
+      $Isa_zip \
+      norm_counts_output \
+      dge_output \
+      dge_output_ercc
+    """
+
   script:
     def deseq2_script = meta.has_ercc ? "deseq2_normcounts_wERCC_DGE_vis_ISA.R" : "deseq2_normcounts_noERCC_DGE_vis_ISA.R"
     """

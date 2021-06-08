@@ -33,6 +33,7 @@ include { VV_RAW_READS;
           VV_STAR_ALIGNMENTS;
           VV_RSEM_COUNTS;
           VV_DESEQ2_ANALYSIS } from './modules/vv.nf' addParams(timestamp: sdf.format(date))
+include { GET_MAX_READ_LENGTH } from './modules/fastqc.nf'
 
 /**************************************************
 * HELP MENU  **************************************
@@ -122,6 +123,13 @@ workflow {
                             //| view {"PRE_RAW_MULTIQC: $it"}
                             | RAW_MULTIQC
 
+      RAW_FASTQC.out.fastqc | map { it -> [ it[2] ] }
+                            | flatten
+                            | GET_MAX_READ_LENGTH
+
+      GET_MAX_READ_LENGTH.out.length | max { it.toInteger() }
+                                     | set { max_read_length_ch }
+
       raw_reads_ch |  TRIMGALORE
 
       TRIMGALORE.out.reads | TRIMMED_FASTQC
@@ -146,7 +154,7 @@ workflow {
       CONCAT_ERCC( genome_annotations_pre_ercc, DOWNLOAD_ERCC(), meta_ch )
       .ifEmpty { genome_annotations_pre_ercc.value }  | set { genome_annotations }
       meta_ch | view
-      BUILD_STAR( genome_annotations, meta_ch)
+      BUILD_STAR( genome_annotations, meta_ch, max_read_length_ch)
 
       TRIMGALORE.out.reads | combine( BUILD_STAR.out.build ) | ALIGN_STAR
 
@@ -181,6 +189,7 @@ workflow {
       BUILD_RSEM.out.version.ifEmpty(null) | mix(ch_software_versions) | set{ch_software_versions}
       DGE_BY_DESEQ2.out.version.ifEmpty(null) | mix(ch_software_versions) | set{ch_software_versions}
       ch_software_versions | collectFile(name: "${ params.outputDir }/${params.gldsAccession}/software_versions.txt", newLine: true)
+                           | view
 
       // VV processes
       if ( !params.skipVV ) {

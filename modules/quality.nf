@@ -58,11 +58,14 @@ process RAW_MULTIQC {
   output:
     path("raw_multiqc_report/raw_multiqc.html"), emit: html
     path("raw_multiqc_report/raw_multiqc_data"), emit: data
+    path("raw_multiqc_report.zip"), emit: zip
     path("versions.txt"), emit: version
 
   script:
     """
     multiqc -o raw_multiqc_report -n raw_multiqc fastqc
+
+    zip -r raw_multiqc_report.zip raw_multiqc_report/
 
     multiqc --version > versions.txt
     """
@@ -79,11 +82,15 @@ process TRIMMED_MULTIQC {
   output:
     path("trimmed_multiqc_report/trimmed_multiqc.html"), emit: html
     path("trimmed_multiqc_report/trimmed_multiqc_data"), emit: data
+    path("trimmed_multiqc_report.zip"), emit: zip
     path("versions.txt"), emit: version
 
   script:
     """
     multiqc -o trimmed_multiqc_report -n trimmed_multiqc fastqc
+
+    zip -r trimmed_multiqc_report.zip trimmed_multiqc_report/
+
     multiqc --version > versions.txt
     """
 }
@@ -100,10 +107,16 @@ process ALIGN_MULTIQC {
   output:
     path("align_multiqc_report/align_multiqc.html"), emit: html
     path("align_multiqc_report/align_multiqc_data"), emit: data
+    path("align_multiqc_report.zip"), emit: zip
+    path("versions.txt"), emit: version
 
   script:
     """
     multiqc -o align_multiqc_report -n align_multiqc alignments
+
+    zip -r align_multiqc_report.zip align_multiqc_report/
+
+    multiqc --version > versions.txt
     """
 }
 

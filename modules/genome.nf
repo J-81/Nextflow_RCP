@@ -2,26 +2,26 @@
  * Processes related to genome and annotations
  */
 
+subsample_mod = params.genomeSubsample ? "_subsampled-${ params.genomeSubsample }" : ""
 process BUILD_STAR {
   conda "${baseDir}/envs/star.yml"
   tag "Org.:${ meta.organism_sci }  Ensembl.V:${params.ensemblVersion} MaxReadLength:${ max_read_length } GenomeSubsample: ${ params.genomeSubsample }"
-  storeDir ( params.genomeSubsample ?
-              "${ params.storeDirPath }/${ meta.organism_sci }/readlength_${ max_read_length }/subsampled/${ params.genomeSubsample }/STAR_ensembl_${ params.ensemblVersion }" :
-              "${ params.storeDirPath }/${ meta.organism_sci }/readlength_${ max_read_length }/STAR_ensembl_${ params.ensemblVersion }"
-            )
+  storeDir "${ params.storeDirPath }/STAR_Indices/ensembl_release${params.ensemblVersion}/${ meta.organism_sci }${ ercc_mod }_RL-${ max_read_length }${ subsample_mod }"
+
   label 'maxCPU'
   label 'big_mem'
 
   input:
     tuple path(genomeFasta), path(genomeGtf)
     val(meta)
+    val(max_read_length) // Generated from raw data QC step, MUST include actual longest read length
   output:
     path("STAR_REF"), emit: build
     path("versions.txt"), emit: version
 
   script:
-    max_read_length = meta.paired_end ? [meta.read_length_R1, meta.read_length_R2].max() : meta.read_length_R1
-    if (!max_read_length) { throw new Exception("NullOrFalse Max Read Length: ${max_read_length}") }
+    // max_read_length = meta.paired_end ? [meta.read_length_R1, meta.read_length_R2].max() : meta.read_length_R1
+    // if (!max_read_length) { throw new Exception("NullOrFalse Max Read Length: ${max_read_length}") }
     """
     STAR --runThreadN ${task.cpus} \
     --runMode genomeGenerate \
@@ -30,7 +30,7 @@ process BUILD_STAR {
     --genomeDir STAR_REF \
     --genomeFastaFiles ${ genomeFasta } \
     --sjdbGTFfile ${ genomeGtf } \
-    --sjdbOverhang ${ max_read_length - 1 }
+    --sjdbOverhang ${ max_read_length - 1 } # TODO: replace with readlength determined from ACTUAL raw data [NOT the TRIMMED] (instead of meta)
 
     echo STAR_version: `STAR --version` > versions.txt
     """
@@ -85,10 +85,7 @@ process ALIGN_STAR {
 process BUILD_RSEM {
   conda "${baseDir}/envs/rsem.yml"
   tag "Organism: ${ meta.organism_sci }  Ensembl Version: ${params.ensemblVersion}"
-  storeDir ( params.genomeSubsample ?
-              "${params.storeDirPath}/${ meta.organism_sci }/subsampled/${ params.genomeSubsample }/RSEM_ensembl_${ params.ensemblVersion }" :
-              "${params.storeDirPath}/${ meta.organism_sci }/RSEM_ensembl_${ params.ensemblVersion }"
-            )
+  storeDir "${ params.storeDirPath }/RSEM_Indices/ensembl_release${params.ensemblVersion}/${ meta.organism_sci }${ ercc_mod }${ subsample_mod }"
 
   input:
     tuple path(genomeFasta), path(genomeGtf)
@@ -99,9 +96,10 @@ process BUILD_RSEM {
 
 
   script:
+    ercc_mod = meta.has_ercc ? "_w_ERCC" : ""
     """
     mkdir RSEM_REF
-    rsem-prepare-reference --gtf $genomeGtf $genomeFasta RSEM_REF/
+    rsem-prepare-reference --gtf $genomeGtf $genomeFasta RSEM_REF/${meta.organism_sci}${ercc_mod}
 
     rsem-calculate-expression --version > versions.txt
     """
@@ -120,6 +118,7 @@ process COUNT_ALIGNED {
     tuple val(meta), path("${ meta.RSEM_Counts_dir }/*")
 
   script:
+    ercc_mod = meta.has_ercc ? "_w_ERCC" : ""
     """
     rsem-calculate-expression --num-threads $task.cpus \
       ${ meta.paired_end ? '--paired-end' : '' } \
@@ -130,7 +129,7 @@ process COUNT_ALIGNED {
       --seed 12345 \
       --strandedness reverse \
       starOutput/${meta.id}/${meta.id}_Aligned.toTranscriptome.out.bam \
-      $RSEM_REF/ \
+      $RSEM_REF/${meta.organism_sci}${ercc_mod} \
       $meta.id
 
     # move into output directory
