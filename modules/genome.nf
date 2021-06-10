@@ -30,7 +30,7 @@ process BUILD_STAR {
     --genomeDir STAR_REF \
     --genomeFastaFiles ${ genomeFasta } \
     --sjdbGTFfile ${ genomeGtf } \
-    --sjdbOverhang ${ max_read_length - 1 } # TODO: replace with readlength determined from ACTUAL raw data [NOT the TRIMMED] (instead of meta)
+    --sjdbOverhang ${ max_read_length.toInteger() - 1 }
 
     echo STAR_version: `STAR --version` > versions.txt
     """
