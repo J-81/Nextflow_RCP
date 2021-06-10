@@ -22,6 +22,7 @@ process BUILD_STAR {
   script:
     // max_read_length = meta.paired_end ? [meta.read_length_R1, meta.read_length_R2].max() : meta.read_length_R1
     // if (!max_read_length) { throw new Exception("NullOrFalse Max Read Length: ${max_read_length}") }
+    ercc_mod = meta.has_ercc ? "_w_ERCC" : ""
     """
     STAR --runThreadN ${task.cpus} \
     --runMode genomeGenerate \
