@@ -188,7 +188,9 @@ workflow {
       BUILD_STAR.out.version.ifEmpty(null) | mix(ch_software_versions) | set{ch_software_versions}
       BUILD_RSEM.out.version.ifEmpty(null) | mix(ch_software_versions) | set{ch_software_versions}
       DGE_BY_DESEQ2.out.version.ifEmpty(null) | mix(ch_software_versions) | set{ch_software_versions}
-      ch_software_versions | collectFile(name: "${ params.outputDir }/${params.gldsAccession}/software_versions.txt", newLine: true)
+      ch_software_versions | map { it.text + "\n<><><>\n"}
+                           | unique
+                           | collectFile(name: "${ params.outputDir }/${params.gldsAccession}/software_versions.txt", newLine: true)
                            | view
 
       // VV processes
