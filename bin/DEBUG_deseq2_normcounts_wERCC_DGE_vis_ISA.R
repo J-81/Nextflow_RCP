@@ -95,6 +95,7 @@ txi.rsem$length[txi.rsem$length == 0] <- 1
 
 ## Add 10 to genes to first sample - DEBUG: ensures truncated runs process
 cat(NROW(txi.rsem$counts))
+set.seed(77077)
 txi.rsem$counts <- txi.rsem$counts + matrix(sample( 0:5000, NROW(txi.rsem$counts)*NCOL(txi.rsem$counts), replace=TRUE),nrow=NROW(txi.rsem$counts))
 
 ##### Make DESeqDataSet object #####
