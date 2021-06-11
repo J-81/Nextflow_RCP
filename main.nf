@@ -1,22 +1,17 @@
 nextflow.enable.dsl=2
-import java.text.SimpleDateFormat
-def date = new Date()
-def sdf = new SimpleDateFormat("MMddyyyy-HH_mm_ss")
 // color defs
 c_back_bright_red = "\u001b[41;1m";
 c_bright_green = "\u001b[32;1m";
 c_blue = "\033[0;34m";
 c_reset = "\033[0m";
 
-include { DOWNLOAD_RAW_READS;
-          DOWNLOAD_GENOME_ANNOTATIONS;
-          DOWNLOAD_ERCC;
-          DOWNLOAD_ISA } from './modules/download.nf'
-include { RAW_FASTQC
-          TRIMMED_FASTQC
-          RAW_MULTIQC
-          TRIMMED_MULTIQC
-          ALIGN_MULTIQC } from './modules/quality.nf'
+include { DOWNLOAD_GENOME_ANNOTATIONS;
+          DOWNLOAD_ERCC } from './modules/download.nf'
+include { FASTQC as RAW_FASTQC } from './modules/quality.nf' addParams(PublishTo: "00-RawData/FastQC_Reports")
+include { FASTQC as TRIMMED_FASTQC } from './modules/quality.nf' addParams(PublishTo: "01-TG_Preproc/FastQC_Reports")
+include { MULTIQC as RAW_MULTIQC } from './modules/quality.nf' addParams(PublishTo: "00-RawData/FastQC_Reports", MQCLabel:"raw")
+include { MULTIQC as TRIMMED_MULTIQC } from './modules/quality.nf' addParams(PublishTo: "01-TG_Preproc/FastQC_Reports", MQCLabel:"trimmed")
+include { MULTIQC as ALIGN_MULTIQC } from './modules/quality.nf' addParams(PublishTo: "02-STAR_Alignment", MQCLabel:"align")
 include { TRIMGALORE } from './modules/quality.nf'
 include { BUILD_STAR;
           ALIGN_STAR;
@@ -25,14 +20,13 @@ include { BUILD_STAR;
           SUBSAMPLE_GENOME;
           CONCAT_ERCC } from './modules/genome.nf'
 include { DGE_BY_DESEQ2 } from './modules/dge.nf'
-include { PARSE_ISA } from './modules/isa.nf'
 include { VV_RAW_READS;
           VV_TRIMMED_READS;
           VV_RAW_READS_MULTIQC;
           VV_TRIMMED_READS_MULTIQC;
           VV_STAR_ALIGNMENTS;
           VV_RSEM_COUNTS;
-          VV_DESEQ2_ANALYSIS } from './modules/vv.nf' addParams(timestamp: sdf.format(date))
+          VV_DESEQ2_ANALYSIS } from './modules/vv.nf' addParams( RootDirForVV: "${workflow.launchDir}/${ params.outputDir }")
 include { GET_MAX_READ_LENGTH } from './modules/fastqc.nf'
 
 /**************************************************
