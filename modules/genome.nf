@@ -33,7 +33,7 @@ process BUILD_STAR {
     --sjdbGTFfile ${ genomeGtf } \
     --sjdbOverhang ${ max_read_length.toInteger() - 1 }
 
-    echo STAR_version: `STAR --version` > versions.txt
+    echo Build_STAR_version: `STAR --version` > versions.txt
     """
 
 }
@@ -53,7 +53,8 @@ process ALIGN_STAR {
   input:
     tuple val( meta ), path( reads ), path(STAR_INDEX_DIR)
   output:
-    tuple val(meta), path("${ meta.STAR_Alignment_dir }")
+    tuple val(meta), path("${ meta.STAR_Alignment_dir }"), emit: alignments
+    path("versions.txt"), emit: version
 
   script:
     """
@@ -79,6 +80,8 @@ process ALIGN_STAR {
     --quantMode TranscriptomeSAM \
     --outFileNamePrefix '${ meta.STAR_Alignment_dir }/${ meta.id }_' \
     --readFilesIn ${ reads }
+
+    echo ALIGN_STAR_version: `STAR --version` > versions.txt
     """
 
 }
@@ -102,7 +105,7 @@ process BUILD_RSEM {
     mkdir RSEM_REF
     rsem-prepare-reference --gtf $genomeGtf $genomeFasta RSEM_REF/${meta.organism_sci}${ercc_mod}
 
-    rsem-calculate-expression --version > versions.txt
+    echo Build_RSEM_version: `rsem-calculate-expression --version` > versions.txt
     """
 
 }
@@ -115,8 +118,8 @@ process COUNT_ALIGNED {
   input:
     tuple val(meta), path("starOutput/*"), path(RSEM_REF)
   output:
-
-    tuple val(meta), path("${ meta.RSEM_Counts_dir }/*")
+    tuple val(meta), path("${ meta.RSEM_Counts_dir }/*"), emit: counts
+    path("versions.txt"), emit: version
 
   script:
     ercc_mod = meta.has_ercc ? "_w_ERCC" : ""
@@ -138,6 +141,8 @@ process COUNT_ALIGNED {
     mv ${meta.id}* tmp
     mkdir -p ${ meta.RSEM_Counts_dir }
     mv tmp/* ${ meta.RSEM_Counts_dir }
+
+    echo COUNT_RSEM_version: `rsem-calculate-expression --version` > versions.txt
     """
 }
 

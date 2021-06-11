@@ -160,16 +160,16 @@ workflow {
 
       BUILD_RSEM( genome_annotations, meta_ch)
 
-      ALIGN_STAR.out | combine( BUILD_RSEM.out.build ) | set { aligned_ch }
+      ALIGN_STAR.out.alignments | combine( BUILD_RSEM.out.build ) | set { aligned_ch }
       aligned_ch | COUNT_ALIGNED
 
-      ALIGN_STAR.out | map { it -> it[1] } | collect | ALIGN_MULTIQC
+      ALIGN_STAR.out.alignments | map { it -> it[1] } | collect | ALIGN_MULTIQC
 
-      COUNT_ALIGNED.out | map { it[0].id }
-                        | collectFile(name: "samples.txt", newLine: true)
-                        | set { samples_ch }
+      COUNT_ALIGNED.out.counts | map { it[0].id }
+                               | collectFile(name: "samples.txt", newLine: true)
+                               | set { samples_ch }
 
-      COUNT_ALIGNED.out | map { it[1] } | collect | set { rsem_ch }
+      COUNT_ALIGNED.out.counts | map { it[1] } | collect | set { rsem_ch }
 
       // TODO: Reintegrate QUANTIFY_GENES( samples_ch, rsem_ch )
 
@@ -180,14 +180,14 @@ workflow {
 
       // Software Version Capturing
       ch_software_versions = Channel.empty()
-      RAW_FASTQC.out.version.ifEmpty(null) | mix(ch_software_versions) | set{ch_software_versions}
-      RAW_MULTIQC.out.version.ifEmpty(null) | mix(ch_software_versions) | set{ch_software_versions}
-      TRIMGALORE.out.version.ifEmpty(null) | mix(ch_software_versions) | set{ch_software_versions}
-      TRIMMED_FASTQC.out.version.ifEmpty(null) | mix(ch_software_versions) | set{ch_software_versions}
-      TRIMMED_MULTIQC.out.version.ifEmpty(null) | mix(ch_software_versions) | set{ch_software_versions}
-      BUILD_STAR.out.version.ifEmpty(null) | mix(ch_software_versions) | set{ch_software_versions}
-      BUILD_RSEM.out.version.ifEmpty(null) | mix(ch_software_versions) | set{ch_software_versions}
-      DGE_BY_DESEQ2.out.version.ifEmpty(null) | mix(ch_software_versions) | set{ch_software_versions}
+      RAW_FASTQC.out.version | mix(ch_software_versions) | set{ch_software_versions}
+      RAW_MULTIQC.out.version | mix(ch_software_versions) | set{ch_software_versions}
+      TRIMGALORE.out.version | mix(ch_software_versions) | set{ch_software_versions}
+      TRIMMED_FASTQC.out.version | mix(ch_software_versions) | set{ch_software_versions}
+      TRIMMED_MULTIQC.out.version | mix(ch_software_versions) | set{ch_software_versions}
+      ALIGN_STAR.out.version | mix(ch_software_versions) | set{ch_software_versions}
+      COUNT_ALIGNED.out.version | mix(ch_software_versions) | set{ch_software_versions}
+      DGE_BY_DESEQ2.out.version | mix(ch_software_versions) | set{ch_software_versions}
       ch_software_versions | map { it.text + "\n<><><>\n"}
                            | unique
                            | collectFile(name: "${ params.outputDir }/${params.gldsAccession}/software_versions.txt", newLine: true)
@@ -208,10 +208,10 @@ workflow {
         VV_TRIMMED_READS_MULTIQC( TRIMMED_MULTIQC.out.data,
                                   ch_vv_log_03 ) | set { ch_vv_log_04 }
 
-        VV_STAR_ALIGNMENTS( ALIGN_STAR.out | map{ it -> it[1..it.size()-1] } | collect, // map use here: removes val(meta) from tuple
+        VV_STAR_ALIGNMENTS( ALIGN_STAR.out.alignments | map{ it -> it[1..it.size()-1] } | collect, // map use here: removes val(meta) from tuple
                             ch_vv_log_04 ) | set { ch_vv_log_05 }
 
-        VV_RSEM_COUNTS( COUNT_ALIGNED.out | map{ it -> it[1..it.size()-1] } | flatten | collect, // map use here: removes val(meta) from tuple
+        VV_RSEM_COUNTS( COUNT_ALIGNED.out.counts | map{ it -> it[1..it.size()-1] } | flatten | collect, // map use here: removes val(meta) from tuple
                         ch_vv_log_05 ) | set { ch_vv_log_06 }
 
         VV_DESEQ2_ANALYSIS( DGE_BY_DESEQ2.out.dge | map{ it -> it[1..it.size()-1] } | collect, // map use here: removes val(meta) from tuple
