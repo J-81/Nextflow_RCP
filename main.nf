@@ -184,7 +184,7 @@ workflow {
       DGE_BY_DESEQ2.out.version | mix(ch_software_versions) | set{ch_software_versions}
       ch_software_versions | map { it.text + "\n<><><>\n"}
                            | unique
-                           | collectFile(name: "${ params.outputDir }/${params.gldsAccession}/software_versions.txt", newLine: true)
+                           | collectFile(name: "software_versions.txt",storeDir: "${ params.outputDir }/${params.gldsAccession}" , newLine: true)
                            | view
 
       // VV processes
