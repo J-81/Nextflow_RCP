@@ -155,5 +155,6 @@ process TRIMGALORE {
       "cp ${ meta.id }_R1_raw_trimmed.fq.gz ${ meta.trimmed_read1.name }"}
 
     trim_galore -v > versions.txt
+    echo cutadapt version:\$(cutadapt --version) >> versions.txt
     """
 }
