@@ -7,9 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
   -
-  
+
 ### Changed
   - workflow now uses runsheet to designate where processed files are saved
+  - Updated to use V&V program, version 
 
 ### Removed
   -

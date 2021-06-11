@@ -4,6 +4,7 @@
 import argparse
 from pathlib import Path
 import tempfile
+import os
 
 from VV.rsem import RsemCounts
 from VV.deseq2 import Deseq2ScriptOutput
@@ -98,6 +99,9 @@ if __name__ == '__main__':
                                     has_ERCC = sample_sheet.has_ERCC,
                                     cutoffs = cutoffs).cross_check
     cross_checks["RSEM"] = rsem_cross_check
+
+    # cleanup "tmp_remove.tsv"
+    os.remove("tmp_remove.tsv")
 
     Deseq2ScriptOutput(samples = sample_sheet.samples,
                        counts_dir_path = sample_sheet.DESeq2_NormCount,

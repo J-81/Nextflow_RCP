@@ -496,3 +496,5 @@ print("Session Info below: ")
 sessionInfo()
 ## Log same info into versions.txt file """
 writeLines(capture.output(sessionInfo()), "versions.txt")
+write("BioC_version_associated_with_R_version", file="versions.txt",append=TRUE)
+write(toString(tools:::.BioC_version_associated_with_R_version()), file="versions.txt",append=TRUE)

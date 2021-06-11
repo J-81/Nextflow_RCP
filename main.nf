@@ -1,22 +1,17 @@
 nextflow.enable.dsl=2
-import java.text.SimpleDateFormat
-def date = new Date()
-def sdf = new SimpleDateFormat("MMddyyyy-HH_mm_ss")
 // color defs
 c_back_bright_red = "\u001b[41;1m";
 c_bright_green = "\u001b[32;1m";
 c_blue = "\033[0;34m";
 c_reset = "\033[0m";
 
-include { DOWNLOAD_RAW_READS;
-          DOWNLOAD_GENOME_ANNOTATIONS;
-          DOWNLOAD_ERCC;
-          DOWNLOAD_ISA } from './modules/download.nf'
-include { RAW_FASTQC
-          TRIMMED_FASTQC
-          RAW_MULTIQC
-          TRIMMED_MULTIQC
-          ALIGN_MULTIQC } from './modules/quality.nf'
+include { DOWNLOAD_GENOME_ANNOTATIONS;
+          DOWNLOAD_ERCC } from './modules/download.nf'
+include { FASTQC as RAW_FASTQC } from './modules/quality.nf' addParams(PublishTo: "00-RawData/FastQC_Reports")
+include { FASTQC as TRIMMED_FASTQC } from './modules/quality.nf' addParams(PublishTo: "01-TG_Preproc/FastQC_Reports")
+include { MULTIQC as RAW_MULTIQC } from './modules/quality.nf' addParams(PublishTo: "00-RawData/FastQC_Reports", MQCLabel:"raw")
+include { MULTIQC as TRIMMED_MULTIQC } from './modules/quality.nf' addParams(PublishTo: "01-TG_Preproc/FastQC_Reports", MQCLabel:"trimmed")
+include { MULTIQC as ALIGN_MULTIQC } from './modules/quality.nf' addParams(PublishTo: "02-STAR_Alignment", MQCLabel:"align")
 include { TRIMGALORE } from './modules/quality.nf'
 include { BUILD_STAR;
           ALIGN_STAR;
@@ -25,14 +20,14 @@ include { BUILD_STAR;
           SUBSAMPLE_GENOME;
           CONCAT_ERCC } from './modules/genome.nf'
 include { DGE_BY_DESEQ2 } from './modules/dge.nf'
-include { PARSE_ISA } from './modules/isa.nf'
 include { VV_RAW_READS;
           VV_TRIMMED_READS;
           VV_RAW_READS_MULTIQC;
           VV_TRIMMED_READS_MULTIQC;
           VV_STAR_ALIGNMENTS;
           VV_RSEM_COUNTS;
-          VV_DESEQ2_ANALYSIS } from './modules/vv.nf' addParams(timestamp: sdf.format(date))
+          VV_DESEQ2_ANALYSIS } from './modules/vv.nf' addParams( RootDirForVV: "${workflow.launchDir}/${ params.outputDir }")
+include { GET_MAX_READ_LENGTH } from './modules/fastqc.nf'
 
 /**************************************************
 * HELP MENU  **************************************
@@ -41,15 +36,16 @@ if (params.help) {
   println("┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅")
   println("┇ RNASeq Concensus Pipeline: $workflow.manifest.version  ┇")
   println("┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅")
-  println("usage: nextflow run J-81/Nextflow_RCP -r help_menu_update --gldsAccession GLDS-000 --ensemblVersion 96  [--stageLocal] [--limitSamplesTo n] [--truncateTo n] [--genomeSubsample n]")
+  println("usage: nextflow run J-81/Nextflow_RCP -r $workflow.revision --gldsAccession GLDS-000 --ensemblVersion 96  [--skipVV] [--outputDir] [--stageLocal] [--limitSamplesTo n] [--truncateTo n] [--genomeSubsample n]")
   println()
   println("required arguments:")
   println("  --gldsAccession GLDS-000")
   println("                        the GLDS accession number to stage raw reads for the RNASeq Concensus Pipeline")
-  println("  --ensemblVersion n    ensembl Version to use for the reference genome. Default: 96")
+  println("  --ensemblVersion n    ensembl Version to use for the reference genome.")
   println("optional arguments:")
   println("  --help                show this help message and exit")
   println("  --skipVV              skip automated V&V checks")
+  println("  --outputDir           directory to save staged raw files and processed files. Default: <launch directory>")
   println("  --limitSamplesTo n    limit the number of samples staged to a number.")
   println("  --genomeSubsample n   subsamples genome fasta and gtf files to the supplied chromosome.")
   println("  --truncateTo n        limit the number of records retrieved for each reads file.")
@@ -66,6 +62,8 @@ println "PARAMS: $params"
 // Set up channel containing glds accession number
 if ( params.gldsAccession ) {ch_glds_accession = Channel.from( params.gldsAccession )} else { exit 1, "Missing Required Parameter: gldsAccession. Example for setting on CLI: --gldsAccession GLDS-194"}
 if ( !params.ensemblVersion ) { exit 1, "Missing Required Parameter: ensemblVersion. Example for setting on CLI: --ensemblVersion 96" }
+
+if ( !params.outputDir ) {  params.outputDir = "$workflow.launchDir" }
 
 /**************************************************
 * DEBUG WARNING  **********************************
@@ -119,6 +117,13 @@ workflow {
                             //| view {"PRE_RAW_MULTIQC: $it"}
                             | RAW_MULTIQC
 
+      RAW_FASTQC.out.fastqc | map { it -> [ it[2] ] }
+                            | flatten
+                            | GET_MAX_READ_LENGTH
+
+      GET_MAX_READ_LENGTH.out.length | max { it.toInteger() }
+                                     | set { max_read_length_ch }
+
       raw_reads_ch |  TRIMGALORE
 
       TRIMGALORE.out.reads | TRIMMED_FASTQC
@@ -143,22 +148,22 @@ workflow {
       CONCAT_ERCC( genome_annotations_pre_ercc, DOWNLOAD_ERCC(), meta_ch )
       .ifEmpty { genome_annotations_pre_ercc.value }  | set { genome_annotations }
       meta_ch | view
-      BUILD_STAR( genome_annotations, meta_ch)
+      BUILD_STAR( genome_annotations, meta_ch, max_read_length_ch)
 
       TRIMGALORE.out.reads | combine( BUILD_STAR.out.build ) | ALIGN_STAR
 
       BUILD_RSEM( genome_annotations, meta_ch)
 
-      ALIGN_STAR.out | combine( BUILD_RSEM.out.build ) | set { aligned_ch }
+      ALIGN_STAR.out.alignments | combine( BUILD_RSEM.out.build ) | set { aligned_ch }
       aligned_ch | COUNT_ALIGNED
 
-      ALIGN_STAR.out | map { it -> it[1] } | collect | ALIGN_MULTIQC
+      ALIGN_STAR.out.alignments | map { it -> it[1] } | collect | ALIGN_MULTIQC
 
-      COUNT_ALIGNED.out | map { it[0].id }
-                        | collectFile(name: "samples.txt", newLine: true)
-                        | set { samples_ch }
+      COUNT_ALIGNED.out.counts | map { it[0].id }
+                               | collectFile(name: "samples.txt", newLine: true)
+                               | set { samples_ch }
 
-      COUNT_ALIGNED.out | map { it[1] } | collect | set { rsem_ch }
+      COUNT_ALIGNED.out.counts | map { it[1] } | collect | set { rsem_ch }
 
       // TODO: Reintegrate QUANTIFY_GENES( samples_ch, rsem_ch )
 
@@ -169,15 +174,18 @@ workflow {
 
       // Software Version Capturing
       ch_software_versions = Channel.empty()
-      RAW_FASTQC.out.version.ifEmpty(null) | mix(ch_software_versions) | set{ch_software_versions}
-      RAW_MULTIQC.out.version.ifEmpty(null) | mix(ch_software_versions) | set{ch_software_versions}
-      TRIMGALORE.out.version.ifEmpty(null) | mix(ch_software_versions) | set{ch_software_versions}
-      TRIMMED_FASTQC.out.version.ifEmpty(null) | mix(ch_software_versions) | set{ch_software_versions}
-      TRIMMED_MULTIQC.out.version.ifEmpty(null) | mix(ch_software_versions) | set{ch_software_versions}
-      BUILD_STAR.out.version.ifEmpty(null) | mix(ch_software_versions) | set{ch_software_versions}
-      BUILD_RSEM.out.version.ifEmpty(null) | mix(ch_software_versions) | set{ch_software_versions}
-      DGE_BY_DESEQ2.out.version.ifEmpty(null) | mix(ch_software_versions) | set{ch_software_versions}
-      ch_software_versions | collectFile(name: "${params.gldsAccession}/software_versions.txt", newLine: true)
+      RAW_FASTQC.out.version | mix(ch_software_versions) | set{ch_software_versions}
+      RAW_MULTIQC.out.version | mix(ch_software_versions) | set{ch_software_versions}
+      TRIMGALORE.out.version | mix(ch_software_versions) | set{ch_software_versions}
+      TRIMMED_FASTQC.out.version | mix(ch_software_versions) | set{ch_software_versions}
+      TRIMMED_MULTIQC.out.version | mix(ch_software_versions) | set{ch_software_versions}
+      ALIGN_STAR.out.version | mix(ch_software_versions) | set{ch_software_versions}
+      COUNT_ALIGNED.out.version | mix(ch_software_versions) | set{ch_software_versions}
+      DGE_BY_DESEQ2.out.version | mix(ch_software_versions) | set{ch_software_versions}
+      ch_software_versions | map { it.text + "\n<><><>\n"}
+                           | unique
+                           | collectFile(name: "software_versions.txt",storeDir: "${ params.outputDir }/${params.gldsAccession}" , newLine: true)
+                           | view
 
       // VV processes
       if ( !params.skipVV ) {
@@ -194,10 +202,10 @@ workflow {
         VV_TRIMMED_READS_MULTIQC( TRIMMED_MULTIQC.out.data,
                                   ch_vv_log_03 ) | set { ch_vv_log_04 }
 
-        VV_STAR_ALIGNMENTS( ALIGN_STAR.out | map{ it -> it[1..it.size()-1] } | collect, // map use here: removes val(meta) from tuple
+        VV_STAR_ALIGNMENTS( ALIGN_STAR.out.alignments | map{ it -> it[1..it.size()-1] } | collect, // map use here: removes val(meta) from tuple
                             ch_vv_log_04 ) | set { ch_vv_log_05 }
 
-        VV_RSEM_COUNTS( COUNT_ALIGNED.out | map{ it -> it[1..it.size()-1] } | flatten | collect, // map use here: removes val(meta) from tuple
+        VV_RSEM_COUNTS( COUNT_ALIGNED.out.counts | map{ it -> it[1..it.size()-1] } | flatten | collect, // map use here: removes val(meta) from tuple
                         ch_vv_log_05 ) | set { ch_vv_log_06 }
 
         VV_DESEQ2_ANALYSIS( DGE_BY_DESEQ2.out.dge | map{ it -> it[1..it.size()-1] } | collect, // map use here: removes val(meta) from tuple

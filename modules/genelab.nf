@@ -1,10 +1,9 @@
 /* Processes dealing with retrieving data from GeneLab
 */
-
 process RNASEQ_RUNSHEET_FROM_GLDS {
-  conda "${baseDir}/envs/AST.yml"
+  // Downloads isazip and creates run sheets using GeneLab API
   tag "${ glds_accession }"
-  publishDir "${ params.gldsAccession }/Metadata"
+  publishDir "${ params.outputDir }/${ params.gldsAccession }/Metadata"
 
   input:
     val(glds_accession)
@@ -19,13 +18,13 @@ process RNASEQ_RUNSHEET_FROM_GLDS {
                                  --alternate-url\
                                  --to-RNASeq-runsheet
     """
-
 }
 
 
 process STAGE_RAW_READS {
+  // Stages the raw reads into appropriate publish directory
   tag "${ meta.id }"
-  publishDir "${ params.gldsAccession }/${ meta.raw_read_root_dir }"
+  publishDir "${ params.outputDir }/${ params.gldsAccession }/${ meta.raw_read_root_dir }"
 
   input:
     tuple val(meta), path("?.gz")
@@ -48,8 +47,9 @@ process STAGE_RAW_READS {
 
 
 process GENERATE_METASHEET {
+  // Generates a metadata table, not used in further processing
   tag "${ params.gldsAccession }"
-  publishDir "${ params.gldsAccession }/Metadata"
+  publishDir "${ params.outputDir }/${ params.gldsAccession }/Metadata"
 
   input:
     path("isa.zip")
@@ -67,7 +67,7 @@ process GENERATE_METASHEET {
 
 // Adapted from Function: https://github.com/nf-core/rnaseq/blob/master/modules/local/process/samplesheet_check.nf
 // Original Function Credit: Dr. Harshil Patel
-// Function to get list of [ meta, [ fastq_1, fastq_2 ] ]
+// Function to get list of [ meta, [ fastq_1_path, fastq_2_path ] ]
 def get_runsheet_paths(LinkedHashMap row) {
     def ORGANISMS = ["mus_musculus":"MOUSE",
                      "danio_rerio":"ZEBRAFISH",
