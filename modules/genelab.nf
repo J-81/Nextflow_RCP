@@ -3,7 +3,8 @@
 process RNASEQ_RUNSHEET_FROM_GLDS {
   // Downloads isazip and creates run sheets using GeneLab API
   tag "${ glds_accession }"
-  publishDir "${ params.outputDir }/${ params.gldsAccession }/Metadata"
+  publishDir "${ params.outputDir }/${ params.gldsAccession }/Metadata",
+    mode: params.publish_dir_mode
 
   input:
     val(glds_accession)
@@ -24,7 +25,8 @@ process RNASEQ_RUNSHEET_FROM_GLDS {
 process STAGE_RAW_READS {
   // Stages the raw reads into appropriate publish directory
   tag "${ meta.id }"
-  publishDir "${ params.outputDir }/${ params.gldsAccession }/${ meta.raw_read_root_dir }"
+  publishDir "${ params.outputDir }/${ params.gldsAccession }/${ meta.raw_read_root_dir }",
+    mode: params.publish_dir_mode
 
   input:
     tuple val(meta), path("?.gz")
@@ -49,7 +51,8 @@ process STAGE_RAW_READS {
 process GENERATE_METASHEET {
   // Generates a metadata table, not used in further processing
   tag "${ params.gldsAccession }"
-  publishDir "${ params.outputDir }/${ params.gldsAccession }/Metadata"
+  publishDir "${ params.outputDir }/${ params.gldsAccession }/Metadata",
+    mode: params.publish_dir_mode
 
   input:
     path("isa.zip")

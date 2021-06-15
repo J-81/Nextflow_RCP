@@ -44,7 +44,8 @@ process BUILD_STAR {
 process ALIGN_STAR {
   // Aligns reads against STAR index
   tag "Sample: ${ meta.id }"
-  publishDir "${ params.outputDir }/${ params.gldsAccession }"
+  publishDir "${ params.outputDir }/${ params.gldsAccession }",
+    mode: params.publish_dir_mode
 
   label 'maxCPU'
   label 'big_mem'
@@ -115,7 +116,8 @@ process BUILD_RSEM {
 process COUNT_ALIGNED {
   // Generates gene and isoform counts from alignments
   tag "Sample: ${ meta.id }"
-  publishDir "${ params.outputDir }/${ params.gldsAccession }"
+  publishDir "${ params.outputDir }/${ params.gldsAccession }",
+    mode: params.publish_dir_mode
 
   input:
     tuple val(meta), path("starOutput/*"), path(RSEM_REF)
