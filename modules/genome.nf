@@ -45,7 +45,8 @@ process ALIGN_STAR {
   // Aligns reads against STAR index
   tag "Sample: ${ meta.id }"
   publishDir "${ params.outputDir }/${ params.gldsAccession }",
-    mode: params.publish_dir_mode
+    mode: params.publish_dir_mode,
+    pattern: "${ meta.STAR_Alignment_dir }"
 
   label 'maxCPU'
   label 'big_mem'
