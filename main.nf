@@ -18,7 +18,8 @@ include { BUILD_STAR;
           BUILD_RSEM;
           COUNT_ALIGNED;
           SUBSAMPLE_GENOME;
-          CONCAT_ERCC } from './modules/genome.nf'
+          CONCAT_ERCC;
+          QUANTIFY_GENES } from './modules/genome.nf'
 include { DGE_BY_DESEQ2 } from './modules/dge.nf'
 include { VV_RAW_READS;
           VV_TRIMMED_READS;
@@ -160,12 +161,12 @@ workflow {
       ALIGN_STAR.out.alignments | map { it -> it[1] } | collect | ALIGN_MULTIQC
 
       COUNT_ALIGNED.out.counts | map { it[0].id }
-                               | collectFile(name: "samples.txt", newLine: true)
+                               | collectFile(name: "samples.txt", sort: true, newLine: true)
                                | set { samples_ch }
 
       COUNT_ALIGNED.out.counts | map { it[1] } | collect | set { rsem_ch }
 
-      // TODO: Reintegrate QUANTIFY_GENES( samples_ch, rsem_ch )
+      QUANTIFY_GENES( samples_ch, rsem_ch )
 
       organism_ch = channel.fromPath( params.organismCSV )
 

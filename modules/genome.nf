@@ -154,10 +154,12 @@ process COUNT_ALIGNED {
 process QUANTIFY_GENES {
   // An R script that extracts gene counts by sample to a table
   tag "Dataset: ${ params.gldsAccession }"
+  publishDir "${ params.outputDir }/${ params.gldsAccession }/03-RSEM_Counts",
+    mode: params.publish_dir_mode
 
   input:
     path("samples.txt")
-    path("03-RSEM_COUNTS/*.genes.results")
+    path("03-RSEM_Counts/*")
 
   output:
     tuple path("RSEM_Unnormalized_Counts.csv"), path("NumNonZeroGenes.csv")
