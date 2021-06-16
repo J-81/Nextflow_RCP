@@ -106,8 +106,6 @@ workflow {
       STAGING.out.raw_reads | take(1) | map{it -> it[0]} | set { meta_ch }
       STAGING.out.isa | set { isa_ch }
 
-      println (meta_ch)
-
       raw_reads_ch | RAW_FASTQC //| view {"POST_FASTQC: $it"}
 
       RAW_FASTQC.out.fastqc | map { it -> [ it[1], it[2] ] }
