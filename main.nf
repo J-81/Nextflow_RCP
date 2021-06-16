@@ -186,7 +186,6 @@ workflow {
       ch_software_versions | map { it.text + "\n<><><>\n"}
                            | unique
                            | collectFile(name: "software_versions.txt",storeDir: "${ params.outputDir }/${params.gldsAccession}" , newLine: true)
-                           | view
 
       // VV processes
       if ( !params.skipVV ) {
@@ -219,7 +218,8 @@ workflow.onComplete {
     println "${c_bright_green}Pipeline completed at: $workflow.complete"
     println "Execution status: ${ workflow.success ? 'OK' : 'failed' }"
     if ( workflow.success ) {
-      println "Raw and Processed data location: ${ params.gldsAccession }"
-      println "V&V logs location: ${ params.gldsAccession }/VV_Log${c_reset}"
+      println "Raw and Processed data location: ${ params.outputDir }/${ params.gldsAccession }"
+      println "V&V logs location: ${ params.outputDir }/${ params.gldsAccession }/VV_Log"
+      println "Pipeline tracing/visualization files location: ${ params.outputDir }/${ params.tracedir }/${ params.gldsAccession }${c_reset}"
     }
 }
