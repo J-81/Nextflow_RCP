@@ -10,13 +10,12 @@ process RNASEQ_RUNSHEET_FROM_GLDS {
     val(glds_accession)
 
   output:
-    path("AST_autogen_${ glds_accession }_RNASeq_runsheet.csv"), emit: runsheet
+    path("AST_autogen_*_${ glds_accession }_RNASeq_runsheet.csv"), emit: runsheet
     path("*.zip"), emit: isazip
 
   script:
     """
     retrieve_isa_from_genelab.py --accession ${ glds_accession }\
-                                 --alternate-url\
                                  --to-RNASeq-runsheet
     """
 }
