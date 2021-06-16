@@ -18,7 +18,8 @@ include { BUILD_STAR;
           BUILD_RSEM;
           COUNT_ALIGNED;
           SUBSAMPLE_GENOME;
-          CONCAT_ERCC } from './modules/genome.nf'
+          CONCAT_ERCC;
+          QUANTIFY_GENES } from './modules/genome.nf'
 include { DGE_BY_DESEQ2 } from './modules/dge.nf'
 include { VV_RAW_READS;
           VV_TRIMMED_READS;
@@ -105,8 +106,6 @@ workflow {
       STAGING.out.raw_reads | take(1) | map{it -> it[0]} | set { meta_ch }
       STAGING.out.isa | set { isa_ch }
 
-      println (meta_ch)
-
       raw_reads_ch | RAW_FASTQC //| view {"POST_FASTQC: $it"}
 
       RAW_FASTQC.out.fastqc | map { it -> [ it[1], it[2] ] }
@@ -160,12 +159,12 @@ workflow {
       ALIGN_STAR.out.alignments | map { it -> it[1] } | collect | ALIGN_MULTIQC
 
       COUNT_ALIGNED.out.counts | map { it[0].id }
-                               | collectFile(name: "samples.txt", newLine: true)
+                               | collectFile(name: "samples.txt", sort: true, newLine: true)
                                | set { samples_ch }
 
       COUNT_ALIGNED.out.counts | map { it[1] } | collect | set { rsem_ch }
 
-      // TODO: Reintegrate QUANTIFY_GENES( samples_ch, rsem_ch )
+      QUANTIFY_GENES( samples_ch, rsem_ch )
 
       organism_ch = channel.fromPath( params.organismCSV )
 
@@ -185,7 +184,6 @@ workflow {
       ch_software_versions | map { it.text + "\n<><><>\n"}
                            | unique
                            | collectFile(name: "software_versions.txt",storeDir: "${ params.outputDir }/${params.gldsAccession}" , newLine: true)
-                           | view
 
       // VV processes
       if ( !params.skipVV ) {
@@ -218,7 +216,8 @@ workflow.onComplete {
     println "${c_bright_green}Pipeline completed at: $workflow.complete"
     println "Execution status: ${ workflow.success ? 'OK' : 'failed' }"
     if ( workflow.success ) {
-      println "Raw and Processed data location: ${ params.gldsAccession }"
-      println "V&V logs location: ${ params.gldsAccession }/VV_Log${c_reset}"
+      println "Raw and Processed data location: ${ params.outputDir }/${ params.gldsAccession }"
+      println "V&V logs location: ${ params.outputDir }/${ params.gldsAccession }/VV_Log"
+      println "Pipeline tracing/visualization files location: ${ params.tracedir }/${ params.gldsAccession }${c_reset}"
     }
 }

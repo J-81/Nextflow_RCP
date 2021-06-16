@@ -44,7 +44,9 @@ process BUILD_STAR {
 process ALIGN_STAR {
   // Aligns reads against STAR index
   tag "Sample: ${ meta.id }"
-  publishDir "${ params.outputDir }/${ params.gldsAccession }"
+  publishDir "${ params.outputDir }/${ params.gldsAccession }",
+    mode: params.publish_dir_mode,
+    pattern: "${ meta.STAR_Alignment_dir }"
 
   label 'maxCPU'
   label 'big_mem'
@@ -115,7 +117,9 @@ process BUILD_RSEM {
 process COUNT_ALIGNED {
   // Generates gene and isoform counts from alignments
   tag "Sample: ${ meta.id }"
-  publishDir "${ params.outputDir }/${ params.gldsAccession }"
+  publishDir "${ params.outputDir }/${ params.gldsAccession }",
+    mode: params.publish_dir_mode,
+    pattern: "${ meta.RSEM_Counts_dir }/*"
 
   input:
     tuple val(meta), path("starOutput/*"), path(RSEM_REF)
@@ -152,10 +156,12 @@ process COUNT_ALIGNED {
 process QUANTIFY_GENES {
   // An R script that extracts gene counts by sample to a table
   tag "Dataset: ${ params.gldsAccession }"
+  publishDir "${ params.outputDir }/${ params.gldsAccession }/03-RSEM_Counts",
+    mode: params.publish_dir_mode
 
   input:
     path("samples.txt")
-    path("03-RSEM_COUNTS/*.genes.results")
+    path("03-RSEM_Counts/*")
 
   output:
     tuple path("RSEM_Unnormalized_Counts.csv"), path("NumNonZeroGenes.csv")

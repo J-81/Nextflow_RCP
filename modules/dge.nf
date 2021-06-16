@@ -2,9 +2,15 @@
  * Different Gene Expression Analysis Processes
  */
 process DGE_BY_DESEQ2 {
-  publishDir "${ params.outputDir }/${ params.gldsAccession }/${meta.DESeq2_NormCount}", pattern: "norm_counts_output/*", saveAs: { "${file(it).getName()}" }
-  publishDir "${ params.outputDir }/${ params.gldsAccession }/${meta.DESeq2_DGE}", pattern: "dge_output/*", saveAs: { "${file(it).getName()}" }
-  publishDir "${ params.outputDir }/${ params.gldsAccession }/${meta.DESeq2_DGE}/ERCC_NormDGE", pattern: "dge_output_ercc/*", saveAs: { "${file(it).getName()}" }
+  publishDir "${ params.outputDir }/${ params.gldsAccession }/${meta.DESeq2_NormCount}",
+    mode: params.publish_dir_mode,
+    pattern: "norm_counts_output/*", saveAs: { "${file(it).getName()}" }
+  publishDir "${ params.outputDir }/${ params.gldsAccession }/${meta.DESeq2_DGE}",
+    mode: params.publish_dir_mode,
+    pattern: "dge_output/*", saveAs: { "${file(it).getName()}" }
+  publishDir "${ params.outputDir }/${ params.gldsAccession }/${meta.DESeq2_DGE}/ERCC_NormDGE",
+    mode: params.publish_dir_mode,
+    pattern: "dge_output_ercc/*", saveAs: { "${file(it).getName()}" }
 
   input:
     path(Isa_zip)

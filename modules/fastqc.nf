@@ -14,6 +14,6 @@ process GET_MAX_READ_LENGTH {
     # unzip fastqc datazip
     unzip ${ fastqc_datazip }
 
-    RESULT=\$(get_max_readlength_from_fastqc.py "${ fastqc_datazip.simpleName }/fastqc_data.txt")
+    RESULT=\$(get_max_readlength_from_fastqc.py "${ fastqc_datazip.baseName }/fastqc_data.txt")
     """
 }

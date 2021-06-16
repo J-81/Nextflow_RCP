@@ -18,7 +18,7 @@ names(files) <- rownames(samples)
 txi.rsem <- tximport(files, type = "rsem", txIn = FALSE, txOut = FALSE)
 
 ##### Export unnormalized gene counts table
-setwd(file.path(counts_dir))
+#setwd(file.path(counts_dir))
 write.csv(txi.rsem$counts,file='RSEM_Unnormalized_Counts.csv')
 
 ##### Count the number of genes with non-zero counts for each sample
@@ -27,7 +27,7 @@ NumNonZeroGenes <- (as.matrix(colSums(rawCounts > 0), row.names = 1))
 colnames(NumNonZeroGenes) <- c("Number of genes with non-zero counts")
 
 ##### Export the number of genes with non-zero counts for each sample
-setwd(file.path(counts_dir))
+#setwd(file.path(counts_dir))
 write.csv(NumNonZeroGenes,file='NumNonZeroGenes.csv')
 
 ## print session info ##

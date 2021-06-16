@@ -3,19 +3,19 @@
 process RNASEQ_RUNSHEET_FROM_GLDS {
   // Downloads isazip and creates run sheets using GeneLab API
   tag "${ glds_accession }"
-  publishDir "${ params.outputDir }/${ params.gldsAccession }/Metadata"
+  publishDir "${ params.outputDir }/${ params.gldsAccession }/Metadata",
+    mode: params.publish_dir_mode
 
   input:
     val(glds_accession)
 
   output:
-    path("AST_autogen_${ glds_accession }_RNASeq_runsheet.csv"), emit: runsheet
+    path("AST_autogen_*_${ glds_accession }_RNASeq_runsheet.csv"), emit: runsheet
     path("*.zip"), emit: isazip
 
   script:
     """
     retrieve_isa_from_genelab.py --accession ${ glds_accession }\
-                                 --alternate-url\
                                  --to-RNASeq-runsheet
     """
 }
@@ -24,7 +24,8 @@ process RNASEQ_RUNSHEET_FROM_GLDS {
 process STAGE_RAW_READS {
   // Stages the raw reads into appropriate publish directory
   tag "${ meta.id }"
-  publishDir "${ params.outputDir }/${ params.gldsAccession }/${ meta.raw_read_root_dir }"
+  publishDir "${ params.outputDir }/${ params.gldsAccession }/${ meta.raw_read_root_dir }",
+    mode: params.publish_dir_mode
 
   input:
     tuple val(meta), path("?.gz")
@@ -49,7 +50,8 @@ process STAGE_RAW_READS {
 process GENERATE_METASHEET {
   // Generates a metadata table, not used in further processing
   tag "${ params.gldsAccession }"
-  publishDir "${ params.outputDir }/${ params.gldsAccession }/Metadata"
+  publishDir "${ params.outputDir }/${ params.gldsAccession }/Metadata",
+    mode: params.publish_dir_mode
 
   input:
     path("isa.zip")
@@ -81,7 +83,6 @@ def get_runsheet_paths(LinkedHashMap row) {
     meta.id                         = row.sample_name
     meta.organism_sci               = row.organism.replaceAll(" ","_").toLowerCase()
     meta.organism_non_sci           = ORGANISMS[meta.organism_sci]
-    meta.read_length_R1             = row.read_length_R1.toInteger()
     meta.paired_end                 = row.paired_end.toBoolean()
     meta.has_ercc                   = row.has_ERCC.toBoolean()
     meta.raw_read1                  = new File(row.raw_read1) //points to file
@@ -107,7 +108,6 @@ def get_runsheet_paths(LinkedHashMap row) {
         meta.stage2                         = file("${ params.gldsAccession }") / file(row.raw_read2).name
         meta.raw_read2                      = new File(row.raw_read2) //points to file
         meta.trimmed_read2                  = new File(row.trimmed_read2) //points to file
-        meta.read_length_R2                 = row.read_length_R2.toInteger()
         raw_reads.add(file(row.read2_url))
       }
     array = [meta, raw_reads]
