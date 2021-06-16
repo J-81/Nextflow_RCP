@@ -218,6 +218,6 @@ workflow.onComplete {
     if ( workflow.success ) {
       println "Raw and Processed data location: ${ params.outputDir }/${ params.gldsAccession }"
       println "V&V logs location: ${ params.outputDir }/${ params.gldsAccession }/VV_Log"
-      println "Pipeline tracing/visualization files location: ${ params.outputDir }/${ params.tracedir }/${ params.gldsAccession }${c_reset}"
+      println "Pipeline tracing/visualization files location: ${ params.tracedir }/${ params.gldsAccession }${c_reset}"
     }
 }
