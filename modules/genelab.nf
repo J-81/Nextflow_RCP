@@ -83,7 +83,6 @@ def get_runsheet_paths(LinkedHashMap row) {
     meta.id                         = row.sample_name
     meta.organism_sci               = row.organism.replaceAll(" ","_").toLowerCase()
     meta.organism_non_sci           = ORGANISMS[meta.organism_sci]
-    meta.read_length_R1             = row.read_length_R1.toInteger()
     meta.paired_end                 = row.paired_end.toBoolean()
     meta.has_ercc                   = row.has_ERCC.toBoolean()
     meta.raw_read1                  = new File(row.raw_read1) //points to file
@@ -109,7 +108,6 @@ def get_runsheet_paths(LinkedHashMap row) {
         meta.stage2                         = file("${ params.gldsAccession }") / file(row.raw_read2).name
         meta.raw_read2                      = new File(row.raw_read2) //points to file
         meta.trimmed_read2                  = new File(row.trimmed_read2) //points to file
-        meta.read_length_R2                 = row.read_length_R2.toInteger()
         raw_reads.add(file(row.read2_url))
       }
     array = [meta, raw_reads]
