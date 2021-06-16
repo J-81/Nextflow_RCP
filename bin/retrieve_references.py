@@ -4,6 +4,7 @@ Script should be compatible with releases from 73 and onward.
 Older releases have different FTP directory formats and/or are missing checksums.
 """
 from ftplib import FTP
+from ftplib import error_perm
 import subprocess
 import argparse
 
@@ -26,9 +27,16 @@ args = _parse_args()
 ENSEMBL_VERSION = int(args.ensembl_version)
 ORGANISM = args.organism.capitalize()
 
+# sets string modifiers needed to access the correct ftp server
+if ORGANISM.lower() in ["arabidopsis_thaliana"]:
+    non_vertebrate_mod1 = "genomes"
+    non_vertebrate_mod2 = "plants/"
+else:
+    non_vertebrate_mod1 = ''
+    non_vertebrate_mod2 = ''
 # constants
-SERVER = "ftp.ensembl.org"
-RELEASE_FOLDER = f"pub/release-{ENSEMBL_VERSION}"
+SERVER = f"ftp.ensembl{non_vertebrate_mod1}.org"
+RELEASE_FOLDER = f"pub/{non_vertebrate_mod2}release-{ENSEMBL_VERSION}"
 FASTA_FOLDER = f"fasta/{ORGANISM.lower()}/dna"
 TARGET_FASTA_SUFFIX = "dna.toplevel.fa.gz"
 GTF_FOLDER = f"gtf/{ORGANISM.lower()}"
@@ -45,12 +53,17 @@ def download_from_ftp(target_file_suffix, target_file_folder, verbose = False):
     ftp = FTP(SERVER)
     print(f"FTP: Logging into {SERVER}") if verbose else None
     ftp.login()
-    print(f"FTP: Navigating into folder {RELEASE_FOLDER}")
-    ftp.cwd(RELEASE_FOLDER)
 
-    # cd into the fasta folder
-    print(f"FTP: Searching in {target_file_folder}") if verbose else None
-    ftp.cwd(target_file_folder)
+    # try,except block to capture any bad ftp naviations.
+    try:
+        print(f"FTP: Navigating into folder {RELEASE_FOLDER}")
+        ftp.cwd(RELEASE_FOLDER)
+
+        # cd into the fasta folder
+        print(f"FTP: Searching in {target_file_folder}") if verbose else None
+        ftp.cwd(target_file_folder)
+    except error_perm as e:
+        raise ValueError("FTPLIB ERROR RAISED: {e}.  This usually indicates the organism '{ORGANISM}' could not be located on Ensembl using this script.  This script may need updating if the organism is on ensembl as this indicates the ftp path isn't formed correctly.")
 
     ################################################################################
     # Find Fasta File
