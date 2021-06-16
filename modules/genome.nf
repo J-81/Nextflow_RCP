@@ -118,7 +118,8 @@ process COUNT_ALIGNED {
   // Generates gene and isoform counts from alignments
   tag "Sample: ${ meta.id }"
   publishDir "${ params.outputDir }/${ params.gldsAccession }",
-    mode: params.publish_dir_mode
+    mode: params.publish_dir_mode,
+    pattern: "${ meta.RSEM_Counts_dir }/*"
 
   input:
     tuple val(meta), path("starOutput/*"), path(RSEM_REF)

@@ -30,7 +30,8 @@ process FASTQC {
 process MULTIQC {
   tag "Dataset: ${ params.gldsAccession }"
   publishDir "${ params.outputDir }/${ params.gldsAccession }/${ params.PublishTo }",
-    mode: params.publish_dir_mode
+    mode: params.publish_dir_mode,
+    pattern: "*_multiqc_report/*"
 
   label "fastLocal"
 
