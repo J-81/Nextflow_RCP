@@ -188,7 +188,7 @@ process VV_DESEQ2_ANALYSIS {
     cd ${ params.RootDirForVV }/${ params.gldsAccession }
     deseq2_script_VV.py --runsheet-path Metadata/*runsheet.csv \
                         --output VV_Log/VV_FULL_OUT.tsv \
-                        --halt-severity 91
+                        --halt-severity 91 # required as the stub deseq2 script results in counts that differ from the rsem, a halting error by default
 
     # move back to work dir and mv tsv into work dir
     cd -
