@@ -41,16 +41,16 @@ if (params.help) {
   println()
   println("required arguments:")
   println("  --gldsAccession GLDS-000")
-  println("                        the GLDS accession number to stage raw reads for the RNASeq Concensus Pipeline")
-  println("  --ensemblVersion n    ensembl Version to use for the reference genome.")
+  println("                        the GLDS accession id to process through the RNASeq Concensus Pipeline.")
+  println("  --ensemblVersion n    the ensembl Version to use for the reference genome.")
   println("optional arguments:")
   println("  --help                show this help message and exit")
-  println("  --skipVV              skip automated V&V checks")
+  println("  --skipVV              skip automated V&V processes. Default: false")
   println("  --outputDir           directory to save staged raw files and processed files. Default: <launch directory>")
   println("  --limitSamplesTo n    limit the number of samples staged to a number.")
   println("  --genomeSubsample n   subsamples genome fasta and gtf files to the supplied chromosome.")
-  println("  --truncateTo n        limit the number of records retrieved for each reads file.")
-  println("  --stageLocal          download the raw reads files to the path specifed in the RNASeq runsheet.  Set to false to disable raw read download and processing.")
+  println("  --truncateTo n        limit number of reads downloaded and processed to *n* reads , for paired end limits number of reverse and forward read files to *n* reads each.")
+  println("  --stageLocal          download the raw reads files for the supplied GLDS accession id.  Set to false to disable raw read download and processing.  Default: true")
   exit 0
   }
 
