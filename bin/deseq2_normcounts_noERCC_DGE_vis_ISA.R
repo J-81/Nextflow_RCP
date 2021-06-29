@@ -41,9 +41,17 @@ unzip(file.path(Isa_zip), exdir = td)
 #END_MOD#
 isa <- readISAtab(path = td)
 n = as.numeric(which(isa@assay.technology.types == "RNA Sequencing (RNA-Seq)"))
+# Get sample indexes for only RNASeq
+n2 <- as.numeric(which(isa@samples %in% isa@samples.per.assay.filename[[n]]))
+
+
 isa_tabs<-isa@assay.tabs[[n]]@assay.file
 factors <- as.data.frame(isa@factors[[1]], stringsAsFactors = FALSE)
 colnames(factors)<-paste("factor",1:dim(factors)[2], sep = "_")
+
+# Subset only the samples for RNASeq
+factors <- factors[n2,]
+
 compare_csv <- data.frame(sample_id = isa_tabs$`Sample Name`, factors)
 
 #### Create data frame containing all samples and respective factors
@@ -176,25 +184,9 @@ for (i in 1:dim(contrasts)[2]){
   rm(res_1)
 }
 
-## Determine the keytype to use for annotation database
-## Order (proceed to next if not found)
-## 'ENSEMBL' -> 'TAIR' -> Raise Error
-if ( "ENSEMBL" %in% keytypes( eval( parse(text = ann.dbi) ) ) ) {
-  keytype = "ENSEMBL"
-} else if ( "TAIR" %in% keytypes( eval( parse(text = ann.dbi) ) ) ) {
-  keytype = "TAIR"
-} else {
-  stop(
-    sprintf("Neither 'ENSEMBL' nor 'TAIR' keytypes found in %s. The following keytypes were found '%s'",
-            ann.dbi,
-            paste( keytypes( eval( parse(text = ann.dbi) ) ), collapse="' '" )
-          )
-      )
-}
-sprintf("Using '%s' keytype for %s", keytype, ann.dbi )
 
 ## Create annotation table and add gene annotation columns
-#keytype = "ENSEMBL" # will be different if primary annotations are not ENSEMBL # replaced by section above
+keytype = "ENSEMBL" # will be different if primary annotations are not ENSEMBL
 annot <- data.frame(rownames(output_table_1), stringsAsFactors = FALSE)
 colnames(annot)[1]<-keytype
 if ("SYMBOL" %in% columns(eval(parse(text = ann.dbi),env=.GlobalEnv))){

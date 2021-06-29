@@ -41,9 +41,16 @@ unzip(file.path(Isa_zip), exdir = td)
 #END_MOD#
 isa <- readISAtab(path = td)
 n = as.numeric(which(isa@assay.technology.types == "RNA Sequencing (RNA-Seq)"))
+# Get sample indexes for only RNASeq
+n2 <- as.numeric(which(isa@samples %in% isa@samples.per.assay.filename[[n]]))
+
+
 isa_tabs<-isa@assay.tabs[[n]]@assay.file
 factors <- as.data.frame(isa@factors[[1]], stringsAsFactors = FALSE)
 colnames(factors)<-paste("factor",1:dim(factors)[2], sep = "_")
+
+# Subset only the samples for RNASeq
+factors <- factors[n2,]
 compare_csv <- data.frame(sample_id = isa_tabs$`Sample Name`, factors)
 
 #### Create data frame containing all samples and respective factors
