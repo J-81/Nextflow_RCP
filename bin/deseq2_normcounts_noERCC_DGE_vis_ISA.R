@@ -93,8 +93,13 @@ rm(contrast.names)
 files <- list.files(path = "Rsem_gene_counts", pattern = ".genes.results", full.names = TRUE)
 
 ## Reorder the *genes.results files to match the ordering of the ISA samples
-files <- files[sapply(rownames(study), function(x)grep(x, files, value=FALSE, fixed=TRUE))]
-names(files) <- rownames(study)
+
+# Replace spaces in sample names from ISA with "_", consistent with runsheet generation
+library(stringr)
+samples = str_replace_all(rownames(study), " ", "_")
+
+files <- files[sapply(samples, function(x)grep(x, files, value=FALSE, fixed=TRUE))]
+names(files) <- samples
 txi.rsem <- tximport(files, type = "rsem", txIn = FALSE, txOut = FALSE)
 
 
