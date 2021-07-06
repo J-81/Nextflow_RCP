@@ -16,6 +16,7 @@ process RNASEQ_RUNSHEET_FROM_GLDS {
   script:
     """
     retrieve_isa_from_genelab.py --accession ${ glds_accession }\
+                                 --alternate-url \
                                  --to-RNASeq-runsheet
     """
 }
