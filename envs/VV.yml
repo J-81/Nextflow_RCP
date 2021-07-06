@@ -5,7 +5,7 @@ channels:
    - defaults
 dependencies:
    - python=3.8
-   - pandas
+   - pandas=1.2
    - samtools
    - isatools
    - pip

@@ -5,6 +5,7 @@ channels:
    - defaults
 dependencies:
    - python=3.8
+   - pandas=1.2
    - isatools
    - peppy
    - pip
