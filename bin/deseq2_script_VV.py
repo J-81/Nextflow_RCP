@@ -40,7 +40,7 @@ if __name__ == '__main__':
                       log_to = Path(args.output),
                       halt_level = int(args.halt_severity))
 
-    cutoffs = load_cutoffs(None, "DEFAULT")
+    cutoffs = load_cutoffs(None, "DEFAULT_RNASEQ")
 
     cross_checks = dict()
     sample_sheet = RNASeqSampleSheet(sample_sheet = args.runsheet_path)
@@ -88,7 +88,7 @@ if __name__ == '__main__':
                                log_to = Path("tmp_remove.tsv"),
                                halt_level = int(args.halt_severity))
 
-    cutoffs = load_cutoffs(None, "DEFAULT")
+    cutoffs = load_cutoffs(None, "DEFAULT_RNASEQ")
 
     cross_checks = dict()
     sample_sheet = RNASeqSampleSheet(sample_sheet = args.runsheet_path)
