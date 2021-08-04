@@ -26,8 +26,22 @@ work_dir=getwd()
 #REMOVE_MOD#counts_dir=args[4]
 norm_output=args[3]
 DGE_output=args[4]
-DGE_output_ERCC=args[5]
+DEBUG_RUN=args[5]
+DGE_output_ERCC=args[6]
 
+if (DEBUG_RUN) {
+	print('DEBUG MODE ENABLED')
+} else {
+	print('DEBUG MODE DISABLED')
+}
+
+if (!is.na(DGE_output_ERCC)) {
+	print('ERCC MODE ENABLED')
+	ERCC_MODE=TRUE
+} else {
+	print('ERCC MODE DISABLED')
+	ERCC_MODE=FALSE
+}
 
 ## Set your working directory to the directory containing the *ISA.zip file for the GLDS being processed
 #setwd(file.path(metadata_dir))
@@ -105,7 +119,12 @@ txi.rsem <- tximport(files, type = "rsem", txIn = FALSE, txOut = FALSE)
 ## Add 1 to genes with lengths of zero - needed to make DESeqDataSet object
 txi.rsem$length[txi.rsem$length == 0] <- 1
 
-
+## Add 10 to genes to first sample - DEBUG: ensures truncated runs process
+if (DEBUG_RUN) {
+	print('DEBUG MODE: Replacing all gene counts with random counts from 0-5000!!')
+	set.seed(77077)
+	txi.rsem$counts <- txi.rsem$counts + matrix(sample( 0:5000, NROW(txi.rsem$counts)*NCOL(txi.rsem$counts), replace=TRUE),nrow=NROW(txi.rsem$counts))
+}
 ##### Make DESeqDataSet object #####
 
 ## Create data frame defining which group each sample belongs to
@@ -120,14 +139,15 @@ summary(dds)
 
 ## Note: These data are used internally at GeneLab for QC
 
-## Make a DESeqDataSet object using only unfiltered ERCC genes
-ercc_rows_all <- grep("ERCC-",rownames(dds))
-ercc_dds_all <- dds[ercc_rows_all,]
-
-## Print ERCC unfiltered raw counts table
-ERCC_rawCounts_all = as.data.frame(counts(ercc_dds_all))
-write.csv(ERCC_rawCounts_all,file='ERCC_rawCounts_unfiltered.csv')
-
+if (ERCC_MODE) {
+	## Make a DESeqDataSet object using only unfiltered ERCC genes
+	ercc_rows_all <- grep("ERCC-",rownames(dds))
+	ercc_dds_all <- dds[ercc_rows_all,]
+	
+	## Print ERCC unfiltered raw counts table
+	ERCC_rawCounts_all = as.data.frame(counts(ercc_dds_all))
+	write.csv(ERCC_rawCounts_all,file='ERCC_rawCounts_unfiltered.csv')
+}
 
 ##### Filter out genes with counts of less than 10 in all samples #####
 keep <- rowSums(counts(dds)) > 10
@@ -137,57 +157,65 @@ summary(dds)
 
 ##### Prepare filtered data to be normalized with and without considering ERCC genes #####
 
-## Make a DESeqDataSet object using only filtered ERCC genes, which will be used to generate ERCC counts table
-ercc_rows <- grep("ERCC-",rownames(dds))
-ercc_dds <- dds[ercc_rows,]
+if (ERCC_MODE) {
+	## Make a DESeqDataSet object using only filtered ERCC genes, which will be used to generate ERCC counts table
+	ercc_rows <- grep("ERCC-",rownames(dds))
+	ercc_dds <- dds[ercc_rows,]
 
-## Create list of rows containing ERCC group B genes to use for ERCC-normalization
-## Note: ERCC group B genes should be the same concentration in all samples
-ercc_rows_gpB <- grep("ERCC-00096|ERCC-00171|ERCC-00009|ERCC-00042|ERCC-00060|ERCC-00035|ERCC-00025|ERCC-00051|ERCC-00053|ERCC-00148|ERCC-00126|ERCC-00034|ERCC-00150|ERCC-00067|ERCC-00031|ERCC-00109|ERCC-00073|ERCC-00158|ERCC-00104|ERCC-00142|ERCC-00138|ERCC-00117|ERCC-00075",rownames(dds))
+	## Create list of rows containing ERCC group B genes to use for ERCC-normalization
+	## Note: ERCC group B genes should be the same concentration in all samples
+	ercc_rows_gpB <- grep("ERCC-00096|ERCC-00171|ERCC-00009|ERCC-00042|ERCC-00060|ERCC-00035|ERCC-00025|ERCC-00051|ERCC-00053|ERCC-00148|ERCC-00126|ERCC-00034|ERCC-00150|ERCC-00067|ERCC-00031|ERCC-00109|ERCC-00073|ERCC-00158|ERCC-00104|ERCC-00142|ERCC-00138|ERCC-00117|ERCC-00075",rownames(dds))
 
-## Identify and list samples that do not contain counts for ERCC genes
-## This is to make sure all samples indeed contain ERCC spike-in
-cat("Samples that do not have detectable ERCC spike-ins: ", colnames(ercc_dds[,colSums(counts(ercc_dds))==0]), sep="\n")
+	## Identify and list samples that do not contain counts for ERCC genes
+	## This is to make sure all samples indeed contain ERCC spike-in
+	cat("Samples that do not have detectable ERCC spike-ins: ", colnames(ercc_dds[,colSums(counts(ercc_dds))==0]), sep="\n")
 
-## Print ERCC filtered raw counts table
-## Note: These data are used internally at GeneLab for QC
-ERCC_rawCounts = as.data.frame(counts(ercc_dds))
-write.csv(ERCC_rawCounts,file='ERCC_rawCounts_filtered.csv')
+	## Print ERCC filtered raw counts table
+	## Note: These data are used internally at GeneLab for QC
+	ERCC_rawCounts = as.data.frame(counts(ercc_dds))
+	write.csv(ERCC_rawCounts,file='ERCC_rawCounts_filtered.csv')
 
-## Remove samples that do not contain ERCC counts
-## Note: All samples should contain ERCC spike-in and thus ERCC counts, if some samples do not contain ERCC counts, those samples should be removed and not used for downstream analysis
-ercc_dds <- ercc_dds[,colSums(counts(ercc_dds)) > 0]
-
+	## Remove samples that do not contain ERCC counts
+	## Note: All samples should contain ERCC spike-in and thus ERCC counts, if some samples do not contain ERCC counts, those samples should be removed and not used for downstream analysis
+	ercc_dds <- ercc_dds[,colSums(counts(ercc_dds)) > 0]
+}
 ##### Generate a DESeqDataSet object using only non-ERCC genes #####
 
 ## dds_1 will be used to generate data without considering ERCC genes
-dds_1 <- dds[-c(ercc_rows),] # remove ERCCs from full counts table
-
-## dds_2 will be used to generate data with considering ERCC genes
-dds_2 <- dds
+if (ERCC_MODE) {
+	dds_1 <- dds[-c(ercc_rows),] # remove ERCCs from full counts table
+	## dds_2 will be used to generate data with considering ERCC genes
+	dds_2 <- dds
+} else {
+	ercc_rows <- grep("ERCC-",rownames(dds))
+	print(any(ercc_rows))
+	dds_1 <- dds[-c(ercc_rows),]
+}
 
 
 ##### Perform DESeq analysis with and without considering ERCC genes #####
-
-## Run DESeq analysis with ERCC-normalization by replacing size factor object with ERCC size factors for rescaling
-dds_2 <- estimateSizeFactors(dds_2, controlGenes=ercc_rows_gpB)
-dds_2 <- dds_2[-c(ercc_rows),] # remove ERCCs from counts table after normalization
-dds_2 <- estimateDispersions(dds_2)
-dds_2 <- nbinomWaldTest(dds_2)
-
+if (ERCC_MODE) {
+	## Run DESeq analysis with ERCC-normalization by replacing size factor object with ERCC size factors for rescaling
+	dds_2 <- estimateSizeFactors(dds_2, controlGenes=ercc_rows_gpB)
+	dds_2 <- dds_2[-c(ercc_rows),] # remove ERCCs from counts table after normalization
+	dds_2 <- estimateDispersions(dds_2)
+	dds_2 <- nbinomWaldTest(dds_2)
+}
 ## Run DESeq analysis without considering ERCC genes
 dds_1 <- DESeq(dds_1)
 
 ##### Export unnormalized, normalized, and ERCC-normalized counts as well as the sample table #####
 
 normCounts = as.data.frame(counts(dds_1, normalized=TRUE))
-ERCCnormCounts = as.data.frame(counts(dds_2, normalized=TRUE))
 setwd(file.path(norm_output))
 write.csv(txi.rsem$counts,file='Unnormalized_Counts.csv')
 write.csv(normCounts,file='Normalized_Counts.csv')
-write.csv(ERCCnormCounts,file='ERCC_Normalized_Counts.csv')
 write.csv(sampleTable,file='SampleTable.csv')
 
+if (ERCC_MODE) {
+	ERCCnormCounts = as.data.frame(counts(dds_2, normalized=TRUE))
+	write.csv(ERCCnormCounts,file='ERCC_Normalized_Counts.csv')
+}
 setwd(file.path(work_dir))
 
 
@@ -195,16 +223,18 @@ setwd(file.path(work_dir))
 
 ## Add 1 to all counts to avoid issues with log transformation
 normCounts <- normCounts +1
-ERCCnormCounts <- ERCCnormCounts +1
-
+if (ERCC_MODE) {
+	ERCCnormCounts <- ERCCnormCounts +1
+}
 ## For non-ERCC normalized data
 dds_1_lrt <- DESeq(dds_1, test = "LRT", reduced = ~ 1)
 res_1_lrt <- results(dds_1_lrt)
 
-## For ERCC-normalized data
-dds_2_lrt <- DESeq(dds_2, test = "LRT", reduced = ~ 1)
-res_2_lrt <- results(dds_2_lrt)
-
+if (ERCC_MODE) {
+	## For ERCC-normalized data
+	dds_2_lrt <- DESeq(dds_2, test = "LRT", reduced = ~ 1)
+	res_2_lrt <- results(dds_2_lrt)
+}
 
 ##### Generate annotated DGE tables #####
 
@@ -383,141 +413,141 @@ rm(exp_raw,PCA_raw)
 
 
 #### Generate annotated DGE table for ERCC-normalized counts ####
+if (ERCC_MODE) {
+	## Start by creating output tables with ERCC-normalized sample expression values
 
-## Start by creating output tables with ERCC-normalized sample expression values
+	## reduced output table 2 will be used to generate human-readable DGE table
+	reduced_output_table_2 <- ERCCnormCounts
 
-## reduced output table 2 will be used to generate human-readable DGE table
-reduced_output_table_2 <- ERCCnormCounts
+	## output table 2 will be used to generate computer-readable DGE table, which is used to create GeneLab visualization plots
+	output_table_2 <- ERCCnormCounts
 
-## output table 2 will be used to generate computer-readable DGE table, which is used to create GeneLab visualization plots
-output_table_2 <- ERCCnormCounts
+	## Iterate through Wald Tests to generate pairwise comparisons of all groups
+	for (i in 1:dim(contrasts)[2]){
+		res_2 <- results(dds_2, contrast=c("condition",contrasts[1,i],contrasts[2,i]))
+		res_2 <- as.data.frame(res_2@listData)[,c(2,5,6)]
+		colnames(res_2)<-c(paste0("Log2fc_",colnames(contrasts)[i]),paste0("P.value_",colnames(contrasts)[i]),paste0("Adj.p.value_",colnames(contrasts)[i]))
+		output_table_2<-cbind(output_table_2,res_2)
+		reduced_output_table_2 <- cbind(reduced_output_table_2,res_2)
+		rm(res_2)
+	}
 
-## Iterate through Wald Tests to generate pairwise comparisons of all groups
-for (i in 1:dim(contrasts)[2]){
-  res_2 <- results(dds_2, contrast=c("condition",contrasts[1,i],contrasts[2,i]))
-  res_2 <- as.data.frame(res_2@listData)[,c(2,5,6)]
-  colnames(res_2)<-c(paste0("Log2fc_",colnames(contrasts)[i]),paste0("P.value_",colnames(contrasts)[i]),paste0("Adj.p.value_",colnames(contrasts)[i]))
-  output_table_2<-cbind(output_table_2,res_2)
-  reduced_output_table_2 <- cbind(reduced_output_table_2,res_2)
-  rm(res_2)
+	## Create annotation table and add gene annotation columns
+	keytype = "ENSEMBL" # will be different if primary annotations are not ENSEMBL
+	annot <- data.frame(rownames(output_table_2), stringsAsFactors = FALSE)
+	colnames(annot)[1]<-keytype
+	if ("SYMBOL" %in% columns(eval(parse(text = ann.dbi),env=.GlobalEnv))){
+		annot$SYMBOL<-mapIds(eval(parse(text = ann.dbi),env=.GlobalEnv),keys = rownames(output_table_2),keytype = keytype, column = "SYMBOL", multiVals = "first")
+	}
+	if ("GENENAME" %in% columns(eval(parse(text = ann.dbi),env=.GlobalEnv))){
+		annot$GENENAME<-mapIds(eval(parse(text = ann.dbi),env=.GlobalEnv),keys = rownames(output_table_2),keytype = keytype, column = "GENENAME", multiVals = "first")
+	}
+	if ("ENSEMBL" %in% columns(eval(parse(text = ann.dbi),env=.GlobalEnv))){
+		annot$ENSEMBL<-mapIds(eval(parse(text = ann.dbi),env=.GlobalEnv),keys = rownames(output_table_2),keytype = keytype, column = "ENSEMBL", multiVals = "first")
+	}
+	if ("REFSEQ" %in% columns(eval(parse(text = ann.dbi),env=.GlobalEnv))){
+		annot$REFSEQ<-mapIds(eval(parse(text = ann.dbi),env=.GlobalEnv),keys = rownames(output_table_2),keytype = keytype, column = "REFSEQ", multiVals = "first")
+	}
+	if ("ENTREZID" %in% columns(eval(parse(text = ann.dbi),env=.GlobalEnv))){
+		annot$ENTREZID<-mapIds(eval(parse(text = ann.dbi),env=.GlobalEnv),keys = rownames(output_table_2),keytype = keytype, column = "ENTREZID", multiVals = "first")
+	}
+
+	## Create and add string annotation columns to the annotation table
+	string_db <- STRINGdb$new( version="11", species=organism_table$taxon[organism_table$name == organism],score_threshold=0)
+	string_map <- string_db$map(annot,"SYMBOL",removeUnmappedRows = FALSE, takeFirst = TRUE)[,c(1,6)]
+	string_map <- string_map[!duplicated(string_map$SYMBOL),]
+	annot <- dplyr::left_join(annot,string_map, by = "SYMBOL")
+
+	## Create and add columns containing GOSLIM ids using the panther annotation database to the annotation table
+	pthOrganisms(PANTHER.db) <- organism
+	panther <- mapIds(PANTHER.db,keys = annot$ENTREZID,keytype = "ENTREZ",column = "GOSLIM_ID", multiVals = "list")
+	panther <- na.omit(panther)
+	annot$GOSLIM_IDS <- panther
+	rm(string_db,string_map,panther,keytype)
+
+	## Generate and add all sample mean column to the ERCC-normalized counts table
+	output_table_2$All.mean <- rowMeans(ERCCnormCounts, na.rm = TRUE, dims = 1)
+	reduced_output_table_2$All.mean <- rowMeans(ERCCnormCounts, na.rm = TRUE, dims = 1)
+
+	## Generate and add all sample stdev column to the ERCC-normalized counts table
+	output_table_2$All.stdev <- rowSds(as.matrix(ERCCnormCounts), na.rm = TRUE, dims = 1)
+	reduced_output_table_2$All.stdev <- rowSds(as.matrix(ERCCnormCounts), na.rm = TRUE, dims = 1)
+
+	## Add F statistic p-value (similar to ANOVA p-value) column to the ERCC-normalized counts table
+	output_table_2$LRT.p.value <- res_2_lrt@listData$padj
+	reduced_output_table_2$LRT.p.value <- res_2_lrt@listData$padj
+
+	## Generate and add group mean and stdev columns to the ERCC-normalized counts table
+	tcounts <- as.data.frame(t(ERCCnormCounts))
+	tcounts$group <- group
+	group_means <- as.data.frame(t(aggregate(. ~ group,data = tcounts,mean)))
+	group_means <- group_means[-c(1),]
+	colnames(group_means) <- paste0("Group.Mean_",levels(factor(names(group))))
+	group_stdev <- as.data.frame(t(aggregate(. ~ group,data = tcounts,sd)))
+	group_stdev <- group_stdev[-c(1),]
+	colnames(group_stdev) <- paste0("Group.Stdev_",levels(factor(names(group))))
+
+	output_table_2 <- cbind(output_table_2,group_means)
+	reduced_output_table_2 <- cbind(reduced_output_table_2,group_means)
+
+	output_table_2 <- cbind(output_table_2,group_stdev)
+	reduced_output_table_2 <- cbind(reduced_output_table_2,group_stdev)
+
+	rm(group_stdev,group_means,tcounts)
+
+	### Add columns needed to generate GeneLab visulaization plots to the ERCC-normalized counts table
+
+	## Add column to indicate the sign (positive/negative) of log2fc for each pairwise comparison
+	updown_table <- sign(output_table_2[,grep("Log2fc_",colnames(output_table_2))])
+	colnames(updown_table) <- gsub("Log2fc","Updown",grep("Log2fc_",colnames(output_table_2),value = TRUE))
+	output_table_2 <- cbind(output_table_2,updown_table)
+	rm(updown_table)
+
+	## Add column to indicate contrast significance with p <= 0.1
+	sig.1_table <- output_table_2[,grep("P.value_",colnames(output_table_2))]<=.1
+	colnames(sig.1_table) <- gsub("P.value","Sig.1",grep("P.value_",colnames(output_table_2),value = TRUE))
+	output_table_2 <- cbind(output_table_2,sig.1_table)
+	rm(sig.1_table)
+
+	## Add column to indicate contrast significance with p <= 0.05
+	sig.05_table <- output_table_2[,grep("P.value_",colnames(output_table_2))]<=.05
+	colnames(sig.05_table) <- gsub("P.value","Sig.05",grep("P.value_",colnames(output_table_2),value = TRUE))
+	output_table_2 <- cbind(output_table_2,sig.05_table)
+	rm(sig.05_table)
+
+	## Add columns for the volcano plot with p-value and adjusted p-value
+	log_pval_table <- log2(output_table_2[,grep("P.value_",colnames(output_table_2))])
+	colnames(log_pval_table) <- paste0("Log2_",colnames(log_pval_table))
+	output_table_2 <- cbind(output_table_2,log_pval_table)
+	rm(log_pval_table)
+	log_adj_pval_table <- log2(output_table_2[,grep("Adj.p.value_",colnames(output_table_2))])
+	colnames(log_adj_pval_table) <- paste0("Log2_",colnames(log_adj_pval_table))
+	output_table_2 <- cbind(output_table_2,log_adj_pval_table)
+	rm(log_adj_pval_table)
+
+	### Combine annotations table and the ERCC-normalized counts table
+
+	output_table_2 <- cbind(annot,output_table_2)
+	reduced_output_table_2 <- cbind(annot,reduced_output_table_2)
+	rownames(output_table_2) <- NULL
+	rownames(reduced_output_table_2) <- NULL
+
+	output_table_2$GOSLIM_IDS <- vapply(output_table_2$GOSLIM_IDS, paste, collapse = ", ", character(1L))
+	reduced_output_table_2$GOSLIM_IDS <- vapply(reduced_output_table_2$GOSLIM_IDS, paste, collapse = ", ", character(1L))
+
+	### Export human- and computer/visualization- readable DGE tables
+
+	write.csv(output_table_2,file.path(DGE_output_ERCC, "visualization_output_table_ERCCnorm.csv"), row.names = FALSE)
+	write.csv(contrasts,file.path(DGE_output_ERCC, "ERCCnorm_contrasts.csv"))
+	write.csv(reduced_output_table_2,file.path(DGE_output_ERCC, "ERCCnorm_differential_expression.csv"), row.names = FALSE)
+
+	### Generate and export PCA table for GeneLab visualization plots
+
+	exp_raw <- log2(ERCCnormCounts)
+	PCA_raw <- prcomp(t(exp_raw), scale = FALSE)
+	write.csv(PCA_raw$x,file.path(DGE_output_ERCC, "visualization_PCA_table_ERCCnorm.csv"), row.names = TRUE)
+	rm(exp_raw,PCA_raw)
 }
-
-## Create annotation table and add gene annotation columns
-keytype = "ENSEMBL" # will be different if primary annotations are not ENSEMBL
-annot <- data.frame(rownames(output_table_2), stringsAsFactors = FALSE)
-colnames(annot)[1]<-keytype
-if ("SYMBOL" %in% columns(eval(parse(text = ann.dbi),env=.GlobalEnv))){
-  annot$SYMBOL<-mapIds(eval(parse(text = ann.dbi),env=.GlobalEnv),keys = rownames(output_table_2),keytype = keytype, column = "SYMBOL", multiVals = "first")
-}
-if ("GENENAME" %in% columns(eval(parse(text = ann.dbi),env=.GlobalEnv))){
-  annot$GENENAME<-mapIds(eval(parse(text = ann.dbi),env=.GlobalEnv),keys = rownames(output_table_2),keytype = keytype, column = "GENENAME", multiVals = "first")
-}
-if ("ENSEMBL" %in% columns(eval(parse(text = ann.dbi),env=.GlobalEnv))){
-  annot$ENSEMBL<-mapIds(eval(parse(text = ann.dbi),env=.GlobalEnv),keys = rownames(output_table_2),keytype = keytype, column = "ENSEMBL", multiVals = "first")
-}
-if ("REFSEQ" %in% columns(eval(parse(text = ann.dbi),env=.GlobalEnv))){
-  annot$REFSEQ<-mapIds(eval(parse(text = ann.dbi),env=.GlobalEnv),keys = rownames(output_table_2),keytype = keytype, column = "REFSEQ", multiVals = "first")
-}
-if ("ENTREZID" %in% columns(eval(parse(text = ann.dbi),env=.GlobalEnv))){
-  annot$ENTREZID<-mapIds(eval(parse(text = ann.dbi),env=.GlobalEnv),keys = rownames(output_table_2),keytype = keytype, column = "ENTREZID", multiVals = "first")
-}
-
-## Create and add string annotation columns to the annotation table
-string_db <- STRINGdb$new( version="11", species=organism_table$taxon[organism_table$name == organism],score_threshold=0)
-string_map <- string_db$map(annot,"SYMBOL",removeUnmappedRows = FALSE, takeFirst = TRUE)[,c(1,6)]
-string_map <- string_map[!duplicated(string_map$SYMBOL),]
-annot <- dplyr::left_join(annot,string_map, by = "SYMBOL")
-
-## Create and add columns containing GOSLIM ids using the panther annotation database to the annotation table
-pthOrganisms(PANTHER.db) <- organism
-panther <- mapIds(PANTHER.db,keys = annot$ENTREZID,keytype = "ENTREZ",column = "GOSLIM_ID", multiVals = "list")
-panther <- na.omit(panther)
-annot$GOSLIM_IDS <- panther
-rm(string_db,string_map,panther,keytype)
-
-## Generate and add all sample mean column to the ERCC-normalized counts table
-output_table_2$All.mean <- rowMeans(ERCCnormCounts, na.rm = TRUE, dims = 1)
-reduced_output_table_2$All.mean <- rowMeans(ERCCnormCounts, na.rm = TRUE, dims = 1)
-
-## Generate and add all sample stdev column to the ERCC-normalized counts table
-output_table_2$All.stdev <- rowSds(as.matrix(ERCCnormCounts), na.rm = TRUE, dims = 1)
-reduced_output_table_2$All.stdev <- rowSds(as.matrix(ERCCnormCounts), na.rm = TRUE, dims = 1)
-
-## Add F statistic p-value (similar to ANOVA p-value) column to the ERCC-normalized counts table
-output_table_2$LRT.p.value <- res_2_lrt@listData$padj
-reduced_output_table_2$LRT.p.value <- res_2_lrt@listData$padj
-
-## Generate and add group mean and stdev columns to the ERCC-normalized counts table
-tcounts <- as.data.frame(t(ERCCnormCounts))
-tcounts$group <- group
-group_means <- as.data.frame(t(aggregate(. ~ group,data = tcounts,mean)))
-group_means <- group_means[-c(1),]
-colnames(group_means) <- paste0("Group.Mean_",levels(factor(names(group))))
-group_stdev <- as.data.frame(t(aggregate(. ~ group,data = tcounts,sd)))
-group_stdev <- group_stdev[-c(1),]
-colnames(group_stdev) <- paste0("Group.Stdev_",levels(factor(names(group))))
-
-output_table_2 <- cbind(output_table_2,group_means)
-reduced_output_table_2 <- cbind(reduced_output_table_2,group_means)
-
-output_table_2 <- cbind(output_table_2,group_stdev)
-reduced_output_table_2 <- cbind(reduced_output_table_2,group_stdev)
-
-rm(group_stdev,group_means,tcounts)
-
-### Add columns needed to generate GeneLab visulaization plots to the ERCC-normalized counts table
-
-## Add column to indicate the sign (positive/negative) of log2fc for each pairwise comparison
-updown_table <- sign(output_table_2[,grep("Log2fc_",colnames(output_table_2))])
-colnames(updown_table) <- gsub("Log2fc","Updown",grep("Log2fc_",colnames(output_table_2),value = TRUE))
-output_table_2 <- cbind(output_table_2,updown_table)
-rm(updown_table)
-
-## Add column to indicate contrast significance with p <= 0.1
-sig.1_table <- output_table_2[,grep("P.value_",colnames(output_table_2))]<=.1
-colnames(sig.1_table) <- gsub("P.value","Sig.1",grep("P.value_",colnames(output_table_2),value = TRUE))
-output_table_2 <- cbind(output_table_2,sig.1_table)
-rm(sig.1_table)
-
-## Add column to indicate contrast significance with p <= 0.05
-sig.05_table <- output_table_2[,grep("P.value_",colnames(output_table_2))]<=.05
-colnames(sig.05_table) <- gsub("P.value","Sig.05",grep("P.value_",colnames(output_table_2),value = TRUE))
-output_table_2 <- cbind(output_table_2,sig.05_table)
-rm(sig.05_table)
-
-## Add columns for the volcano plot with p-value and adjusted p-value
-log_pval_table <- log2(output_table_2[,grep("P.value_",colnames(output_table_2))])
-colnames(log_pval_table) <- paste0("Log2_",colnames(log_pval_table))
-output_table_2 <- cbind(output_table_2,log_pval_table)
-rm(log_pval_table)
-log_adj_pval_table <- log2(output_table_2[,grep("Adj.p.value_",colnames(output_table_2))])
-colnames(log_adj_pval_table) <- paste0("Log2_",colnames(log_adj_pval_table))
-output_table_2 <- cbind(output_table_2,log_adj_pval_table)
-rm(log_adj_pval_table)
-
-### Combine annotations table and the ERCC-normalized counts table
-
-output_table_2 <- cbind(annot,output_table_2)
-reduced_output_table_2 <- cbind(annot,reduced_output_table_2)
-rownames(output_table_2) <- NULL
-rownames(reduced_output_table_2) <- NULL
-
-output_table_2$GOSLIM_IDS <- vapply(output_table_2$GOSLIM_IDS, paste, collapse = ", ", character(1L))
-reduced_output_table_2$GOSLIM_IDS <- vapply(reduced_output_table_2$GOSLIM_IDS, paste, collapse = ", ", character(1L))
-
-### Export human- and computer/visualization- readable DGE tables
-
-write.csv(output_table_2,file.path(DGE_output_ERCC, "visualization_output_table_ERCCnorm.csv"), row.names = FALSE)
-write.csv(contrasts,file.path(DGE_output_ERCC, "ERCCnorm_contrasts.csv"))
-write.csv(reduced_output_table_2,file.path(DGE_output_ERCC, "ERCCnorm_differential_expression.csv"), row.names = FALSE)
-
-### Generate and export PCA table for GeneLab visualization plots
-
-exp_raw <- log2(ERCCnormCounts)
-PCA_raw <- prcomp(t(exp_raw), scale = FALSE)
-write.csv(PCA_raw$x,file.path(DGE_output_ERCC, "visualization_PCA_table_ERCCnorm.csv"), row.names = TRUE)
-rm(exp_raw,PCA_raw)
-
 
 ## print session info ##
 print("Session Info below: ")

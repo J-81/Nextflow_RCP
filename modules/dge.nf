@@ -37,7 +37,7 @@ process DGE_BY_DESEQ2 {
     path("versions.txt"), emit: version
 
   stub:
-    def deseq2_debug_script = meta.has_ercc ? "DEBUG_deseq2_normcounts_wERCC_DGE_vis_ISA.R" : "DEBUG_deseq2_normcounts_noERCC_DGE_vis_ISA.R"
+    def ercc_flag = meta.has_ercc ? "dge_output_ercc" : ""
     """
     # create output directories
     mkdir norm_counts_output
@@ -45,16 +45,17 @@ process DGE_BY_DESEQ2 {
     mkdir dge_output_ercc
 
     # run the script with R
-    ${deseq2_debug_script} \
+    deseq2_normcounts_DGE_vis_ISA.R \
       ${ meta.organism_non_sci } \
       $Isa_zip \
       norm_counts_output \
       dge_output \
-      dge_output_ercc
+      TRUE \
+      ${ ercc_flag }
     """
 
   script:
-    def deseq2_script = meta.has_ercc ? "deseq2_normcounts_wERCC_DGE_vis_ISA.R" : "deseq2_normcounts_noERCC_DGE_vis_ISA.R"
+    def ercc_flag = meta.has_ercc ? "dge_output_ercc" : ""
     """
     # create output directories
     mkdir norm_counts_output
@@ -62,11 +63,12 @@ process DGE_BY_DESEQ2 {
     mkdir dge_output_ercc
 
     # run the script with R
-    ${deseq2_script} \
+    deseq2_normcounts_DGE_vis_ISA.R \
       ${ meta.organism_non_sci } \
       $Isa_zip \
       norm_counts_output \
       dge_output \
-      dge_output_ercc
+      FALSE \
+      ${ ercc_flag }
     """
 }
