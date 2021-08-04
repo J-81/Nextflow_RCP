@@ -65,7 +65,8 @@ colnames(factors)<-paste("factor",1:dim(factors)[2], sep = "_")
 
 # Subset only the samples for RNASeq
 factors <- factors[n2,]
-compare_csv <- data.frame(sample_id = isa_tabs$`Sample Name`, factors)
+print(isa@samples)
+compare_csv <- data.frame(sample_id = isa@samples[n2], factors)
 
 #### Create data frame containing all samples and respective factors
 study <- as.data.frame(compare_csv[,2:dim(compare_csv)[2]])
