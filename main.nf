@@ -29,6 +29,7 @@ include { VV_RAW_READS;
           VV_RSEM_COUNTS;
           VV_DESEQ2_ANALYSIS } from './modules/vv.nf' addParams( RootDirForVV: "${workflow.launchDir}/${ params.outputDir }")
 include { GET_MAX_READ_LENGTH } from './modules/fastqc.nf'
+include { POST_PROCESSING } from './modules/genelab.nf'
 
 /**************************************************
 * HELP MENU  **************************************
@@ -183,7 +184,11 @@ workflow {
       DGE_BY_DESEQ2.out.version | mix(ch_software_versions) | set{ch_software_versions}
       ch_software_versions | map { it.text + "\n<><><>\n"}
                            | unique
-                           | collectFile(name: "software_versions.txt",storeDir: "${ params.outputDir }/${params.gldsAccession}" , newLine: true)
+                           | collectFile(name: "software_versions.txt", newLine: true, cache: false)
+			   | set{ch_final_software_versions}
+
+      // GeneLab post processing
+      POST_PROCESSING(STAGING.out.runsheet, ch_final_software_versions)
 
       // VV processes
       if ( !params.skipVV ) {

@@ -67,6 +67,29 @@ process GENERATE_METASHEET {
                        --output-dir .
     """
 }
+process POST_PROCESSING {
+  // Generates tabular data indicating genelab standard publishing files, md5sum generation, and tool version table formatting
+  tag "${ params.gldsAccession }"
+  publishDir "${ params.outputDir }/${ params.gldsAccession }/GeneLab",
+    mode: params.publish_dir_mode
+
+  input:
+    path("runsheet.csv")
+    path("software_versions.txt")
+
+  output:
+    path("*.xlsx")
+    path("*md5sum*")
+    path("*.md")
+
+  script:
+    root_out_dir = "${ workflow.launchDir}/${ params.outputDir }/${ params.gldsAccession }"
+    """
+    generate_md5sum_files.py ${ root_out_dir }
+    generate_publish_to_repo_excel.py ${ root_out_dir } runsheet.csv
+    format_software_versions.py software_versions.txt
+    """
+}
 
 // Adapted from Function: https://github.com/nf-core/rnaseq/blob/master/modules/local/process/samplesheet_check.nf
 // Original Function Credit: Dr. Harshil Patel
