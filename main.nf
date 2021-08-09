@@ -169,7 +169,7 @@ workflow {
 
       organism_ch = channel.fromPath( params.organismCSV )
 
-      DGE_BY_DESEQ2( isa_ch, organism_ch, rsem_ch, meta_ch  )
+      DGE_BY_DESEQ2( STAGING.out.runsheet, organism_ch, rsem_ch, meta_ch  )
 
 
       // Software Version Capturing

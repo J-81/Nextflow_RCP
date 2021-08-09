@@ -13,7 +13,7 @@ process DGE_BY_DESEQ2 {
     pattern: "dge_output_ercc/*", saveAs: { "${file(it).getName()}" }
 
   input:
-    path(Isa_zip)
+    path("runsheet.csv")
     path(organisms_csv)
     path("Rsem_gene_counts/*")
     val(meta)
@@ -47,7 +47,7 @@ process DGE_BY_DESEQ2 {
     # run the script with R
     deseq2_normcounts_DGE_vis_ISA.R \
       ${ meta.organism_non_sci } \
-      $Isa_zip \
+      runsheet.csv \
       norm_counts_output \
       dge_output \
       TRUE \
@@ -65,7 +65,7 @@ process DGE_BY_DESEQ2 {
     # run the script with R
     deseq2_normcounts_DGE_vis_ISA.R \
       ${ meta.organism_non_sci } \
-      $Isa_zip \
+      runsheet.csv \
       norm_counts_output \
       dge_output \
       FALSE \
