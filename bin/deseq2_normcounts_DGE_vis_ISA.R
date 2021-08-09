@@ -4,7 +4,6 @@
 library(tximport)
 library(DESeq2)
 library(tidyverse)
-library(Risa)
 
 ################################################################################
 # Retrieve args from commandline
@@ -20,7 +19,7 @@ organism <- args[1]
 ## Create a directory for the metadata and in that directory, download the *ISA.zip file for the study being analyzed, which is located in the [GLDS repository](https://genelab-data.ndc.nasa.gov/genelab/projects) under 'STUDY FILES' -> 'Study Metadata Files'
 
 #MOD#metadata_dir=arg[2]
-Isa_zip=args[2]
+runsheet_path=args[2]
 #END_MOD#
 work_dir=getwd()
 #REMOVE_MOD#counts_dir=args[4]
@@ -43,29 +42,19 @@ if (!is.na(DGE_output_ERCC)) {
 	ERCC_MODE=FALSE
 }
 
-## Set your working directory to the directory containing the *ISA.zip file for the GLDS being processed
-#setwd(file.path(metadata_dir))
+####### Pull all factors for each sample in the study from the metadata in the runsheet 
+compare_csv_from_runsheet <- function(runsheet_path) {
+	df = read.csv(runsheet_path)
+	# get only Factor Value columns
+	print(colnames(df))
+	factors = df[,grep("Factor.Value", colnames(df), ignore.case=TRUE)]
+	colnames(factors) = paste("factor",1:dim(factors)[2], sep= "_")
 
+	result = data.frame(sample_id = df[,c("sample_name")], factors)	
+	return(result)
+}
 
-####### Pull all factors for each sample in the study from the metadata in the ISA files #####
-# Load comparison table
-td = tempdir()
-#MOD#unzip(Sys.glob(file.path(metadata_dir,"*ISA.zip")), exdir = td)
-unzip(file.path(Isa_zip), exdir = td)
-#END_MOD#
-isa <- readISAtab(path = td)
-n = as.numeric(which(isa@assay.technology.types == "RNA Sequencing (RNA-Seq)"))
-# Get sample indexes for only RNASeq
-n2 <- as.numeric(which(isa@samples %in% isa@samples.per.assay.filename[[n]]))
-
-
-isa_tabs<-isa@assay.tabs[[n]]@assay.file
-factors <- as.data.frame(isa@factors[[1]], stringsAsFactors = FALSE)
-colnames(factors)<-paste("factor",1:dim(factors)[2], sep = "_")
-
-# Subset only the samples for RNASeq
-factors <- factors[n2,]
-compare_csv <- data.frame(sample_id = isa@samples[n2], factors)
+compare_csv <- compare_csv_from_runsheet(runsheet_path)
 
 #### Create data frame containing all samples and respective factors
 study <- as.data.frame(compare_csv[,2:dim(compare_csv)[2]])
