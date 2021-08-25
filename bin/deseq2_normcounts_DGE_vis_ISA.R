@@ -90,7 +90,6 @@ contrasts <- cbind(contrasts,contrasts[c(2,1),])
 colnames(contrasts) <- contrast.names
 rm(contrast.names)
 
-
 ##### Import RSEM raw (gene) count data #####
 files <- list.files(path = "Rsem_gene_counts", pattern = ".genes.results", full.names = TRUE)
 
@@ -219,8 +218,9 @@ if (ERCC_MODE) {
 	dim(dds_2)
 } else {
 	ercc_rows <- grep("ERCC-",rownames(dds))
-	print(any(ercc_rows))
-	dds_1 <- dds[-c(ercc_rows),]
+	if ( length(ercc_rows) != 0 )
+		{ stop("Found ERCC rows despite user indicating NO ERCC") }
+	dds_1 <- dds
 }
 
 
