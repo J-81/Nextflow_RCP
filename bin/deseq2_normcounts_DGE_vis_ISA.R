@@ -47,7 +47,7 @@ compare_csv_from_runsheet <- function(runsheet_path) {
 	df = read.csv(runsheet_path)
 	# get only Factor Value columns
 	print(colnames(df))
-	factors = df[,grep("Factor.Value", colnames(df), ignore.case=TRUE)]
+	factors = as.data.frame(df[,grep("Factor.Value", colnames(df), ignore.case=TRUE)])
 	colnames(factors) = paste("factor",1:dim(factors)[2], sep= "_")
 
 	result = data.frame(sample_id = df[,c("sample_name")], factors)	
