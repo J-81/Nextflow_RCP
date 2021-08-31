@@ -76,6 +76,7 @@ process POST_PROCESSING {
   input:
     path("runsheet.csv")
     path("software_versions.txt")
+    val(LAST_PROCESS_MARKER) // Unused in task, but used in workflow definition to ensure this process is last regardless of whether V&V is used
 
   output:
     path("*.xlsx")

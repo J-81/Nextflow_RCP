@@ -187,8 +187,6 @@ workflow {
                            | collectFile(name: "software_versions.txt", newLine: true, cache: false)
 			   | set{ch_final_software_versions}
 
-      // GeneLab post processing
-      POST_PROCESSING(STAGING.out.runsheet, ch_final_software_versions)
 
       // VV processes
       if ( !params.skipVV ) {
@@ -213,6 +211,11 @@ workflow {
 
         VV_DESEQ2_ANALYSIS( DGE_BY_DESEQ2.out.dge | map{ it -> it[1..it.size()-1] } | collect, // map use here: removes val(meta) from tuple
                             ch_vv_log_06 ) | set { ch_vv_log_07 }
+        
+        // GeneLab post processing
+        POST_PROCESSING(STAGING.out.runsheet, ch_final_software_versions, ch_vv_log_07) // Penultimate process when V&V enabled is the last V&V process
+      } else {
+        POST_PROCESSING(STAGING.out.runsheet, ch_final_software_versions, Channel.value("NO VV, last output is software versions"))
       }
     }
 }
