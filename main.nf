@@ -213,9 +213,9 @@ workflow {
                             ch_vv_log_06 ) | set { ch_vv_log_07 }
         
         // GeneLab post processing
-        POST_PROCESSING(STAGING.out.runsheet, ch_final_software_versions, ch_vv_log_07) // Penultimate process when V&V enabled is the last V&V process
+        POST_PROCESSING(STAGING.out.runsheet, ch_final_software_versions, ch_vv_log_07, STAGING.out.metasheet) // Penultimate process when V&V enabled is the last V&V process
       } else {
-        POST_PROCESSING(STAGING.out.runsheet, ch_final_software_versions, Channel.value("NO VV, last output is software versions"))
+        POST_PROCESSING(STAGING.out.runsheet, ch_final_software_versions, Channel.value("NO VV, last output is software versions"), STAGING.out.metasheet)
       }
     }
 }

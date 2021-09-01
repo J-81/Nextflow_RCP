@@ -76,4 +76,5 @@ workflow staging{
       raw_reads = params.stageLocal ? STAGE_RAW_READS.out : null
       isa = GENERATE_RUNSHEET.out.isazip
       runsheet = GENERATE_RUNSHEET.out.runsheet
+      metasheet = GENERATE_METASHEET.out.metasheet
 }

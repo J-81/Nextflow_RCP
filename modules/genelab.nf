@@ -58,7 +58,7 @@ process GENERATE_METASHEET {
     path("isa.zip")
 
   output:
-    path("${ params.gldsAccession }_metadata_table.txt")
+    path("${ params.gldsAccession }_metadata_table.txt"), emit: metasheet
 
   script:
     """
@@ -77,6 +77,7 @@ process POST_PROCESSING {
     path("runsheet.csv")
     path("software_versions.txt")
     val(LAST_PROCESS_MARKER) // Unused in task, but used in workflow definition to ensure this process is last regardless of whether V&V is used
+    val(LAST_PROCESS_MARKER_2) // Unused in task, but used in workflow definition to ensure this process follows metasheet generation
 
   output:
     path("*.xlsx")
