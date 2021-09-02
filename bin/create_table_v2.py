@@ -692,6 +692,7 @@ if __name__ == '__main__':
     #success = 0
     #while success >= 0:
     # No longer interactive, removing this while loop
+    success = 0
     [success, sample_file, investigation_file, file_name_s, file_name_i, metadata_directory] = open_files(success, args.isa_zip)
 
     #get glds# from curator (not in ISA files)
