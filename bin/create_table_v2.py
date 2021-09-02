@@ -81,7 +81,7 @@ def open_files(success, isa_zip_path):
                     if filename[0]=="s" and filename[1]=="_":
                         file_name_s = outdir+"/"+filename
                         try:
-                            f1 = open(os.path.join(metadata_directory, file_name_s), "r", encoding='windows-1252')
+                            f1 = open(os.path.join(metadata_directory, file_name_s), "r")
                             sample_file = f1.read()
                             f1.close()
                         except Exception as e:
@@ -90,7 +90,7 @@ def open_files(success, isa_zip_path):
                     if filename[0]=="i" and filename[1]=="_":
                         file_name_i = outdir+"/"+filename
                         try:
-                            f1 = open(os.path.join(metadata_directory, file_name_i), "r", encoding='windows-1252')
+                            f1 = open(os.path.join(metadata_directory, file_name_i), "r")
                             investigation_file = f1.read()
                             f1.close()
                         except Exception as e:
@@ -689,9 +689,10 @@ if __name__ == '__main__':
     #t1 = time.time()
 
     #try to open files until successful
-    success = 0
-    while success >= 0:
-        [success, sample_file, investigation_file, file_name_s, file_name_i, metadata_directory] = open_files(success, args.isa_zip)
+    #success = 0
+    #while success >= 0:
+    # No longer interactive, removing this while loop
+    [success, sample_file, investigation_file, file_name_s, file_name_i, metadata_directory] = open_files(success, args.isa_zip)
 
     #get glds# from curator (not in ISA files)
     glds_num = args.accession.replace("GLDS-","")
