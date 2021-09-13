@@ -40,14 +40,11 @@ process MULTIQC {
   output:
     path("${ params.MQCLabel }_multiqc_report/${ params.MQCLabel }_multiqc.html"), emit: html
     path("${ params.MQCLabel }_multiqc_report/${ params.MQCLabel }_multiqc_data"), emit: data
-    path("${ params.MQCLabel }_multiqc_report.zip"), emit: zip
     path("versions.txt"), emit: version
 
   script:
     """
     multiqc -o ${ params.MQCLabel }_multiqc_report -n ${ params.MQCLabel }_multiqc fastqc
-
-    zip -r ${ params.MQCLabel }_multiqc_report.zip ${ params.MQCLabel }_multiqc_report/
 
     multiqc --version > versions.txt
     """
