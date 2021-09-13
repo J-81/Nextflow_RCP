@@ -3,3 +3,4 @@ channels:
   - defaults
 dependencies:
   - star
+  - python=3.8

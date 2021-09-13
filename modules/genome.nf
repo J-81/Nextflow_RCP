@@ -26,16 +26,57 @@ process BUILD_STAR {
     // Filename modifier string for indices with ERCC included
     ercc_mod = meta.has_ercc ? "_w_ERCC" : ""
     """
+#! /usr/bin/env python
+    
+import subprocess
+import shlex
+
+command = '''
+STAR --runThreadN ${task.cpus} \
+--runMode genomeGenerate \
+--limitGenomeGenerateRAM ${ task.memory.toBytes() } \
+--genomeSAindexNbases 14 \
+--genomeDir STAR_REF \
+--genomeFastaFiles ${ genomeFasta } \
+--sjdbGTFfile ${ genomeGtf } \
+--sjdbOverhang ${ max_read_length.toInteger() - 1 }
+'''
+
+def rerun(suggested):
+    command = '''
     STAR --runThreadN ${task.cpus} \
     --runMode genomeGenerate \
     --limitGenomeGenerateRAM ${ task.memory.toBytes() } \
-    --genomeSAindexNbases 14 \
+    --genomeSAindexNbases {suggested} \
     --genomeDir STAR_REF \
     --genomeFastaFiles ${ genomeFasta } \
     --sjdbGTFfile ${ genomeGtf } \
     --sjdbOverhang ${ max_read_length.toInteger() - 1 }
+    '''
+    print(command)
+    command = command.format(suggested=suggested)
+    
+    subprocess.Popen(shlex.split(command), shell=False)
 
-    # echo Build_STAR_version: `STAR --version` > versions.txt
+# invoke initial build process
+process = subprocess.Popen(shlex.split(command), shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+# Poll process.stdout
+while True:
+    output = process.stderr.readline()
+    if process.poll() is not None:
+        break
+    if output:
+        line = output.strip().decode()
+        print(line)
+        if "!!!!! WARNING: --genomeSAindexNbases" in line: # indicating better parameters
+            suggested = int(line.split()[-1])
+            print(f"Restarting build with suggested '--genomeSAindexNbases' parameter ({suggested})")
+            process.kill()
+            rerun(suggested)
+            break
+        
+    rc = process.poll()
     """
 
 }
