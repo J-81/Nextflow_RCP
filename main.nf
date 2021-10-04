@@ -5,8 +5,6 @@ c_bright_green = "\u001b[32;1m";
 c_blue = "\033[0;34m";
 c_reset = "\033[0m";
 
-include { DOWNLOAD_GENOME_ANNOTATIONS;
-          DOWNLOAD_ERCC } from './modules/download.nf'
 include { FASTQC as RAW_FASTQC } from './modules/quality.nf' addParams(PublishTo: "00-RawData/FastQC_Reports")
 include { FASTQC as TRIMMED_FASTQC } from './modules/quality.nf' addParams(PublishTo: "01-TG_Preproc/FastQC_Reports")
 include { MULTIQC as RAW_MULTIQC } from './modules/quality.nf' addParams(PublishTo: "00-RawData/FastQC_Reports", MQCLabel:"raw")
@@ -34,6 +32,7 @@ include { POST_PROCESSING } from './modules/genelab.nf'
 /**************************************************
 * HELP MENU  **************************************
 **************************************************/
+allowed_ref_order = ['toplevel','primary_assemblyELSEtoplevel']
 if (params.help) {
   println("┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅")
   println("┇ RNASeq Concensus Pipeline: $workflow.manifest.version  ┇")
@@ -52,6 +51,7 @@ if (params.help) {
   println("  --genomeSubsample n   subsamples genome fasta and gtf files to the supplied chromosome.")
   println("  --truncateTo n        limit number of reads downloaded and processed to *n* reads , for paired end limits number of reverse and forward read files to *n* reads each.")
   println("  --stageLocal          download the raw reads files for the supplied GLDS accession id.  Set to false to disable raw read download and processing.  Default: true")
+  println("  --ref_order           specifies the reference to use from ensembl.  Allowed values:  ['toplevel','primary_assemblyELSEtoplevel']. 'toplevel' : use toplevel.  'primary_assemblyELSEtoplevel' : use primary assembly, but use toplevel if primary assembly doesn't exist. Default: 'primary_assemblyELSEtoplevel'")  
   exit 0
   }
 
@@ -65,6 +65,7 @@ println "PARAMS: $params"
 if ( params.gldsAccession ) {ch_glds_accession = Channel.from( params.gldsAccession )} else { exit 1, "Missing Required Parameter: gldsAccession. Example for setting on CLI: --gldsAccession GLDS-194"}
 if ( !params.ensemblVersion ) { exit 1, "Missing Required Parameter: ensemblVersion. Example for setting on CLI: --ensemblVersion 96" }
 
+if ( !allowed_ref_order.contains(params.ref_order ) ) { exit 1, "Invalid ref_order param.  Must be either 'toplevel' or 'primary_assembly,toplevel'" }
 if ( !params.outputDir ) {  params.outputDir = "$workflow.launchDir" }
 
 /**************************************************
@@ -95,6 +96,7 @@ if ( params.stageLocal && params.truncateTo ) {
 }
 
 include { staging as STAGING } from './stage_analysis.nf'
+include { references as REFERENCES } from './references.nf'
 
 workflow {
 	main:
@@ -106,6 +108,8 @@ workflow {
       // e.g. downloading correct reference genome base on organism
       STAGING.out.raw_reads | take(1) | map{it -> it[0]} | set { meta_ch }
       STAGING.out.isa | set { isa_ch }
+
+      meta_ch | view
 
       raw_reads_ch | RAW_FASTQC //| view {"POST_FASTQC: $it"}
 
@@ -134,20 +138,9 @@ workflow {
                                 | collect \
                                 | TRIMMED_MULTIQC
 
-      meta_ch | DOWNLOAD_GENOME_ANNOTATIONS | set { genome_annotations_pre_subsample }
+      REFERENCES( meta_ch | map { it.organism_sci }, meta_ch | map { it.has_ercc } )
+      REFERENCES.out.genome_annotations | set { genome_annotations }      
 
-      // SUBSAMPLING STEP : USED FOR DEBUG/TEST RUNS
-      if ( params.genomeSubsample ) {
-        SUBSAMPLE_GENOME( genome_annotations_pre_subsample, meta_ch )
-        SUBSAMPLE_GENOME.out.build | first | set { genome_annotations_pre_ercc }
-      } else {
-        genome_annotations_pre_subsample | first | set { genome_annotations_pre_ercc }
-      }
-
-      // ERCC STEP : ADD ERCC Fasta and GTF to genome files
-      CONCAT_ERCC( genome_annotations_pre_ercc, DOWNLOAD_ERCC(), meta_ch )
-      .ifEmpty { genome_annotations_pre_ercc.value }  | set { genome_annotations }
-      meta_ch | view
       BUILD_STAR( genome_annotations, meta_ch, max_read_length_ch)
 
       TRIMGALORE.out.reads | combine( BUILD_STAR.out.build ) | ALIGN_STAR

@@ -4,20 +4,24 @@
 
 process DOWNLOAD_GENOME_ANNOTATIONS {
   // Download and decompress genome and annotation files
-  tag "Organism: ${ meta.organism_sci }  Ensembl Version: ${params.ensemblVersion}"
+  tag "Organism: ${ organism_sci }  Ensembl Version: ${params.ensemblVersion}"
   label 'networkBound'
-  storeDir "${params.storeDirPath}/ensembl/${params.ensemblVersion}/${ meta.organism_sci }"
+  storeDir "${params.storeDirPath}/ensembl/${params.ensemblVersion}/${ organism_sci }"
+  errorStrategy "${ params._has_fallback }" ? 'ignore' : 'terminate'
 
   input:
-    val(meta)
+    val(organism_sci)
 
   output:
-    tuple path("*.dna.toplevel.fa"), path("*.${ params.ensemblVersion }.gtf")
+    tuple path("*.dna.${ params.ref_target }.fa"), path("*.${ params.ensemblVersion }.gtf")
 
   script:
     """
     retrieve_references.py --ensembl_version ${ params.ensemblVersion } \
-                           --organism        ${ meta.organism_sci}
+                           --organism        ${ organism_sci} \
+                           --target          ${ params.ref_target }
+
+
 
     # decompress files
     gunzip *.fa.gz

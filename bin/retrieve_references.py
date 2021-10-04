@@ -19,9 +19,12 @@ def _parse_args():
                       help='Ensembl release number')
   parser.add_argument('--organism', metavar='animal_animalus', required=True,
                       help='Scientific name for organism.')
+  parser.add_argument('--target', metavar='toplevel', required=True, choices=["toplevel","primary_assembly"],
+                      help='Fetch the toplevel or primary_assembly.')
   args = parser.parse_args()
   return args
 args = _parse_args()
+
 
 # parsed from CLI args
 ENSEMBL_VERSION = int(args.ensembl_version)
@@ -38,7 +41,7 @@ else:
 SERVER = f"ftp.ensembl{non_vertebrate_mod1}.org"
 RELEASE_FOLDER = f"pub/{non_vertebrate_mod2}release-{ENSEMBL_VERSION}"
 FASTA_FOLDER = f"fasta/{ORGANISM.lower()}/dna"
-TARGET_FASTA_SUFFIX = "dna.toplevel.fa.gz"
+TARGET_FASTA_SUFFIX = f"dna.{args.target}.fa.gz"
 GTF_FOLDER = f"gtf/{ORGANISM.lower()}"
 TARGET_GTF_SUFFIX = f"{ENSEMBL_VERSION}.gtf.gz"
  # although named txt, this is tab separated
