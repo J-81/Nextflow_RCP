@@ -3,11 +3,14 @@ nextflow.enable.dsl=2
 
 include { DOWNLOAD_ERCC } from './modules/download.nf'
 include { CONCAT_ERCC;
-          SUBSAMPLE_GENOME } from './modules/genome.nf'
+          SUBSAMPLE_GENOME;
+          TO_PRED;
+          TO_BED } from './modules/genome.nf'
 
 include { DOWNLOAD_GENOME_ANNOTATIONS as DOWNLOAD_TOPLEVEL_REF } from './modules/download.nf' addParams(ref_target: "toplevel", _has_fallback: false)
 
 include { DOWNLOAD_GENOME_ANNOTATIONS as DOWNLOAD_PRIMARY_ASSEMBLY_REF } from './modules/download.nf' addParams(ref_target: "primary_assembly", _has_fallback: true)
+
 /**************************************************
 * ACTUAL WORKFLOW  ********************************
 **************************************************/
@@ -54,6 +57,10 @@ workflow references{
       .ifEmpty { genome_annotations_pre_ercc.value }  | set { genome_annotations }
 
 
+      TO_PRED( genome_annotations | map { it[1] } )
+      TO_BED( TO_PRED.out, organism_sci )
+
   emit:
       genome_annotations = genome_annotations
+      genome_bed = TO_BED.out
 }

@@ -92,6 +92,7 @@ process ALIGN_STAR {
 
   output:
     tuple val(meta), path("${ meta.STAR_Alignment_dir }"), emit: alignments
+    tuple val(meta), path("${ meta.STAR_Alignment_dir }/${ meta.id }_Aligned.sortedByCoord.out.bam"), emit: bam_by_coord
     path("versions.txt"), emit: version
 
   script:
@@ -157,14 +158,15 @@ process COUNT_ALIGNED {
 
   input:
     tuple val(meta), path("starOutput/*"), path(RSEM_REF)
+    val(strandedness)
 
   output:
-    tuple val(meta), path("${ meta.RSEM_Counts_dir }"), emit: counts
+    tuple val(meta), path("${ meta.RSEM_Counts_dir }/*"), emit: counts
     path("versions.txt"), emit: version
 
   script:
+    strandedness_opt_map = ["sense":"forward","antisense":"reverse","equal_percents":"none"]
     """
-    mkdir -p ${ meta.RSEM_Counts_dir }
     rsem-calculate-expression --num-threads $task.cpus \
       ${ meta.paired_end ? '--paired-end' : '' } \
       --bam \
@@ -172,11 +174,16 @@ process COUNT_ALIGNED {
       --no-bam-output \
       --estimate-rspd \
       --seed 12345 \
-      --strandedness reverse \
+      --strandedness ${ strandedness_opt_map.get(strandedness) } \
       starOutput/${meta.id}/${meta.id}_Aligned.toTranscriptome.out.bam \
       ${ RSEM_REF }/ \
-      ${ meta.RSEM_Counts_dir }
+      ${ meta.id }
 
+    # move results into output directory
+    mkdir tmp
+    mv ${ meta.id }* tmp
+    mkdir -p ${ meta.RSEM_Counts_dir }
+    mv tmp/* ${ meta.RSEM_Counts_dir }
 
     echo COUNT_RSEM_version: `rsem-calculate-expression --version` > versions.txt
     """
@@ -247,5 +254,40 @@ process CONCAT_ERCC {
   """
   cat ${genome_fasta} ${ercc_fasta} > ${ genome_fasta.baseName }_and_ERCC.fa
   cat ${genome_gtf} ${ercc_gtf} > ${ genome_gtf.baseName }_and_ERCC.gtf
+  """
+}
+
+process TO_PRED {
+  // Converts reference gtf into pred 
+          
+
+  input:
+    path(genome_gtf)
+
+  output:
+    path("${ genome_gtf }.genePred")
+
+  script:
+  """
+  gtfToGenePred -geneNameAsName2 ${ genome_gtf } ${ genome_gtf }.genePred
+  """
+}
+
+
+process TO_BED {
+  // Converts reference genePred into Bed format
+  storeDir "${params.storeDirPath}/ensembl/version-${params.ensemblVersion}/${ organism_sci }"
+          
+
+  input:
+    path(genome_pred)
+    val(organism_sci)
+
+  output:
+    path("${ genome_pred.baseName }.bed")
+
+  script:
+  """
+  genePredToBed ${ genome_pred } ${ genome_pred.baseName }.bed
   """
 }

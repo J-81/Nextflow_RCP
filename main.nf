@@ -97,6 +97,7 @@ if ( params.stageLocal && params.truncateTo ) {
 
 include { staging as STAGING } from './stage_analysis.nf'
 include { references as REFERENCES } from './references.nf'
+include { strandedness as STRANDEDNESS } from './strandedness.nf'
 
 workflow {
 	main:
@@ -145,10 +146,13 @@ workflow {
 
       TRIMGALORE.out.reads | combine( BUILD_STAR.out.build ) | ALIGN_STAR
 
+      STRANDEDNESS ( ALIGN_STAR.out.bam_by_coord, REFERENCES.out.genome_bed ) 
+      STRANDEDNESS.out.strandedness | map { it.text.split(":")[0] } | set { strandedness_ch }
+
       BUILD_RSEM( genome_annotations, meta_ch)
 
       ALIGN_STAR.out.alignments | combine( BUILD_RSEM.out.build ) | set { aligned_ch }
-      aligned_ch | COUNT_ALIGNED
+      COUNT_ALIGNED( aligned_ch, strandedness_ch )
 
       ALIGN_STAR.out.alignments | map { it -> it[1] } | collect | ALIGN_MULTIQC
 
@@ -175,6 +179,7 @@ workflow {
       ALIGN_STAR.out.version | mix(ch_software_versions) | set{ch_software_versions}
       COUNT_ALIGNED.out.version | mix(ch_software_versions) | set{ch_software_versions}
       DGE_BY_DESEQ2.out.version | mix(ch_software_versions) | set{ch_software_versions}
+      STRANDEDNESS.out.versions | mix(ch_software_versions) | set{ch_software_versions}
       ch_software_versions | map { it.text + "\n<><><>\n"}
                            | unique
                            | collectFile(name: "software_versions.txt", newLine: true, cache: false)
