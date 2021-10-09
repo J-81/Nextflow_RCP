@@ -44,7 +44,7 @@ process MULTIQC {
 
   script:
     """
-    multiqc -o ${ params.MQCLabel }_multiqc_report -n ${ params.MQCLabel }_multiqc fastqc
+    multiqc --interactive -o ${ params.MQCLabel }_multiqc_report -n ${ params.MQCLabel }_multiqc fastqc
 
     multiqc --version > versions.txt
     """
@@ -95,9 +95,9 @@ process TRIMGALORE {
 
 process INFER_EXPERIMENT {
   tag "Sample:${ meta.id }"
-  // publishDir "${ params.outputDir }/${ params.gldsAccession }/${ params.PublishTo }",
-  //   mode: params.publish_dir_mode,
-  //   pattern: "*_multiqc_report**"
+  publishDir "${ params.outputDir }/${ params.gldsAccession }/${ params.PublishTo }",
+     mode: params.publish_dir_mode,
+     pattern: "*_infer_experiment.out"
 
   input:
     tuple val(meta), path(bam_file), path(bed_file) // bam file sorted by coordinate
