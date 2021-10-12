@@ -24,6 +24,7 @@ include { VV_RAW_READS;
           VV_RAW_READS_MULTIQC;
           VV_TRIMMED_READS_MULTIQC;
           VV_STAR_ALIGNMENTS;
+          VV_RSEQC;
           VV_RSEM_COUNTS;
           VV_DESEQ2_ANALYSIS } from './modules/vv.nf' addParams( RootDirForVV: "${workflow.launchDir}/${ params.outputDir }")
 include { GET_MAX_READ_LENGTH } from './modules/fastqc.nf'
@@ -203,15 +204,19 @@ workflow {
 
         VV_STAR_ALIGNMENTS( ALIGN_STAR.out.alignments | map{ it -> it[1..it.size()-1] } | collect, // map use here: removes val(meta) from tuple
                             ch_vv_log_04 ) | set { ch_vv_log_05 }
+        
+        VV_RSEQC( ALIGN_STAR.out.alignments | map{ it -> it[1..it.size()-1] } | collect, // map use here: removes val(meta) from tuple
+                            ch_vv_log_05 ) | set { ch_vv_log_06 }
+
 
         VV_RSEM_COUNTS( COUNT_ALIGNED.out.counts | map{ it -> it[1..it.size()-1] } | flatten | collect, // map use here: removes val(meta) from tuple
-                        ch_vv_log_05 ) | set { ch_vv_log_06 }
+                        ch_vv_log_06 ) | set { ch_vv_log_07 }
 
         VV_DESEQ2_ANALYSIS( DGE_BY_DESEQ2.out.dge | map{ it -> it[1..it.size()-1] } | collect, // map use here: removes val(meta) from tuple
-                            ch_vv_log_06 ) | set { ch_vv_log_07 }
+                            ch_vv_log_07 ) | set { ch_vv_log_08 }
         
         // GeneLab post processing
-        POST_PROCESSING(STAGING.out.runsheet, ch_final_software_versions, ch_vv_log_07, STAGING.out.metasheet) // Penultimate process when V&V enabled is the last V&V process
+        POST_PROCESSING(STAGING.out.runsheet, ch_final_software_versions, ch_vv_log_08, STAGING.out.metasheet) // Penultimate process when V&V enabled is the last V&V process
       } else {
         POST_PROCESSING(STAGING.out.runsheet, ch_final_software_versions, Channel.value("NO VV, last output is software versions"), STAGING.out.metasheet)
       }

@@ -1,6 +1,6 @@
 // Workflow that determines the strandedness of reads compared to a reference genome bed file
-include { INFER_EXPERIMENT;
-          ASSESS_STRANDEDNESS } from './modules/quality.nf'
+include { INFER_EXPERIMENT } from './modules/quality.nf' addParams(PublishTo: "01-TG_Preproc/RSeQC_Reports")
+include { ASSESS_STRANDEDNESS } from './modules/quality.nf'
 
 include { MULTIQC as INFER_EXPT_MULTIQC } from './modules/quality.nf' addParams(PublishTo: "01-TG_Preproc/RSeQC_Reports", MQCLabel:"infer_expt")
 
@@ -22,5 +22,6 @@ workflow strandedness{
 
   emit:
      strandedness = ASSESS_STRANDEDNESS.out 
+     infer_expt = ch_infer_expt
      versions = INFER_EXPERIMENT.out.version
 }

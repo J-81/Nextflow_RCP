@@ -140,6 +140,34 @@ process VV_STAR_ALIGNMENTS {
     """
 }
 
+process VV_RSEQC {
+  tag "Dataset: ${ params.gldsAccession }"
+
+  label 'VV'
+
+  input:
+    path("NULL") // While files from processing are staged, we instead want to use the files located in the publishDir for QC
+    path("VV_in.tsv")
+
+  output:
+    path("VV_out.tsv")
+
+  script:
+    """
+    # copy to processed data directory
+    cp -L VV_in.tsv ${ params.RootDirForVV }/${ params.gldsAccession }/VV_Log_Up_To_Halt.tsv
+    # cd into processed data directory
+    cd ${ params.RootDirForVV }/${ params.gldsAccession }
+    rseqc_VV.py --runsheet-path Metadata/*runsheet.csv \
+                          --output VV_Log_Up_To_Halt.tsv \
+                          --halt-severity 90
+    # move back to work dir and mv tsv into work dir
+    cd -
+    mv ${ params.RootDirForVV }/${ params.gldsAccession }/VV_Log_Up_To_Halt.tsv VV_out.tsv
+    """
+}
+
+
 process VV_RSEM_COUNTS {
   tag "Dataset: ${ params.gldsAccession }"
 
