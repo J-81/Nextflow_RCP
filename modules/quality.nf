@@ -31,20 +31,23 @@ process MULTIQC {
   tag "Dataset: ${ params.gldsAccession }"
   publishDir "${ params.outputDir }/${ params.gldsAccession }/${ params.PublishTo }",
     mode: params.publish_dir_mode,
-    pattern: "*_multiqc_report**"
+    pattern: "*_multiqc**"
 
   label "fastLocal"
 
   input:
-    path("fastqc/*") // any number of fastqc files
+    path("mqc_in/*") // any number of multiqc compatible files
   output:
     path("${ params.MQCLabel }_multiqc_report/${ params.MQCLabel }_multiqc.html"), emit: html
     path("${ params.MQCLabel }_multiqc_report/${ params.MQCLabel }_multiqc_data"), emit: data
+    path("${ params.MQCLabel }_multiqc_report.zip"), emit: zipped_report
     path("versions.txt"), emit: version
 
   script:
     """
-    multiqc --interactive -o ${ params.MQCLabel }_multiqc_report -n ${ params.MQCLabel }_multiqc fastqc
+    multiqc --interactive -o ${ params.MQCLabel }_multiqc_report -n ${ params.MQCLabel }_multiqc mqc_in
+
+    zip -r '${ params.MQCLabel }_multiqc_report.zip' '${ params.MQCLabel }_multiqc_report'
 
     multiqc --version > versions.txt
     """
