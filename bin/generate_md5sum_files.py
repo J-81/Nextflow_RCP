@@ -14,28 +14,44 @@ import pandas as pd
 from displayablepaths import DisplayablePath
 
 def filter_to_publish_files(row):
-    fn = row.filename
+    fname = row.filename
     if any(
             (
-                fn.endswith(".fastq.gz"),
-                fn.endswith(".fastq.gz_trimming_report.txt"),
-                fn.endswith(".out.bam"),
-                fn.endswith("_SJ.out.tab"),
-                fn.endswith(".genes.results"),
-                fn.endswith(".isoforms.results"),
-                fn == "Unnormalized_Counts.csv",
-                fn == "ERCC_Normalized_Counts.csv",
-                fn == "Normalized_Counts.csv",
-                fn == "contrasts.csv",
-                fn == "differential_expression.csv",
-                fn == "ERCCnorm_contrasts.csv",
-                fn == "ERCCnorm_differential_expression.csv",
-                fn == "visualization_output_table.csv",
-                fn == "visualization_PCA_table.csv",
-                fn == "visualization_output_table_ERCCnorm.csv",
-                fn == "visualization_PCA_table_ERCCnorm.csv",
-            )
-        ) :
+              (fname.endswith("_raw.fastq.gz")),
+              (fname == "raw_multiqc_report.zip"),
+              # processed
+                # trimmed files
+                (fname.endswith("_trimming_report.txt")),
+                (fname.endswith("_trimmed.fastq.gz")),
+                (fname == "trimmed_multiqc_report.zip"),
+                # alignment files
+                (fname.endswith("_Aligned.sortedByCoord.out.bam")),
+                (fname.endswith("_Aligned.toTranscriptome.out.bam")),
+                (fname.endswith("_SJ.out.tab")),
+
+                (fname.endswith("_Log.final.out")),
+                (fname == "align_multiqc_report.zip"),
+
+                # raw counts files
+                (fname.endswith(".genes.results")),
+                (fname.endswith(".isoforms.results")),
+                (fname == "Unnormalized_Counts.csv"),
+
+                # Normalized Counts
+                (fname == "Normalized_Counts.csv"),
+                (fname == "ERCC_Normalized_Counts.csv"),
+
+                # DGE Files
+                (fname == "contrasts.csv"),
+                (fname == "differential_expression.csv"),
+                (fname == "visualization_output_table.csv"),
+                (fname == "visualization_PCA_table.csv"),
+                (fname == "ERCCnorm_contrasts.csv"),
+                (fname == "ERCCnorm_differential_expression.csv"),
+                (fname == "visualization_output_table_ERCCnorm.csv"),
+                (fname == "visualization_PCA_table_ERCCnorm.csv"),
+              )
+            ):
         return True
     return False
 
@@ -53,12 +69,14 @@ def main(root_path: Path, outputDir: Path = None):
     output_table_filename = f"{outputDir}/{root_path.name}_md5sum_table.md" if outputDir else f"{root_path.name}_md5sum_table.md"
     print(f"Writing {output_table_filename}")
     md_table.to_markdown(buf=output_table_filename, index=False)
+    md_table.to_csv(output_table_filename.replace(".md",".tsv"), index=False, sep="\t")
     # repeat writing after filtering files the won't be published to the repo
     md_table = md_table.loc[md_table.apply(filter_to_publish_files, axis=1)]
     #md_table =
     output_table_filename = f"{outputDir}/{root_path.name}_md5sum_table_publish_to_repo.md" if outputDir else f"{root_path.name}_md5sum_table_publish_to_repo.md"
     print(f"Writing {output_table_filename}")
     md_table.to_markdown(buf=output_table_filename, index=False)
+    md_table.to_csv(output_table_filename.replace(".md",".tsv"), index=False, sep="\t")
 
 
 if __name__ == "__main__":
