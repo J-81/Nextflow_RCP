@@ -171,6 +171,8 @@ workflow {
 
 
       // Software Version Capturing
+      nf_version = "Nextflow Version:".concat("${nextflow.version}\n<><><>\n")
+      ch_nextflow_version = Channel.value(nf_version)
       ch_software_versions = Channel.empty()
       RAW_FASTQC.out.version | mix(ch_software_versions) | set{ch_software_versions}
       RAW_MULTIQC.out.version | mix(ch_software_versions) | set{ch_software_versions}
@@ -183,6 +185,7 @@ workflow {
       STRANDEDNESS.out.versions | mix(ch_software_versions) | set{ch_software_versions}
       ch_software_versions | map { it.text + "\n<><><>\n"}
                            | unique
+                           | mix(ch_nextflow_version)
                            | collectFile(name: "software_versions.txt", newLine: true, cache: false)
 			   | set{ch_final_software_versions}
 

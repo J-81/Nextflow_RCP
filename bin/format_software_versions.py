@@ -8,7 +8,18 @@ from pathlib import Path
 
 import pandas as pd
 
-PUBLISH_TABLE_ORDER = ["FastQC","MultiQC","Cutadapt","TrimGalore!","STAR","RSEM","Bioconductor","DESeq2","tximport","tidyverse","STRINGdb","PANTHER.db"]
+PUBLISH_TABLE_ORDER = ["Nextflow", "FastQC", "MultiQC","Cutadapt", "TrimGalore!", "STAR", "RSEM", "R", "Bioconductor", "DESeq2", "tximport", "tidyverse", "STRINGdb", "PANTHER.db"]
+
+def _parse_Nextflow_block(text) -> dict:
+    """ Parses an Nextflow version output
+    """
+    for line in text.splitlines():
+        if line.startswith("Nextflow Version:"):
+            return {'Program':"Nextflow",
+                    'Version':line.split(':')[1],
+                    'Relevant Links':'https://github.com/nextflow-io/nextflow'
+                    }
+    raise ValueError
 
 def _parse_RSEM_block(text) -> dict:
     """ Parses an RSEM version output
@@ -95,6 +106,34 @@ R_VERSION_TABLE_DICT = {
         'table_name':'org.Mm.eg.db',
         'link':'https://bioconductor.org/packages/release/data/annotation/html/org.Mm.eg.db.html'
     },
+    "org.Rn.eg.db": {
+        'table_name':'org.Rn.eg.db',
+        'link':'https://bioconductor.org/packages/release/data/annotation/html/org.Rn.eg.db.html'
+    },
+    "org.Dr.eg.db": {
+        'table_name':'org.Dr.eg.db',
+        'link':'https://bioconductor.org/packages/release/data/annotation/html/org.Dr.eg.db.html'
+    },
+    "org.Dm.eg.db": {
+        'table_name':'org.Dm.eg.db',
+        'link':'https://bioconductor.org/packages/release/data/annotation/html/org.Dm.eg.db.html'
+    },
+    "org.Ce.eg.db": {
+        'table_name':'org.Ce.eg.db',
+        'link':'https://bioconductor.org/packages/release/data/annotation/html/org.Ce.eg.db.html'
+    },
+    "org.Sc.sgd.db": {
+        'table_name':'org.Sc.sgd.db',
+        'link':'https://bioconductor.org/packages/release/data/annotation/html/org.Sc.sgd.db.html'
+    },
+    "org.At.tair.db": {
+        'table_name':'org.At.tair.db',
+        'link':'https://bioconductor.org/packages/release/data/annotation/html/org.At.tair.db.html'
+    },
+    "org.EcK12.eg.db": {
+        'table_name':'org.EcK12.eg.db',
+        'link':'https://bioconductor.org/packages/release/data/annotation/html/org.EcK12.eg.db.html'
+    },
 }
 def _parse_R_block(text: str, filter_to_rename_dict: dict = R_VERSION_TABLE_DICT, filter_to_rename = True) -> list:
     """ Parses out R package versions
@@ -120,6 +159,13 @@ def _parse_R_block(text: str, filter_to_rename_dict: dict = R_VERSION_TABLE_DICT
         tokens = line.split()
         if not len(tokens) >= 1:
             continue
+        if line.startswith("R version"):
+            versions.append({
+                'Program':"R",
+                'Version':line.split()[2],
+                'Relevant Links':'https://www.r-project.org',
+                })
+
         if line.startswith("BioC_version_associated_with_R_version"):
             # next line is Bioconductor version
             versions.append({
@@ -157,6 +203,8 @@ def main(software_versions_path: Path):
             results.append(_parse_multiqc_block(text_block))
         elif "ALIGN_STAR_version:" in text_block:
             results.append(_parse_STAR_block(text_block))
+        elif "Nextflow Version:" in text_block:
+            results.append(_parse_Nextflow_block(text_block))
         elif "R version" in text_block:
             results.extend(_parse_R_block(text_block))
         elif "Quality-/Adapter-/RRBS-/Speciality-Trimming" in text_block:
@@ -164,7 +212,7 @@ def main(software_versions_path: Path):
         else:
             #raise NotImplementedError(f"Scripts does not know how to parse: {text_block}")
             pass
-
+    print(results)
     df = pd.DataFrame(results)
     df = df.set_index(keys="Program")
     print(df.head())
@@ -172,7 +220,8 @@ def main(software_versions_path: Path):
     extra_software = set(df.index).difference(set(PUBLISH_TABLE_ORDER))
     # and add to end of the table
     PUBLISH_TABLE_ORDER.extend(list(extra_software))
-
+    print(PUBLISH_TABLE_ORDER)
+    print(df)
     df = df.reindex(PUBLISH_TABLE_ORDER)
     output_file = software_versions_path.parent / Path("software_versions.md")
     df.to_markdown(output_file, index=True)
