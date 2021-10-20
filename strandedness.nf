@@ -2,7 +2,6 @@
 include { RSEQC_ALL } from './modules/rseqc.nf' addParams(PublishTo: "RSeQC_Analyses/logs")
 include { ASSESS_STRANDEDNESS } from './modules/rseqc.nf'
 
-include { MULTIQC as RSEQC_MULTIQC } from './modules/quality.nf' addParams(PublishTo: "RSeQC_Analyses", MQCLabel:"rseqc")
 
 workflow strandedness{
   take:
@@ -21,10 +20,12 @@ workflow strandedness{
      ch_infer_expt | ASSESS_STRANDEDNESS
      RSEQC_ALL.out.all | map{ it[1..it.size()-1] } 
                        | collect 
-                       |  RSEQC_MULTIQC
+                       | set { ch_rseqc_logs }
+     
 
   emit:
      strandedness = ASSESS_STRANDEDNESS.out 
      infer_expt = ch_infer_expt
      versions = RSEQC_ALL.out.version
+     rseqc_logs = ch_rseqc_logs
 }

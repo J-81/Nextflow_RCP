@@ -10,6 +10,8 @@ include { FASTQC as TRIMMED_FASTQC } from './modules/quality.nf' addParams(Publi
 include { MULTIQC as RAW_MULTIQC } from './modules/quality.nf' addParams(PublishTo: "00-RawData/FastQC_Reports", MQCLabel:"raw")
 include { MULTIQC as TRIMMED_MULTIQC } from './modules/quality.nf' addParams(PublishTo: "01-TG_Preproc/FastQC_Reports", MQCLabel:"trimmed")
 include { MULTIQC as ALIGN_MULTIQC } from './modules/quality.nf' addParams(PublishTo: "02-STAR_Alignment", MQCLabel:"align")
+include { MULTIQC as RSEQC_MULTIQC } from './modules/quality.nf' addParams(PublishTo: "RSeQC_Analyses", MQCLabel:"rseqc")
+include { MULTIQC as ALL_MULTIQC } from './modules/quality.nf' addParams(PublishTo: "MULTIQC_ALL", MQCLabel:"all")
 include { TRIMGALORE } from './modules/quality.nf'
 include { BUILD_STAR;
           ALIGN_STAR;
@@ -121,7 +123,7 @@ workflow {
                             | unique
                             | collect
                             //| view {"PRE_RAW_MULTIQC: $it"}
-                            | RAW_MULTIQC
+                            | set { raw_mqc_ch }
 
       RAW_FASTQC.out.fastqc | map { it -> [ it[2] ] }
                             | flatten
@@ -138,7 +140,7 @@ workflow {
                                 | flatten \
                                 | unique \
                                 | collect \
-                                | TRIMMED_MULTIQC
+                                | set { trim_mqc_ch }
 
       REFERENCES( meta_ch | map { it.organism_sci }, meta_ch | map { it.has_ercc } )
       REFERENCES.out.genome_annotations | set { genome_annotations }      
@@ -155,7 +157,9 @@ workflow {
       ALIGN_STAR.out.alignments | combine( BUILD_RSEM.out.build ) | set { aligned_ch }
       COUNT_ALIGNED( aligned_ch, strandedness_ch )
 
-      ALIGN_STAR.out.alignments | map { it -> it[1] } | collect | ALIGN_MULTIQC
+      ALIGN_STAR.out.alignments | map { it -> it[1] } 
+                                | collect 
+                                | set { align_mqc_ch }
 
       COUNT_ALIGNED.out.counts | map { it[0].id }
                                | collectFile(name: "samples.txt", sort: true, newLine: true)
@@ -169,6 +173,19 @@ workflow {
 
       DGE_BY_DESEQ2( STAGING.out.runsheet, organism_ch, rsem_ch, meta_ch  )
 
+
+      // ALL MULTIQC
+      RAW_MULTIQC( samples_ch, raw_mqc_ch )
+      TRIMMED_MULTIQC( samples_ch, trim_mqc_ch )
+      ALIGN_MULTIQC( samples_ch, align_mqc_ch )
+      RSEQC_MULTIQC( samples_ch, STRANDEDNESS.out.rseqc_logs )
+      raw_mqc_ch | concat( trim_mqc_ch ) 
+                 | concat( ALIGN_STAR.out.alignment_logs ) 
+                 | concat( STRANDEDNESS.out.rseqc_logs )
+                 | concat( rsem_ch )
+                 | concat( TRIMGALORE.out.trim_reports )
+                 | collect | set { all_mqc_ch }
+      ALL_MULTIQC( samples_ch, all_mqc_ch )
 
       // Software Version Capturing
       nf_version = "Nextflow Version:".concat("${nextflow.version}\n<><><>\n")

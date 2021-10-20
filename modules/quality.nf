@@ -28,7 +28,7 @@ process FASTQC {
 }
 
 process MULTIQC {
-  tag "Dataset: ${ params.gldsAccession }"
+  //tag "Dataset: ${ params.gldsAccession }"
   publishDir "${ params.outputDir }/${ params.gldsAccession }/${ params.PublishTo }",
     mode: params.publish_dir_mode,
     pattern: "*_multiqc**"
@@ -36,7 +36,9 @@ process MULTIQC {
   label "fastLocal"
 
   input:
+    path("samples.txt")
     path("mqc_in/*") // any number of multiqc compatible files
+
   output:
     path("${ params.MQCLabel }_multiqc_report/${ params.MQCLabel }_multiqc.html"), emit: html
     path("${ params.MQCLabel }_multiqc_report/${ params.MQCLabel }_multiqc_data"), emit: data
@@ -45,7 +47,7 @@ process MULTIQC {
 
   script:
     """
-    multiqc --interactive -o ${ params.MQCLabel }_multiqc_report -n ${ params.MQCLabel }_multiqc mqc_in
+    multiqc --sample-names samples.txt  --interactive -o ${ params.MQCLabel }_multiqc_report -n ${ params.MQCLabel }_multiqc mqc_in
 
     zip -r '${ params.MQCLabel }_multiqc_report.zip' '${ params.MQCLabel }_multiqc_report'
 
@@ -67,7 +69,7 @@ process TRIMGALORE {
 
   output:
     tuple val(meta), path("${ meta.id }*trimmed.fastq.gz"), emit: reads
-    tuple val(meta), path("${ meta.id }*.txt"), emit: trim_reports
+    path("${ meta.id }*.txt"), emit: trim_reports
     path("versions.txt"), emit: version
 
   script:
