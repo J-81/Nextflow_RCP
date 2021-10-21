@@ -31,15 +31,10 @@ workflow references{
         pa.ifEmpty([0,null]) | set {pa}
         
         annotations | mix(pa,tl)
-                    | view
                     | max { it[0] }
                     | map { it[1] }
                     | set { genome_annotations_pre_subsample }
-        //
-        /* 
-        annotations | max { it[0] }  // take the highest priority that lands in the completed channel
-                    | set { genome_annotations_pre_subsample }
-        */
+      
       } else if (params.ref_order == 'toplevel' ) {
       	DOWNLOAD_TOPLEVEL_REF( organism_sci ) | set { genome_annotations_pre_subsample }
       }
