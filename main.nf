@@ -71,6 +71,8 @@ if ( !params.ensemblVersion ) { exit 1, "Missing Required Parameter: ensemblVers
 if ( !allowed_ref_order.contains(params.ref_order ) ) { exit 1, "Invalid ref_order param.  Must be either 'toplevel' or 'primary_assembly,toplevel'" }
 if ( !params.outputDir ) {  params.outputDir = "$workflow.launchDir" }
 
+ch_multiqc_config = params.multiqcConfig ? Channel.fromPath( params.multiqcConfig ) : Channel.fromPath("NO_FILE")
+
 /**************************************************
 * DEBUG WARNING  **********************************
 **************************************************/
@@ -175,17 +177,17 @@ workflow {
 
 
       // ALL MULTIQC
-      RAW_MULTIQC( samples_ch, raw_mqc_ch )
-      TRIMMED_MULTIQC( samples_ch, trim_mqc_ch )
-      ALIGN_MULTIQC( samples_ch, align_mqc_ch )
-      RSEQC_MULTIQC( samples_ch, STRANDEDNESS.out.rseqc_logs )
+      RAW_MULTIQC( samples_ch, raw_mqc_ch, ch_multiqc_config  )
+      TRIMMED_MULTIQC( samples_ch, trim_mqc_ch, ch_multiqc_config )
+      ALIGN_MULTIQC( samples_ch, align_mqc_ch, ch_multiqc_config )
+      RSEQC_MULTIQC( samples_ch, STRANDEDNESS.out.rseqc_logs, ch_multiqc_config )
       raw_mqc_ch | concat( trim_mqc_ch ) 
                  | concat( ALIGN_STAR.out.alignment_logs ) 
                  | concat( STRANDEDNESS.out.rseqc_logs )
                  | concat( rsem_ch )
                  | concat( TRIMGALORE.out.trim_reports )
                  | collect | set { all_mqc_ch }
-      ALL_MULTIQC( samples_ch, all_mqc_ch )
+      ALL_MULTIQC( samples_ch, all_mqc_ch, ch_multiqc_config )
 
       // Software Version Capturing
       nf_version = "Nextflow Version:".concat("${nextflow.version}\n<><><>\n")
