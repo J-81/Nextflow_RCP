@@ -75,11 +75,16 @@ process RSEQC_ALL {
 
     geneBody_coverage.py -r ${ bed_file} -i ${ sorted_bam_fname } -o ${ meta.id }/${ meta.id }
 
-    inner_distance.py -r ${ bed_file } -i ${ sorted_bam_fname } -k 15000000 -l -150 -u 350 -o ${ meta.id }/${ meta.id }
-
+    inner_distance.py -r ${ bed_file } -i ${ sorted_bam_fname } -k 15000000 -l -150 -u 350 -o ${ meta.id }/${ meta.id } // run for single end is nonsense and generates blank file, okay for now, make sure to disable output to versions
     read_distribution.py -r ${ bed_file } -i ${ sorted_bam_fname } > ${ meta.id }/${ meta.id }.read_distribution_out 
 
-    infer_experiment.py --version > versions.txt
+    
+    # VERSIONS
+    echo "RSeQC tools versions below:\n" > versions.txt 
+    infer_experiment.py --version >> versions.txt
+    geneBody_coverage.py --version >> versions.txt
+    ${ meta.pairedEnd ? 'inner_distance.py --version >> versions.txt' : '' }
+    read_distribution.py  --version >> versions.txt
     """
 }
 
