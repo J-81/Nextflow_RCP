@@ -91,6 +91,10 @@ def main(root_path, runsheet_path, template, outputDir: Path = None):
                         (fname.endswith("_Log.final.out")),
                         (fname == "align_multiqc_report.zip"),
 
+                        # rseqc files
+                        (fname == "rseqc_multiqc_report.zip"),
+                        (fname.endswith(".infer_experiment_out")),
+
                         # raw counts files
                         (fname.endswith(".genes.results")),
                         (fname.endswith(".isoforms.results")),
@@ -109,6 +113,7 @@ def main(root_path, runsheet_path, template, outputDir: Path = None):
                         (fname == "ERCCnorm_differential_expression.csv"),
                         (fname == "visualization_output_table_ERCCnorm.csv"),
                         (fname == "visualization_PCA_table_ERCCnorm.csv"),
+                        (fname == "SampleTable.csv"),
                       )
                     ):
                 return "processed"
@@ -168,9 +173,18 @@ def main(root_path, runsheet_path, template, outputDir: Path = None):
                         (fname == "ERCCnorm_differential_expression.csv"),
                         (fname == "visualization_output_table_ERCCnorm.csv"),
                         (fname == "visualization_PCA_table_ERCCnorm.csv"),
+                        (fname == "SampleTable.csv"),
                       )
                     ):
                 return "DGE_Files"
+            elif any(
+                      (
+                        # rseqc files
+                        (fname == "rseqc_multiqc_report.zip"),
+                        (fname.endswith(".infer_experiment_out")),
+                      )
+                    ):
+                return "RSeQC_Analysis"
             return "Other"
 
         def categorize_excel_column(fname: str) -> str:
@@ -193,6 +207,13 @@ def main(root_path, runsheet_path, template, outputDir: Path = None):
                       )
                     ):
                 return "Alignment Data"
+            elif any(
+                      (
+                        # rseqc files
+                        (fname.endswith(".infer_experiment_out")),
+                      )
+                    ):
+                return "Infer Experiment"
             elif any(
                       (
                         (fname.endswith("_Log.final.out")),
@@ -225,6 +246,7 @@ def main(root_path, runsheet_path, template, outputDir: Path = None):
                         (fname == "ERCCnorm_differential_expression.csv"),
                         (fname == "visualization_output_table_ERCCnorm.csv"),
                         (fname == "visualization_PCA_table_ERCCnorm.csv"),
+                        (fname == "SampleTable.csv"),
                       )
                     ):
                 return "DGE Data"
