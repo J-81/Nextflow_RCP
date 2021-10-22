@@ -6,5 +6,5 @@ channels:
 
 dependencies:
   - python
-  - rseqc
-  - samtools
+  - rseqc 
+  - samtools >= 1.13
