@@ -113,6 +113,9 @@ workflow {
       // meta only for dataset specific processes that don't use samples
       // e.g. downloading correct reference genome base on organism
       STAGING.out.raw_reads | take(1) | map{it -> it[0]} | set { meta_ch }
+      STAGING.out.raw_reads | map { it[0].id }
+                            | collectFile(name: "samples.txt", sort: true, newLine: true)
+                            | set { samples_ch }
       STAGING.out.isa | set { isa_ch }
 
       meta_ch | view
@@ -163,9 +166,6 @@ workflow {
                                 | collect 
                                 | set { align_mqc_ch }
 
-      COUNT_ALIGNED.out.counts | map { it[0].id }
-                               | collectFile(name: "samples.txt", sort: true, newLine: true)
-                               | set { samples_ch }
 
       COUNT_ALIGNED.out.counts | map { it[1] } | collect | set { rsem_ch }
 
