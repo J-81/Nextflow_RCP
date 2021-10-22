@@ -227,7 +227,7 @@ workflow {
         VV_STAR_ALIGNMENTS( ALIGN_STAR.out.alignments | map{ it -> it[1..it.size()-1] } | collect, // map use here: removes val(meta) from tuple
                             ch_vv_log_04 ) | set { ch_vv_log_05 }
         
-        VV_RSEQC( ALIGN_STAR.out.alignments | map{ it -> it[1..it.size()-1] } | collect, // map use here: removes val(meta) from tuple
+        VV_RSEQC( RSEQC_MULTIQC.out.data,
                             ch_vv_log_05 ) | set { ch_vv_log_06 }
 
 
