@@ -83,7 +83,7 @@ process RSEQC_ALL {
     echo "RSeQC tools versions below:\n" > versions.txt 
     infer_experiment.py --version >> versions.txt
     geneBody_coverage.py --version >> versions.txt
-    ${ meta.pairedEnd ? 'inner_distance.py --version >> versions.txt' : '' }
+    ${ meta.paired_end ? 'inner_distance.py --version >> versions.txt' : '' }
     read_distribution.py  --version >> versions.txt
     """
 }
