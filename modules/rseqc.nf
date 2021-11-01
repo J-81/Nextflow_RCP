@@ -62,9 +62,10 @@ process RSEQC_ALL {
 
   script:
     sorted_bam_fname = bam_file.name.replaceAll('.out.bam','_sorted.out.bam')
+    mem_MB_per_thread = task.memory.toMega().intdiv(task.cpus)
     """    
     mkdir ${ meta.id }
-    samtools sort -m ${ task.memory.toGiga() }G \
+    samtools sort -m ${ mem_MB_per_thread  }M \
                   --threads ${ task.cpus } \
                   -o ${ sorted_bam_fname } \
                   ${ bam_file }
