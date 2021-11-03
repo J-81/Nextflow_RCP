@@ -79,6 +79,7 @@ while True:
 
 process ALIGN_STAR {
   // Aligns reads against STAR index
+  // TODO: make '--alignMatesGapMax 1000000' conditional on PE
   tag "Sample: ${ meta.id }"
   publishDir "${ params.outputDir }/${ params.gldsAccession }",
     mode: params.publish_dir_mode,
