@@ -3,7 +3,12 @@
 # a script to assess the dataset-wise strand selection from the sample-wise output from RSeQC infer_experiment
 from pathlib import Path
 from typing import Tuple
-from statistics import mean
+from statistics import median
+
+STRANDEDNESS_ASSIGNMENT_THRESHOLD = 0.70 # values between above this will be assigned strandedness
+AMBIGUOUS_ASSIGNMENT_THRESHOLD = 0.50 # values above this, but below strandedness assignment will raise an exception
+UNSTRANDEDNESS_ASSIGMENT_THRESHOLD = 0.40 # values between this minimum and the ambiguous threshold are assigned unstranded
+
 
 def main(root_dir: str):
     results = dict()
@@ -20,22 +25,27 @@ def main(root_dir: str):
 
         results[file.name] = result
     
-    #print(results)
     # determine average strandedness
-    mean_sense  =  mean(sense_results)
-    mean_antisense = mean(antisense_results)
-    mean_undetermined = mean(undetermined_results)
+    median_sense  =  median(sense_results)
+    median_antisense = median(antisense_results)
+    median_undetermined = median(undetermined_results)
 
-    if mean_sense > mean_antisense:
-        dominant = f"sense:{mean_sense}"
-    elif mean_antisense > mean_sense:
-        dominant = f"antisense:{mean_antisense}"
-    else:
-        dominant = f"equal_percents:{mean_sense}"
 
+    if median_sense > median_antisense:
+        dominant, value = "sense", median_sense
+    elif median_antisense >= median_sense:
+        dominant, value = "antisense", median_antisense
+
+    # assess strandedness
+    if value > STRANDEDNESS_ASSIGNMENT_THRESHOLD:
+        assignment = dominant
+    elif STRANDEDNESS_ASSIGNMENT_THRESHOLD  > value  > AMBIGUOUS_ASSIGNMENT_THRESHOLD:
+        raise ValueError(f"Strandedness assignment is ambiguious for this dataset")
+    elif AMBIGUOUS_ASSIGNMENT_THRESHOLD  > value > UNSTRANDEDNESS_ASSIGMENT_THRESHOLD:
+        assignment = "unstranded"
 
     with open("result.txt", "w") as f:
-        f.write(dominant)
+        f.write(f"{assignment}:{value}")
     
 
 

@@ -166,7 +166,7 @@ process COUNT_ALIGNED {
     path("versions.txt"), emit: version
 
   script:
-    strandedness_opt_map = ["sense":"forward","antisense":"reverse","equal_percents":"none"]
+    strandedness_opt_map = ["sense":"forward","antisense":"reverse","unstranded":"none"]
     """
     rsem-calculate-expression --num-threads $task.cpus \
       ${ meta.paired_end ? '--paired-end' : '' } \
