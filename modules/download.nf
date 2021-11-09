@@ -7,7 +7,6 @@ process DOWNLOAD_GENOME_ANNOTATIONS {
   tag "Organism: ${ organism_sci }  Ensembl Version: ${params.ensemblVersion}"
   label 'networkBound'
   storeDir "${params.storeDirPath}/ensembl/${params.ensemblVersion}/${ organism_sci }"
-  errorStrategy "${ params._has_fallback }" ? 'ignore' : 'terminate'
 
   input:
     val(organism_sci)
@@ -24,7 +23,7 @@ process DOWNLOAD_GENOME_ANNOTATIONS {
 
 
     # decompress files
-    gunzip *.fa.gz
+    gunzip *.fa.gz || true # this is to accomodate dummy marker file, D.N.E., which results in no decompression needed.
     gunzip *.gtf.gz
     """
 }

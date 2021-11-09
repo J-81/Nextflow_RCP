@@ -7,6 +7,7 @@ from ftplib import FTP
 from ftplib import error_perm
 import subprocess
 import argparse
+from pathlib import Path
 
 import pandas as pd
 from tqdm import tqdm
@@ -140,5 +141,10 @@ def download_from_ftp(target_file_suffix, target_file_folder, verbose = False):
     ftp.close()
 
 if __name__ == "__main__":
-    download_from_ftp(TARGET_FASTA_SUFFIX, FASTA_FOLDER, verbose = True)
+    try:
+        download_from_ftp(TARGET_FASTA_SUFFIX, FASTA_FOLDER, verbose = True)
+    except AssertionError:
+        dummy_path = f"D.N.E.{TARGET_FASTA_SUFFIX}".replace(".gz","") # remove gzipped extension, as would occur if the file existed
+        print(f"Creating dummy file: '{dummy_path}'.  This will be downstream checked by Nextflow, specifically, the D.N.E. prefix")
+        Path(dummy_path).touch()
     download_from_ftp(TARGET_GTF_SUFFIX, GTF_FOLDER, verbose = True)

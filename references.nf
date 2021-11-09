@@ -7,9 +7,9 @@ include { CONCAT_ERCC;
           TO_PRED;
           TO_BED } from './modules/genome.nf'
 
-include { DOWNLOAD_GENOME_ANNOTATIONS as DOWNLOAD_TOPLEVEL_REF } from './modules/download.nf' addParams(ref_target: "toplevel", _has_fallback: false)
+include { DOWNLOAD_GENOME_ANNOTATIONS as DOWNLOAD_TOPLEVEL_REF } from './modules/download.nf' addParams(ref_target: "toplevel")
 
-include { DOWNLOAD_GENOME_ANNOTATIONS as DOWNLOAD_PRIMARY_ASSEMBLY_REF } from './modules/download.nf' addParams(ref_target: "primary_assembly", _has_fallback: true)
+include { DOWNLOAD_GENOME_ANNOTATIONS as DOWNLOAD_PRIMARY_ASSEMBLY_REF } from './modules/download.nf' addParams(ref_target: "primary_assembly")
 
 /**************************************************
 * ACTUAL WORKFLOW  ********************************
@@ -19,22 +19,19 @@ workflow references{
     organism_sci
     has_ercc
   main:
-
-
-
       if ( params.ref_order == 'primary_assemblyELSEtoplevel' ) {
         annotations = Channel.empty()
-        DOWNLOAD_PRIMARY_ASSEMBLY_REF( organism_sci ) | map { it -> [2, it] } // add a priority value
+        DOWNLOAD_PRIMARY_ASSEMBLY_REF( organism_sci ) | map { it -> ( it[0].name.startsWith("D.N.E.") ) ? [-1, it] : [2, it] } // assign priority value, -1 if this is a DNE marker file, 2 otherwise
+                                                      | view { "Primary Assembly Channel: $it" }
                                                       | set{pa}
-        DOWNLOAD_TOPLEVEL_REF( organism_sci ) | map {it -> [1, it] } // add a priority value
-                                              | set{tl}
-        pa.ifEmpty([0,null]) | set {pa}
-        
+        DOWNLOAD_TOPLEVEL_REF( organism_sci ) | map { it -> [1, it] } | set{tl}
+
         annotations | mix(pa,tl)
+                    | view
                     | max { it[0] }
                     | map { it[1] }
                     | set { genome_annotations_pre_subsample }
-      
+        
       } else if (params.ref_order == 'toplevel' ) {
       	DOWNLOAD_TOPLEVEL_REF( organism_sci ) | set { genome_annotations_pre_subsample }
       }
