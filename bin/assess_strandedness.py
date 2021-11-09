@@ -40,7 +40,7 @@ def main(root_dir: str):
     if value > STRANDEDNESS_ASSIGNMENT_THRESHOLD:
         assignment = dominant
     elif STRANDEDNESS_ASSIGNMENT_THRESHOLD  > value  > AMBIGUOUS_ASSIGNMENT_THRESHOLD:
-        raise ValueError(f"Strandedness assignment is ambiguious for this dataset")
+        raise ValueError(f"Strandedness assignment is ambiguious for this dataset. median sense: {median_sense}, median antisense: {median_antisense}")
     elif AMBIGUOUS_ASSIGNMENT_THRESHOLD  > value > UNSTRANDEDNESS_ASSIGMENT_THRESHOLD:
         assignment = "unstranded"
 
