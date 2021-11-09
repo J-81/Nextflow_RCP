@@ -17,7 +17,7 @@ process BUILD_STAR {
 
   output:
     path("STAR_REF_${ genomeFasta.baseName }"), emit: build
-    path("STAR_REF_${ genomeFasta.baseName }/Log.out") // Check for log completed
+    path("STAR_REF_${ genomeFasta.baseName }/genomeParameters.txt") // Check for completion, only successful builds should generate this file, this is required as the process error is NOT currently used to raised an exception in the python wrapper.
 
   script:
     """
@@ -51,7 +51,8 @@ def rerun(suggested):
     print(command)
     command = command.format(suggested=suggested)
     
-    subprocess.Popen(shlex.split(command), shell=False)
+    output_rerun = subprocess.check_output(shlex.split(command), shell=False)
+    print(output_rerun)
 
 # invoke initial build process
 process = subprocess.Popen(shlex.split(command), shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -153,7 +154,7 @@ process BUILD_RSEM {
 
 process COUNT_ALIGNED {
   // Generates gene and isoform counts from alignments
-  tag "Sample: ${ meta.id }"
+  tag "Sample: ${ meta.id }, strandedness: ${ strandedness } "
   publishDir "${ params.outputDir }/${ params.gldsAccession }",
     mode: params.publish_dir_mode,
     pattern: "${ meta.RSEM_Counts_dir }/*"
