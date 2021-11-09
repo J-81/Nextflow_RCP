@@ -15,7 +15,7 @@ def main(root_dir: str):
     sense_results = list()
     antisense_results = list()
     undetermined_results = list()
-    for file in Path(root_dir).glob("*infer_experiment_out"):
+    for file in Path(root_dir).glob("*"):
         with open(file, "r") as f:
             contents = f.read()
         result = _get_stranded_tuple(contents)
