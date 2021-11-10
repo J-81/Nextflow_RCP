@@ -33,22 +33,17 @@ def _parse_Nextflow_block(text) -> dict:
     raise ValueError
 
 def _parse_rseqc_block(text) -> dict:
-    """ Parses an RSEQC version output.  Note, these each tool has its own version so this should output a list of dictionaries.
+    """ Parses an RSEQC version output.  Note, these this operates on individual tools version output.
     """
     results = list()
     for line in text.splitlines():
         if (len(line.split()) == 2) and ('.py' in line):
             tool, version = line.split()
-            result = {'Program':tool,
+            return {'Program':tool,
                       'Version':version,
                       'Relevant Links':'https://sourceforge.net/projects/rseqc'
                      }
-            results.append(result)
-
-    if results:
-        return results
-    else:
-        raise ValueError("NO VERSIONS SUCCESSFULLY PARSED FOR rseqc")
+    raise ValueError("NO VERSIONS SUCCESSFULLY PARSED")
 
 def _parse_RSEM_block(text) -> dict:
     """ Parses an RSEM version output
@@ -239,8 +234,8 @@ def main(software_versions_path: Path):
             results.extend(_parse_R_block(text_block))
         elif "Quality-/Adapter-/RRBS-/Speciality-Trimming" in text_block:
             results.extend(_parse_Trimgalore_block(text_block))
-        elif "RSeQC tools versions below:" in text_block:
-            results.extend(_parse_rseqc_block(text_block))
+        elif "RSeQC" in text_block:
+            results.append(_parse_rseqc_block(text_block))
         else:
             #raise NotImplementedError(f"Scripts does not know how to parse: {text_block}")
             print(f"WARNING: Script does not know how to parse: {text_block}")

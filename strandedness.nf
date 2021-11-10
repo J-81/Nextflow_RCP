@@ -39,6 +39,7 @@ workflow strandedness{
      ch_software_versions = Channel.empty()
      ch_software_versions | mix(INFER_EXPERIMENT.out.version,
                                 GENEBODY_COVERAGE.out.version,
+                                SORT_INDEX_BAM.out.version,
                                 INNER_DISTANCE.out.version,
                                 READ_DISTRIBUTION.out.version)
                           | set{ ch_software_versions }

@@ -86,8 +86,7 @@ process SORT_INDEX_BAM {
     samtools index -@ ${ task.cpus  } ${ sorted_bam_fname }
 
     # VERSIONS
-    echo "Samtools version:" > version
-    samtools --version-only > versions.txt
+    echo "samtools version:\$(samtools --version-only)" > versions.txt
     """
 }
 
