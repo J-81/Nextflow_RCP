@@ -9,8 +9,9 @@ include { FASTQC as RAW_FASTQC } from './modules/quality.nf' addParams(PublishTo
 include { FASTQC as TRIMMED_FASTQC } from './modules/quality.nf' addParams(PublishTo: "01-TG_Preproc/FastQC_Reports")
 include { MULTIQC as RAW_MULTIQC } from './modules/quality.nf' addParams(PublishTo: "00-RawData/FastQC_Reports", MQCLabel:"raw")
 include { MULTIQC as TRIMMED_MULTIQC } from './modules/quality.nf' addParams(PublishTo: "01-TG_Preproc/FastQC_Reports", MQCLabel:"trimmed")
+include { MULTIQC as TRIM_MULTIQC } from './modules/quality.nf' addParams(PublishTo: "01-TG_Preproc/Trimming_Reports", MQCLabel:"trimming")
 include { MULTIQC as ALIGN_MULTIQC } from './modules/quality.nf' addParams(PublishTo: "02-STAR_Alignment", MQCLabel:"align")
-include { MULTIQC as RSEQC_MULTIQC } from './modules/quality.nf' addParams(PublishTo: "RSeQC_Analyses", MQCLabel:"rseqc")
+include { MULTIQC as COUNT_MULTIQC } from './modules/quality.nf' addParams(PublishTo: "03-RSEM_Counts", MQCLabel:"count")
 include { MULTIQC as ALL_MULTIQC } from './modules/quality.nf' addParams(PublishTo: "MULTIQC_ALL", MQCLabel:"all")
 include { TRIMGALORE } from './modules/quality.nf'
 include { BUILD_STAR;
@@ -154,7 +155,7 @@ workflow {
 
       TRIMGALORE.out.reads | combine( BUILD_STAR.out.build ) | ALIGN_STAR
 
-      STRANDEDNESS ( ALIGN_STAR.out.bam_by_coord, REFERENCES.out.genome_bed ) 
+      STRANDEDNESS ( ALIGN_STAR.out.bam_by_coord, REFERENCES.out.genome_bed, samples_ch ) 
       STRANDEDNESS.out.strandedness | map { it.text.split(":")[0] } | set { strandedness_ch }
 
       BUILD_RSEM( genome_annotations, meta_ch)
@@ -178,14 +179,15 @@ workflow {
 
       // ALL MULTIQC
       RAW_MULTIQC( samples_ch, raw_mqc_ch, ch_multiqc_config  )
-      TRIMMED_MULTIQC( samples_ch, trim_mqc_ch, ch_multiqc_config )
+      TRIMMED_MULTIQC( samples_ch, trim_mqc_ch, ch_multiqc_config ) // refering to the trimmed reads
+      TRIM_MULTIQC( samples_ch, TRIMGALORE.out.reports, ch_multiqc_config ) // refering to the trimming process
       ALIGN_MULTIQC( samples_ch, align_mqc_ch, ch_multiqc_config )
-      RSEQC_MULTIQC( samples_ch, STRANDEDNESS.out.rseqc_logs, ch_multiqc_config )
+      COUNT_MULTIQC( samples_ch, rsem_ch, ch_multiqc_config )
       raw_mqc_ch | concat( trim_mqc_ch ) 
                  | concat( ALIGN_STAR.out.alignment_logs ) 
                  | concat( STRANDEDNESS.out.rseqc_logs )
                  | concat( rsem_ch )
-                 | concat( TRIMGALORE.out.trim_reports )
+                 | concat( TRIMGALORE.out.reports )
                  | collect | set { all_mqc_ch }
       ALL_MULTIQC( samples_ch, all_mqc_ch, ch_multiqc_config )
 

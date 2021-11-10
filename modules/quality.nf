@@ -74,7 +74,7 @@ process TRIMGALORE {
 
   output:
     tuple val(meta), path("${ meta.id }*trimmed.fastq.gz"), emit: reads
-    path("${ meta.id }*.txt"), emit: trim_reports
+    path("${ meta.id }*.txt"), emit: reports
     path("versions.txt"), emit: version
 
   script:

@@ -10,6 +10,17 @@ import pandas as pd
 
 PUBLISH_TABLE_ORDER = ["Nextflow", "FastQC", "MultiQC","Cutadapt", "TrimGalore!", "STAR", "RSEM", "R", "Bioconductor", "DESeq2", "tximport", "tidyverse", "STRINGdb", "PANTHER.db"]
 
+def _parse_samtools_block(text) -> dict:
+    """ Parses an Samtools version output
+    """
+    for line in text.splitlines():
+        if line.startswith("samtools version:"):
+            return {'Program':"Samtools",
+                    'Version':line.split(':')[1].strip(),
+                    'Relevant Links':'https://github.com/samtools/samtools'
+                    }
+    raise ValueError
+
 def _parse_Nextflow_block(text) -> dict:
     """ Parses an Nextflow version output
     """
@@ -220,6 +231,8 @@ def main(software_versions_path: Path):
             results.append(_parse_multiqc_block(text_block))
         elif "ALIGN_STAR_version:" in text_block:
             results.append(_parse_STAR_block(text_block))
+        elif "samtools version:" in text_block:
+            results.append(_parse_samtools_block(text_block))
         elif "Nextflow Version:" in text_block:
             results.append(_parse_Nextflow_block(text_block))
         elif "R version" in text_block:
@@ -230,16 +243,17 @@ def main(software_versions_path: Path):
             results.extend(_parse_rseqc_block(text_block))
         else:
             #raise NotImplementedError(f"Scripts does not know how to parse: {text_block}")
+            print(f"WARNING: Script does not know how to parse: {text_block}")
             pass
-    print(results)
+    #print(results)
     df = pd.DataFrame(results)
     df = df.set_index(keys="Program")
-    print(df.head())
+    #print(df.head())
     # find any software not in conserved list (e.g. organism specific annotation databases)
     extra_software = set(df.index).difference(set(PUBLISH_TABLE_ORDER))
     # and add to end of the table
     PUBLISH_TABLE_ORDER.extend(list(extra_software))
-    print(PUBLISH_TABLE_ORDER)
+    #print(PUBLISH_TABLE_ORDER)
     print(df)
     df = df.reindex(PUBLISH_TABLE_ORDER)
     output_file = software_versions_path.parent / Path("software_versions.md")
