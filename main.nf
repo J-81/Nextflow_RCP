@@ -54,6 +54,7 @@ if (params.help) {
   println("  --limitSamplesTo n    limit the number of samples staged to a number.")
   println("  --genomeSubsample n   subsamples genome fasta and gtf files to the supplied chromosome.")
   println("  --truncateTo n        limit number of reads downloaded and processed to *n* reads , for paired end limits number of reverse and forward read files to *n* reads each.")
+  println("  --force_single_end    forces analysis to use single end processing.  For paired end datasets, this means only R1 is used.  For single end studies, this should have no effect.")
   println("  --stageLocal          download the raw reads files for the supplied GLDS accession id.  Set to false to disable raw read download and processing.  Default: true")
   println("  --ref_order           specifies the reference to use from ensembl.  Allowed values:  ['toplevel','primary_assemblyELSEtoplevel']. 'toplevel' : use toplevel.  'primary_assemblyELSEtoplevel' : use primary assembly, but use toplevel if primary assembly doesn't exist. Default: 'primary_assemblyELSEtoplevel'")  
   exit 0
@@ -77,14 +78,16 @@ ch_multiqc_config = params.multiqcConfig ? Channel.fromPath( params.multiqcConfi
 /**************************************************
 * DEBUG WARNING  **********************************
 **************************************************/
-if ( params.limitSamplesTo || params.truncateTo) {
+if ( params.limitSamplesTo || params.truncateTo || params.force_single_end) {
   println("${c_back_bright_red}WARNING WARNING: DEBUG OPTIONS ENABLED!")
   params.limitSamplesTo ? println("Samples limited to ${params.limitSamplesTo}") : println("No Sample Limit Set")
   params.truncateTo ? println("Truncating reads to first ${params.truncateTo} records") : println("No Truncation By Record Limit Set")
+  params.force_single_end ? println("Forcing analysis to used only forward reads if paired end (i.e. as though single ended") : println("No forcing single end analysis")
   println("WARNING WARNING: DEBUG OPTIONS ENABLED!${c_reset}")
 } else {
   params.limitSamplesTo ? println("Samples limited to ${params.limitSamplesTo}") : println("No Sample Limit Set")
   params.truncateTo ? println("Truncating reads to first ${params.truncateTo} records") : println("No Truncation By Record Limit Set")
+  params.force_single_end ? println("Forcing analysis to used only forward reads if paired end (i.e. as though single ended") : println("No forcing single end analysis")
 }
 
 /**************************************************
@@ -229,9 +232,10 @@ workflow {
         VV_STAR_ALIGNMENTS( ALIGN_STAR.out.alignments | map{ it -> it[1..it.size()-1] } | collect, // map use here: removes val(meta) from tuple
                             ch_vv_log_04 ) | set { ch_vv_log_05 }
         
-        VV_RSEQC( RSEQC_MULTIQC.out.data,
-                            ch_vv_log_05 ) | set { ch_vv_log_06 }
+        //VV_RSEQC( STRANDEDNESS.out.infer_expt_mqc, 
+        //                    ch_vv_log_05 ) | set { ch_vv_log_06 }
 
+        ch_vv_log_05 | set { ch_vv_log_06 } // temporary skip
 
         VV_RSEM_COUNTS( COUNT_ALIGNED.out.counts | map{ it -> it[1..it.size()-1] } | flatten | collect, // map use here: removes val(meta) from tuple
                         ch_vv_log_06 ) | set { ch_vv_log_07 }

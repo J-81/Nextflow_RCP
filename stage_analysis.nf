@@ -8,6 +8,11 @@
 // This ensures DSL2 syntax and process imports
 nextflow.enable.dsl=2
 
+def mutate_to_single_end(it) {
+  new_meta = it[0]
+  new_meta["paired_end"] = false
+  return [new_meta, it[1]]
+}
 
 // Import process from separate module file
 include { RNASEQ_RUNSHEET_FROM_GLDS as GENERATE_RUNSHEET;
@@ -28,6 +33,7 @@ workflow staging{
 
     GENERATE_RUNSHEET.out.runsheet | splitCsv(header: true)
                                    | map{ row -> get_runsheet_paths(row) }
+                                   | map{ it -> params.force_single_end ? mutate_to_single_end(it) : it }
                                    | take( sample_limit )
                                    | set{ ch_samples }
 
