@@ -83,6 +83,8 @@ def main(root_path, runsheet_path, template, outputDir: Path = None):
                         (fname.endswith("_trimming_report.txt")),
                         (fname.endswith("_trimmed.fastq.gz")),
                         (fname == "trimmed_multiqc_report.zip"),
+                        (fname == "trimming_multiqc_report.zip"),
+
                         # alignment files
                         (fname.endswith("_Aligned.sortedByCoord.out.bam")),
                         (fname.endswith("_Aligned.toTranscriptome.out.bam")),
@@ -92,8 +94,14 @@ def main(root_path, runsheet_path, template, outputDir: Path = None):
                         (fname == "align_multiqc_report.zip"),
 
                         # rseqc files
-                        (fname == "rseqc_multiqc_report.zip"),
-                        (fname.endswith(".infer_experiment_out")),
+                        (fname == "rseqc-genebody_coverage_multiqc_report.zip"),
+                        (fname == "rseqc-infer_experiment_multiqc_report.zip"),
+                        (fname == "rseqc-inner_distance_multiqc_report.zip"),
+                        (fname == "rseqc-read_distribution_multiqc_report.zip"),
+                        (fname.endswith(".geneBodyCoverage.txt")),
+                        (fname.endswith(".inner_distance_freq.txt")),
+                        (fname.endswith("_read_dist.out")),
+                        (fname.endswith("_infer_expt.out")),
 
                         # raw counts files
                         (fname.endswith(".genes.results")),
@@ -103,6 +111,7 @@ def main(root_path, runsheet_path, template, outputDir: Path = None):
                         # Normalized Counts
                         (fname == "Normalized_Counts.csv"),
                         (fname == "ERCC_Normalized_Counts.csv"),
+                        (fname == "count_multiqc_report.zip"),
 
                         # DGE Files
                         (fname == "contrasts.csv"),
@@ -133,6 +142,7 @@ def main(root_path, runsheet_path, template, outputDir: Path = None):
                         (fname.endswith("_trimming_report.txt")),
                         (fname.endswith("_trimmed.fastq.gz")),
                         (fname == "trimmed_multiqc_report.zip"),
+                        (fname == "trimming_multiqc_report.zip"),
                       )
                     ):
                 return "Trimmed_Files"
@@ -159,6 +169,7 @@ def main(root_path, runsheet_path, template, outputDir: Path = None):
                       (
                         (fname == "Normalized_Counts.csv"),
                         (fname == "ERCC_Normalized_Counts.csv"),
+                        (fname == "count_multiqc_report.zip"),
                       )
                     ):
                 return "Normalized_Counts_Files"
@@ -180,8 +191,14 @@ def main(root_path, runsheet_path, template, outputDir: Path = None):
             elif any(
                       (
                         # rseqc files
-                        (fname == "rseqc_multiqc_report.zip"),
-                        (fname.endswith(".infer_experiment_out")),
+                        (fname == "rseqc-genebody_coverage_multiqc_report.zip"),
+                        (fname == "rseqc-infer_experiment_multiqc_report.zip"),
+                        (fname == "rseqc-inner_distance_multiqc_report.zip"),
+                        (fname == "rseqc-read_distribution_multiqc_report.zip"),
+                        (fname.endswith(".geneBodyCoverage.txt")),
+                        (fname.endswith(".inner_distance_freq.txt")),
+                        (fname.endswith("_read_dist.out")),
+                        (fname.endswith("_infer_expt.out")),
                       )
                     ):
                 return "RSeQC_Analysis"
@@ -189,8 +206,10 @@ def main(root_path, runsheet_path, template, outputDir: Path = None):
 
         def categorize_excel_column(fname: str) -> str:
             """ """
-            if fname.endswith("fastq.gz"):
-                return "FastQC Files"
+            if fname.endswith("_raw.fastq.gz"):
+                return "Raw Fastq Files"
+            elif fname.endswith("_trimmed.fastq.gz"):
+                return "Trimmed Fastq Files"
             elif fname.endswith("_multiqc_report.zip"):
                 return "MultiQC Files"
             elif any(
@@ -210,7 +229,28 @@ def main(root_path, runsheet_path, template, outputDir: Path = None):
             elif any(
                       (
                         # rseqc files
-                        (fname.endswith(".infer_experiment_out")),
+                        (fname.endswith(".geneBodyCoverage.txt")),
+                      )
+                    ):
+                return "GeneBody Coverage"
+            elif any(
+                      (
+                        # rseqc files
+                        (fname.endswith(".inner_distance_freq.txt")),
+                      )
+                    ):
+                return "Inner Distance"
+            elif any(
+                      (
+                        # rseqc files
+                        (fname.endswith("_read_dist.out")),
+                      )
+                    ):
+                return "Read Distribution"
+            elif any(
+                      (
+                        # rseqc files
+                        (fname.endswith("_infer_expt.out")),
                       )
                     ):
                 return "Infer Experiment"
