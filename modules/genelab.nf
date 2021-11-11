@@ -56,6 +56,7 @@ process GENERATE_METASHEET {
 
   input:
     path("isa.zip")
+    path(runsheet)
 
   output:
     path("${ params.gldsAccession }_metadata_table.txt"), emit: metasheet
@@ -64,7 +65,8 @@ process GENERATE_METASHEET {
     """
     create_table_v2.py --accession ${ params.gldsAccession }  \
                        --isa-zip isa.zip \
-                       --output-dir .
+                       --output-dir . \
+                       --runsheet ${ runsheet }
     """
 }
 process POST_PROCESSING {

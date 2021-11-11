@@ -76,7 +76,7 @@ workflow staging{
       // Don't download any raw reads
     }
 
-    GENERATE_RUNSHEET.out.isazip | GENERATE_METASHEET
+    GENERATE_METASHEET( GENERATE_RUNSHEET.out.isazip, GENERATE_RUNSHEET.out.runsheet )
 
     emit:
       raw_reads = params.stageLocal ? STAGE_RAW_READS.out : null

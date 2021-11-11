@@ -26,6 +26,8 @@ def _parse_args():
                         help='Path to GeneLab ISA zip folder')
     parser.add_argument('--output-dir', metavar='out/Dir', required=True,
                         help='Path create the metasheet table')
+    parser.add_argument('--runsheet', metavar='AST*****.csv', required=True,
+                        help='Path runsheet to merge data from')
 
     args = parser.parse_args()
     return args
@@ -722,5 +724,30 @@ if __name__ == '__main__':
     #write table
     write_table(table, metadata_directory, glds_num, output_dir=args.output_dir)
 
-    #print("Ellapsed time = ", time.time()-t1)
-    #input()
+    #############################################################################
+    # merge additional data already parsed in runsheet, added by Jonathan Oribello
+    #############################################################################
+
+    # load tabular files as dataframes
+    import pandas as pd
+    df_meta = pd.read_csv(f"{args.accession}_metadata_table.txt", sep="\t")
+    df_runsheet = pd.read_csv(args.runsheet)
+
+    # determine columns that need to be merged into meta table
+    cols_to_merge_from_runsheet = ["sample_name","organism","paired_end","has_ERCC"] + [col for col in df_runsheet.columns if col.startswith("Factor Value")]
+
+    # preprocess before merging, keep only columns to merge, adjust sample_name to match df_meta as a merge key
+    df_runsheet = df_runsheet[cols_to_merge_from_runsheet]
+    df_runsheet = df_runsheet.rename(columns={"sample_name":"Sample Name"})
+
+    # merge
+    df_merged = df_runsheet.merge(df_meta, on="Sample Name", suffixes=[None,"_metatable"])
+
+    # drop redudant columns from metatable (probably factor values)
+    df_merged = df_merged.drop(columns=[col for col in df_merged.columns if col.endswith("_metatable")])
+
+    # cleanup and "unnamed:" columns as imported from original meta_table
+    df_merged = df_merged.drop(columns=[col for col in df_merged.columns if col.startswith("Unnamed:")])
+
+    # write back to file
+    df_merged.to_csv(f"{args.accession}_metadata_table.txt", sep="\t", index=False)
