@@ -78,15 +78,17 @@ ch_multiqc_config = params.multiqcConfig ? Channel.fromPath( params.multiqcConfi
 /**************************************************
 * DEBUG WARNING  **********************************
 **************************************************/
-if ( params.limitSamplesTo || params.truncateTo || params.force_single_end) {
+if ( params.limitSamplesTo || params.truncateTo || params.force_single_end || params.genomeSubsample) {
   println("${c_back_bright_red}WARNING WARNING: DEBUG OPTIONS ENABLED!")
   params.limitSamplesTo ? println("Samples limited to ${params.limitSamplesTo}") : println("No Sample Limit Set")
   params.truncateTo ? println("Truncating reads to first ${params.truncateTo} records") : println("No Truncation By Record Limit Set")
+  params.genomeSubsample ? println("Subsampling reference genome to chromosome '${params.genomeSubsample}'") : println("No subsampling of reference genome")
   params.force_single_end ? println("Forcing analysis to used only forward reads if paired end (i.e. as though single ended") : println("No forcing single end analysis")
   println("WARNING WARNING: DEBUG OPTIONS ENABLED!${c_reset}")
 } else {
   params.limitSamplesTo ? println("Samples limited to ${params.limitSamplesTo}") : println("No Sample Limit Set")
   params.truncateTo ? println("Truncating reads to first ${params.truncateTo} records") : println("No Truncation By Record Limit Set")
+  params.genomeSubsample ? println("Subsampling reference genome to chromosome '${params.genomeSubsample}'") : println("No subsampling of reference genome")
   params.force_single_end ? println("Forcing analysis to used only forward reads if paired end (i.e. as though single ended") : println("No forcing single end analysis")
 }
 
