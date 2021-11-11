@@ -8,9 +8,9 @@ process DGE_BY_DESEQ2 {
   publishDir "${ params.outputDir }/${ params.gldsAccession }/${meta.DESeq2_DGE}",
     mode: params.publish_dir_mode,
     pattern: "dge_output/*", saveAs: { "${file(it).getName()}" }
-  publishDir "${ params.outputDir }/${ params.gldsAccession }/${meta.DESeq2_DGE}/ERCC_NormDGE",
+  publishDir "${ params.outputDir }/${ params.gldsAccession }/${meta.DESeq2_DGE}",
     mode: params.publish_dir_mode,
-    pattern: "dge_output_ercc/*", saveAs: { "${file(it).getName()}" }
+    pattern: "dge_output_ercc/*", saveAs: { "ERCC_NormDGE/${file(it).getName()}" }
 
   input:
     path("runsheet.csv")
