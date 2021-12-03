@@ -29,13 +29,20 @@ workflow staging{
   main:
     sample_limit = params.limitSamplesTo ? params.limitSamplesTo : -1 // -1 in take means no limit
 
-    ch_glds_accession | GENERATE_RUNSHEET
+    if ( !params.runsheet ) {
+    	GENERATE_RUNSHEET( params.gldsAccession )
+    	GENERATE_RUNSHEET.out.runsheet | set { ch_runsheet }
+        GENERATE_METASHEET( GENERATE_RUNSHEET.out.isazip, ch_runsheet ) // only generate if a runsheet and isa are automatically generated
+    }
+    else {
+        ch_runsheet = Channel.fromPath( params.runsheet )
+    }
 
-    GENERATE_RUNSHEET.out.runsheet | splitCsv(header: true)
-                                   | map{ row -> get_runsheet_paths(row) }
-                                   | map{ it -> params.force_single_end ? mutate_to_single_end(it) : it }
-                                   | take( sample_limit )
-                                   | set{ ch_samples }
+    ch_runsheet | splitCsv(header: true)
+                | map{ row -> get_runsheet_paths(row) }
+                | map{ it -> params.force_single_end ? mutate_to_single_end(it) : it }
+                | take( sample_limit )
+                | set{ ch_samples }
 
     if ( params.stageLocal && params.truncateTo ) {
       // download truncated raw reads
@@ -76,11 +83,9 @@ workflow staging{
       // Don't download any raw reads
     }
 
-    GENERATE_METASHEET( GENERATE_RUNSHEET.out.isazip, GENERATE_RUNSHEET.out.runsheet )
-
     emit:
       raw_reads = params.stageLocal ? STAGE_RAW_READS.out : null
-      isa = GENERATE_RUNSHEET.out.isazip
-      runsheet = GENERATE_RUNSHEET.out.runsheet
-      metasheet = GENERATE_METASHEET.out.metasheet
+      // isa = GENERATE_RUNSHEET.out.isazip
+      runsheet = ch_runsheet
+      // metasheet = GENERATE_METASHEET.out.metasheet
 }

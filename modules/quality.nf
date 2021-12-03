@@ -77,6 +77,7 @@ process TRIMGALORE {
     path("${ meta.id }*.txt"), emit: reports
     path("versions.txt"), emit: version
 
+  // Removed explicit R2 in favor of R? to accomodate R3 usage vs R1
   script:
     /*
      * comments -> --ilumina # if adapters are not illumina, replace with adapters
@@ -94,7 +95,7 @@ process TRIMGALORE {
     # rename with _trimmed suffix
     ${ meta.paired_end ? \
       "cp ${ meta.id }_R1_raw_val_1.fq.gz ${ meta.trimmed_read1.name }; \
-      cp ${ meta.id }_R2_raw_val_2.fq.gz ${ meta.trimmed_read2.name }" : \
+      cp ${ meta.id }_R?_raw_val_2.fq.gz ${ meta.trimmed_read2.name }" : \
       "cp ${ meta.id }_R1_raw_trimmed.fq.gz ${ meta.trimmed_read1.name }"}
 
     trim_galore -v > versions.txt

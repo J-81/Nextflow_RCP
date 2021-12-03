@@ -122,7 +122,6 @@ workflow {
       STAGING.out.raw_reads | map { it[0].id }
                             | collectFile(name: "samples.txt", sort: true, newLine: true)
                             | set { samples_ch }
-      STAGING.out.isa | set { isa_ch }
 
       meta_ch | view
 
@@ -248,7 +247,7 @@ workflow {
         // GeneLab post processing
         POST_PROCESSING(STAGING.out.runsheet, ch_final_software_versions, ch_vv_log_08, STAGING.out.metasheet) // Penultimate process when V&V enabled is the last V&V process
       } else {
-        POST_PROCESSING(STAGING.out.runsheet, ch_final_software_versions, Channel.value("NO VV, last output is software versions"), STAGING.out.metasheet)
+        //POST_PROCESSING(STAGING.out.runsheet, ch_final_software_versions, Channel.value("NO VV, last output is software versions"), STAGING.out.metasheet)
       }
     }
 }
