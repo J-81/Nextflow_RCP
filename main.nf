@@ -61,6 +61,9 @@ if (params.help) {
   }
 
 println "PARAMS: $params"
+println "\n"
+println "Storing any newly fetched primary references files here: ${params.referenceStorePath}"
+println "Storing any newly generated derived reference files here: ${params.derivedStorePath}"
 
 /**************************************************
 * CHECK REQUIRED PARAMS AND LOAD  *****************
