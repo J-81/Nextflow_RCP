@@ -6,7 +6,7 @@ process DOWNLOAD_GENOME_ANNOTATIONS {
   // Download and decompress genome and annotation files
   tag "Organism: ${ organism_sci }  Ensembl Version: ${params.ensemblVersion}"
   label 'networkBound'
-  storeDir "${params.storeDirPath}/ensembl/${params.ensemblVersion}/${ organism_sci }"
+  storeDir "${params.referenceStorePath}/ensembl/${params.ensemblVersion}/${ organism_sci }"
 
   input:
     val(organism_sci)
@@ -30,7 +30,7 @@ process DOWNLOAD_GENOME_ANNOTATIONS {
 
 process DOWNLOAD_ERCC {
   label 'networkBound'
-  storeDir "${params.storeDirPath}/thermofisher/ERCC"
+  storeDir "${params.referenceStorePath}/ERCC_thermofisher"
 
   input:
 

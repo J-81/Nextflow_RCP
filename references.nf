@@ -20,7 +20,7 @@ workflow references{
     has_ercc
   main:
       if (params.ref_fasta && params.ref_gtf) {
-        genome_annotations_pre_subsample = Channel.fromPath([params.ref_fasta, params.ref_gtf]).toList()
+        genome_annotations_pre_subsample = Channel.fromPath([params.ref_fasta, params.ref_gtf], checkIfExists: true).toList()
         genome_annotations_pre_subsample | view
       } else if ( params.ref_order == 'primary_assemblyELSEtoplevel' ) {
         annotations = Channel.empty()
@@ -52,7 +52,7 @@ workflow references{
       .ifEmpty { genome_annotations_pre_ercc.value }  | set { genome_annotations }
 
 
-      TO_PRED( genome_annotations | map { it[1] } )
+      TO_PRED( genome_annotations | map { it[1] }, organism_sci )
       TO_BED( TO_PRED.out, organism_sci )
 
   emit:

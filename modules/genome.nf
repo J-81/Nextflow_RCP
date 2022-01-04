@@ -5,7 +5,7 @@
 process BUILD_STAR {
   // Builds STAR index, this is ercc-spike-in, organism, read length and ensembl version specific
   tag "Refs:${ genomeFasta },${ genomeGtf }, Ensembl.V:${params.ensemblVersion} MaxReadLength:${ max_read_length } GenomeSubsample: ${ params.genomeSubsample }"
-  storeDir "${ params.storeDirPath }/STAR_Indices"
+  storeDir "${ params.derivedStorePath }/STAR_indicies/${ params.ref_source }_release${params.ensemblVersion}/${ meta.organism_sci.capitalize() }"
 
   label 'maxCPU'
   label 'big_mem'
@@ -16,8 +16,8 @@ process BUILD_STAR {
     val(max_read_length) // Based on fastQC report for all samples
 
   output:
-    path("STAR_REF_${ genomeFasta.baseName }"), emit: build
-    path("STAR_REF_${ genomeFasta.baseName }/genomeParameters.txt") // Check for completion, only successful builds should generate this file, this is required as the process error is NOT currently used to raised an exception in the python wrapper.
+    path("${ genomeFasta.baseName }_RL-${ max_read_length.toInteger() }"), emit: build
+    path("${ genomeFasta.baseName }_RL-${ max_read_length.toInteger() }/genomeParameters.txt") // Check for completion, only successful builds should generate this file, this is required as the process error is NOT currently used to raised an exception in the python wrapper.
 
   script:
     """
@@ -31,7 +31,7 @@ STAR --runThreadN ${task.cpus} \
 --runMode genomeGenerate \
 --limitGenomeGenerateRAM ${ task.memory.toBytes() } \
 --genomeSAindexNbases 14 \
---genomeDir STAR_REF_${ genomeFasta.baseName } \
+--genomeDir ${ genomeFasta.baseName }_RL-${ max_read_length.toInteger() } \
 --genomeFastaFiles ${ genomeFasta } \
 --sjdbGTFfile ${ genomeGtf } \
 --sjdbOverhang ${ max_read_length.toInteger() - 1 }
@@ -43,7 +43,7 @@ def rerun(suggested):
     --runMode genomeGenerate \
     --limitGenomeGenerateRAM ${ task.memory.toBytes() } \
     --genomeSAindexNbases {suggested} \
-    --genomeDir STAR_REF_${ genomeFasta.baseName } \
+    --genomeDir ${ genomeFasta.baseName }_RL-${ max_read_length.toInteger() } \
     --genomeFastaFiles ${ genomeFasta } \
     --sjdbGTFfile ${ genomeGtf } \
     --sjdbOverhang ${ max_read_length.toInteger() - 1 }
@@ -131,21 +131,21 @@ process ALIGN_STAR {
 process BUILD_RSEM {
   // Builds RSEM index, this is ercc-spike-in, organism, and ensembl version specific
   tag "Refs:${ genomeFasta },${ genomeGtf }, Ensembl Version: ${params.ensemblVersion}, GenomeSubsample: ${ params.genomeSubsample }"
-  storeDir "${ params.storeDirPath }/RSEM_Indices"
+  storeDir "${ params.derivedStorePath }/RSEM_indicies/${ params.ref_source }_release${params.ensemblVersion}/${ meta.organism_sci.capitalize() }"
 
   input:
     tuple path(genomeFasta), path(genomeGtf)
     val(meta)
 
   output:
-    path("RSEM_REF_${ genomeFasta.baseName }"), emit: build
-    path("RSEM_REF_${ genomeFasta.baseName }/.grp") // to ensure check expected file contents exist
+    path("${ genomeFasta.baseName }"), emit: build
+    path("${ genomeFasta.baseName }/.grp") // to ensure check expected file contents exist
 
 
   script:
     """
-    mkdir  RSEM_REF_${ genomeFasta.baseName }
-    rsem-prepare-reference --gtf $genomeGtf $genomeFasta RSEM_REF_${ genomeFasta.baseName }/
+    mkdir  ${ genomeFasta.baseName }
+    rsem-prepare-reference --gtf $genomeGtf $genomeFasta ${ genomeFasta.baseName }/
 
     # echo Build_RSEM_version: `rsem-calculate-expression --version` > versions.txt
     """
@@ -215,7 +215,7 @@ process QUANTIFY_GENES {
 process SUBSAMPLE_GENOME {
   // Extracts a user-specified sequence from the larger reference fasta and gtf file
   tag "Sequence:'${ params.genomeSubsample }'"
-  storeDir "${params.storeDirPath}/ensembl/version-${params.ensemblVersion}/${ organism_sci }"
+  storeDir "${params.derivedStorePath}/subsampled_files/${ params.ref_source }_release${params.ensemblVersion}/${ organism_sci.capitalize() }"
 
   input:
     tuple path(genome_fasta), path(genome_gtf)
@@ -237,7 +237,7 @@ process CONCAT_ERCC {
   // Concanates ERCC fasta and gtf to reference fasta and gtf
   errorStrategy 'retry'
   maxRetries 3 // This addresses a very rare unexpected error where the command finishes but output is not produced.
-  storeDir "${params.storeDirPath}/ensembl/version-${params.ensemblVersion}/${ organism_sci }"
+  storeDir "${params.referenceStorePath}/${ params.ref_source }_release${params.ensemblVersion}/${ organism_sci.capitalize() }"
           
 
   input:
@@ -262,10 +262,12 @@ process CONCAT_ERCC {
 
 process TO_PRED {
   // Converts reference gtf into pred 
+  storeDir "${ params.derivedStorePath }/Genome_GTF_BED_Files/${ params.ref_source }_release${params.ensemblVersion}/${ organism_sci.capitalize() }"
           
 
   input:
     path(genome_gtf)
+    val(organism_sci)
 
   output:
     path("${ genome_gtf }.genePred")
@@ -279,7 +281,7 @@ process TO_PRED {
 
 process TO_BED {
   // Converts reference genePred into Bed format
-  storeDir "${params.storeDirPath}/ensembl/version-${params.ensemblVersion}/${ organism_sci }"
+  storeDir "${ params.derivedStorePath }/Genome_GTF_BED_Files/${ params.ref_source }_release${params.ensemblVersion}/${ organism_sci.capitalize() }"
           
 
   input:
