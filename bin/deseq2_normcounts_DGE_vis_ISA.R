@@ -99,7 +99,7 @@ files <- list.files(path = "Rsem_gene_counts", pattern = ".genes.results", full.
 library(stringr)
 samples = str_replace_all(rownames(study), " ", "_")
 
-files <- files[sapply(samples, function(x)grep(x, files, value=FALSE, fixed=TRUE))]
+files <- files[sapply(samples, function(x)grep(sprintf("%s.genes.results",x), files, value=FALSE, fixed=TRUE))]
 names(files) <- samples
 txi.rsem <- tximport(files, type = "rsem", txIn = FALSE, txOut = FALSE)
 
