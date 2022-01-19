@@ -41,7 +41,14 @@ if (params.help) {
   println("┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅")
   println("┇ RNASeq Concensus Pipeline: $workflow.manifest.version  ┇")
   println("┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅")
-  println("usage: nextflow run J-81/Nextflow_RCP -r $workflow.revision --gldsAccession GLDS-000 --ensemblVersion 96  [--skipVV] [--outputDir] [--stageLocal] [--limitSamplesTo n] [--truncateTo n] [--genomeSubsample n]")
+  println("Usage example 1:")
+  println("   Fetches ensembl reference files via ftp and GeneLab raw data via https before running processing pipeline")
+  println("   > nextflow run ./main.nf --gldsAccession GLDS-194 --ensemblVersion 96")
+  println()
+  println("Usage example 2:")
+  println("   Fetches GeneLab raw data via https before running processing pipeline using supplied local reference fasta and gtf files.")
+  println("   Note: ensemblVersion and ref_source are used here to label subdirectories for derived reference files.")
+  println("   > nextflow run ./main.nf --gldsAccession GLDS-194 --ensemblVersion 96 --ref_source <reference_label>  --ref_fasta </path/to/fasta> --ref_gtf </path/to/gtf>")
   println()
   println("required arguments:")
   println("  --gldsAccession GLDS-000")
@@ -57,6 +64,12 @@ if (params.help) {
   println("  --force_single_end    forces analysis to use single end processing.  For paired end datasets, this means only R1 is used.  For single end studies, this should have no effect.")
   println("  --stageLocal          download the raw reads files for the supplied GLDS accession id.  Set to false to disable raw read download and processing.  Default: true")
   println("  --ref_order           specifies the reference to use from ensembl.  Allowed values:  ['toplevel','primary_assemblyELSEtoplevel']. 'toplevel' : use toplevel.  'primary_assemblyELSEtoplevel' : use primary assembly, but use toplevel if primary assembly doesn't exist. Default: 'primary_assemblyELSEtoplevel'")  
+  println("  --ref_fasta           specifies a reference fasta from a local path. This an is an alternative approach from the automatic retrieval of reference files from ensembl")  
+  println("  --ref_gtf             specifies a reference gtf from a local path. This an is an alternative approach from the automatic retrieval of reference files from ensembl")  
+  println("  --referenceStorePath  specifies the directory where fetched reference files are downloaded to")  
+  println("  --derivedStorePath    specifies the directory where derivative reference files are saved. Examples of such files in this pipeline included BED and PRED files generated from the reference gtf")  
+  println("  --ref_source          a string to label subdirectories in 'StorePath' paths. Examples include 'ensembl' or 'ensembl_plants'.")  
+  println("  -stub-run             runs the workflow forcing 'unstranded' RSEM settings and using dummy gene counts in the differential gene expression (DGE) analysis. Useful when combined with the --truncateTo parameter this often leads to low gene counts and errors in the DGE analysis")  
   exit 0
   }
 
