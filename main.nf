@@ -140,7 +140,7 @@ workflow {
                             | set { samples_ch }
       STAGING.out.isa | set { isa_ch }
 
-      meta_ch | view
+      meta_ch | view { meta -> "${c_bright_green}Autodetected Processing Metadata:\n\t hasERCC: ${meta.has_ercc}\n\t pairedEND: ${meta.paired_end}\n\t organism: ${meta.organism_sci}${c_reset}"  }
 
       raw_reads_ch | RAW_FASTQC //| view {"POST_FASTQC: $it"}
 
