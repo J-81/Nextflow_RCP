@@ -4,8 +4,8 @@
 
 process BUILD_STAR {
   // Builds STAR index, this is ercc-spike-in, organism, read length and ensembl version specific
-  tag "Refs:${ genomeFasta },${ genomeGtf }, Ensembl.V:${params.ensemblVersion} MaxReadLength:${ max_read_length } GenomeSubsample: ${ params.genomeSubsample }"
   storeDir "${ params.derivedStorePath }/STAR_Indices/${ params.ref_source }_release${params.ensemblVersion}/${ meta.organism_sci.capitalize() }"
+  tag "storeDir: ${ task.storeDir } Target(s): ${ genomeFasta.baseName }_RL-${ max_read_length.toInteger() }, ${ genomeFasta.baseName }_RL-${ max_read_length.toInteger() }/genomeParameters.txt"
 
   label 'maxCPU'
   label 'big_mem'
@@ -130,8 +130,8 @@ process ALIGN_STAR {
 
 process BUILD_RSEM {
   // Builds RSEM index, this is ercc-spike-in, organism, and ensembl version specific
-  tag "Refs:${ genomeFasta },${ genomeGtf }, Ensembl Version: ${params.ensemblVersion}, GenomeSubsample: ${ params.genomeSubsample }"
   storeDir "${ params.derivedStorePath }/RSEM_Indices/${ params.ref_source }_release${params.ensemblVersion}/${ meta.organism_sci.capitalize() }"
+  tag "storeDir: ${ task.storeDir } Target(s): ${ genomeFasta.baseName }, ${ genomeFasta.baseName }/.grp"
 
   input:
     tuple path(genomeFasta), path(genomeGtf)
@@ -214,8 +214,8 @@ process QUANTIFY_GENES {
 
 process SUBSAMPLE_GENOME {
   // Extracts a user-specified sequence from the larger reference fasta and gtf file
-  tag "Sequence:'${ params.genomeSubsample }'"
   storeDir "${params.derivedStorePath}/subsampled_files/${ params.ref_source }_release${params.ensemblVersion}/${ organism_sci.capitalize() }"
+  tag "storeDir: ${ task.storeDir } Target(s): ${ genome_fasta.baseName }_sub_${ params.genomeSubsample  }.fa, ${ genome_gtf.baseName }_sub_${ params.genomeSubsample }.gtf"
 
   input:
     tuple path(genome_fasta), path(genome_gtf)
@@ -237,6 +237,7 @@ process CONCAT_ERCC {
   // Concanates ERCC fasta and gtf to reference fasta and gtf
   errorStrategy 'retry'
   maxRetries 3 // This addresses a very rare unexpected error where the command finishes but output is not produced.
+  tag "storeDir: ${ task.storeDir } Target(s): ${ genome_fasta.baseName }_and_${ ercc_fasta.name }, ${ genome_gtf.baseName }_and_${ ercc_gtf.name }"
   storeDir "${params.referenceStorePath}/${ params.ref_source }_release${params.ensemblVersion}/${ organism_sci.capitalize() }"
           
 
@@ -247,21 +248,22 @@ process CONCAT_ERCC {
     val(has_ercc)
 
   output:
-    tuple path("${ genome_fasta.baseName }_and_ERCC.fa"), \
-          path("${ genome_gtf.baseName }_and_ERCC.gtf")
+    tuple path("${ genome_fasta.baseName }_and_${ ercc_fasta.name }"), \
+          path("${ genome_gtf.baseName }_and_${ ercc_gtf.name }")
 
   when:
     has_ercc
 
   script:
   """
-  cat ${genome_fasta} ${ercc_fasta} > ${ genome_fasta.baseName }_and_ERCC.fa
-  cat ${genome_gtf} ${ercc_gtf} > ${ genome_gtf.baseName }_and_ERCC.gtf
+  cat ${genome_fasta} ${ercc_fasta} > ${ genome_fasta.baseName }_and_${ ercc_fasta.name }
+  cat ${genome_gtf} ${ercc_gtf} > ${ genome_gtf.baseName }_and_${ ercc_gtf.name }
   """
 }
 
 process TO_PRED {
   // Converts reference gtf into pred 
+  tag "storeDir Target: ${ task.storeDir }/${ genome_gtf }.genePred"
   storeDir "${ params.derivedStorePath }/Genome_GTF_BED_Files/${ params.ref_source }_release${params.ensemblVersion}/${ organism_sci.capitalize() }"
           
 
@@ -281,6 +283,7 @@ process TO_PRED {
 
 process TO_BED {
   // Converts reference genePred into Bed format
+  tag "storeDir Target: ${ task.storeDir }/${ genome_pred }.bed"
   storeDir "${ params.derivedStorePath }/Genome_GTF_BED_Files/${ params.ref_source }_release${params.ensemblVersion}/${ organism_sci.capitalize() }"
           
 
