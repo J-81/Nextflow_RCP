@@ -4,7 +4,7 @@
 
 process DOWNLOAD_GENOME_ANNOTATIONS {
   // Download and decompress genome and annotation files
-  tag "Organism: ${ organism_sci }  Ensembl Version: ${params.ensemblVersion}"
+  tag "storeDir: ${ task.storeDir } Target(s): *.dna.${ params.ref_target }.fa, *.${ params.ensemblVersion }.gtf Note: exact target name undefined at task start, hence '*' here"
   label 'networkBound'
   storeDir "${params.referenceStorePath}/ensembl/${params.ensemblVersion}/${ organism_sci }"
 
@@ -29,6 +29,7 @@ process DOWNLOAD_GENOME_ANNOTATIONS {
 }
 
 process DOWNLOAD_ERCC {
+  tag "storeDir: ${ task.storeDir } Target(s): ERCC92.fa, ERCC92.gtf"
   label 'networkBound'
   storeDir "${params.referenceStorePath}/ERCC_thermofisher"
 
