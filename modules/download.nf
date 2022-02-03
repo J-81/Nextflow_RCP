@@ -16,6 +16,9 @@ process DOWNLOAD_GENOME_ANNOTATIONS {
 
   script:
     """
+    # ensure proper permissions for generated file
+    umask 0022
+
     retrieve_references.py --ensembl_version ${ params.ensemblVersion } \
                            --organism        ${ organism_sci} \
                            --target          ${ params.ref_target }
@@ -40,6 +43,9 @@ process DOWNLOAD_ERCC {
 
   script:
     """
+    # ensure proper permissions for generated file
+    umask 0022
+
     wget --no-check-certificate --quiet \
     -O ERCC92.zip \
     https://assets.thermofisher.com/TFS-Assets/LSG/manuals/ERCC92.zip  \
