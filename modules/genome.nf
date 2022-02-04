@@ -5,7 +5,7 @@
 process BUILD_STAR {
   // Builds STAR index, this is ercc-spike-in, organism, read length and ensembl version specific
   storeDir "${ params.derivedStorePath }/STAR_Indices/${ params.ref_source }_release${params.ensemblVersion}/${ meta.organism_sci.capitalize() }"
-  tag "storeDir: ${ task.storeDir } Target(s): ${ genomeFasta.baseName }_RL-${ max_read_length.toInteger() }, ${ genomeFasta.baseName }_RL-${ max_read_length.toInteger() }/genomeParameters.txt"
+  tag "storeDir: ...${ task.storeDir.toString()[-params.shorten_storeDir_tag..-1] } Target(s): ${ build_dir }, ${ build_dir }/genomeParameters.txt"
 
   label 'maxCPU'
   label 'big_mem'
@@ -16,10 +16,11 @@ process BUILD_STAR {
     val(max_read_length) // Based on fastQC report for all samples
 
   output:
-    path("${ genomeFasta.baseName }_RL-${ max_read_length.toInteger() }"), emit: build
-    path("${ genomeFasta.baseName }_RL-${ max_read_length.toInteger() }/genomeParameters.txt") // Check for completion, only successful builds should generate this file, this is required as the process error is NOT currently used to raised an exception in the python wrapper.
+    path("${ build_dir }"), emit: build
+    path("${ build_dir }/genomeParameters.txt") // Check for completion, only successful builds should generate this file, this is required as the process error is NOT currently used to raised an exception in the python wrapper.
 
   script:
+    build_dir = "${ genomeFasta.baseName.split('\\.')[0] }_RL-${ max_read_length.toInteger() }"
     """
 #! /usr/bin/env python
     
@@ -31,7 +32,7 @@ STAR --runThreadN ${task.cpus} \
 --runMode genomeGenerate \
 --limitGenomeGenerateRAM ${ task.memory.toBytes() } \
 --genomeSAindexNbases 14 \
---genomeDir ${ genomeFasta.baseName }_RL-${ max_read_length.toInteger() } \
+--genomeDir ${ build_dir } \
 --genomeFastaFiles ${ genomeFasta } \
 --sjdbGTFfile ${ genomeGtf } \
 --sjdbOverhang ${ max_read_length.toInteger() - 1 }
@@ -43,7 +44,7 @@ def rerun(suggested):
     --runMode genomeGenerate \
     --limitGenomeGenerateRAM ${ task.memory.toBytes() } \
     --genomeSAindexNbases {suggested} \
-    --genomeDir ${ genomeFasta.baseName }_RL-${ max_read_length.toInteger() } \
+    --genomeDir ${ build_dir } \
     --genomeFastaFiles ${ genomeFasta } \
     --sjdbGTFfile ${ genomeGtf } \
     --sjdbOverhang ${ max_read_length.toInteger() - 1 }
@@ -130,22 +131,26 @@ process ALIGN_STAR {
 
 process BUILD_RSEM {
   // Builds RSEM index, this is ercc-spike-in, organism, and ensembl version specific
-  storeDir "${ params.derivedStorePath }/RSEM_Indices/${ params.ref_source }_release${params.ensemblVersion}/${ meta.organism_sci.capitalize() }"
-  tag "storeDir: ${ task.storeDir } Target(s): ${ genomeFasta.baseName }, ${ genomeFasta.baseName }/.grp"
+  storeDir "${ params.derivedStorePath }/RSEM_Indices/${ params.ref_source }_release${params.ensemblVersion}/${ build_dir }"
+  tag "storeDir: ...${ task.storeDir.toString()[-params.shorten_storeDir_tag..-1] } Target(s): ${ build_prefix }*"
 
   input:
     tuple path(genomeFasta), path(genomeGtf)
     val(meta)
 
   output:
-    path("${ genomeFasta.baseName }"), emit: build
-    path("${ genomeFasta.baseName }/.grp") // to ensure check expected file contents exist
+    path("${ build_dir }"), emit: build
+    path("${ build_prefix }.grp") // to ensure check expected file contents exist
 
 
   script:
+    ercc_substring = meta.has_ercc ? '_w_ERCC' : ''
+    build_dir = "${ meta.organism_sci.capitalize() }${ ercc_substring }"
+    organism_substring = "${ meta.organism_sci.capitalize()[0] }${ meta.organism_sci.split('_')[1][0..2] }${ ercc_substring }"
+    build_prefix = "${ build_dir }/${ organism_substring }"
     """
-    mkdir  ${ genomeFasta.baseName }
-    rsem-prepare-reference --gtf $genomeGtf $genomeFasta ${ genomeFasta.baseName }/
+    mkdir  ${ build_dir }
+    rsem-prepare-reference --gtf $genomeGtf $genomeFasta $build_prefix 
 
     # echo Build_RSEM_version: `rsem-calculate-expression --version` > versions.txt
     """
@@ -169,6 +174,11 @@ process COUNT_ALIGNED {
 
   script:
     strandedness_opt_map = ["sense":"forward","antisense":"reverse","unstranded":"none"]
+
+    ercc_substring = "${ meta.has_ercc }" ? '_w_ERCC' : ''
+    build_dir = "${ meta.organism_sci.capitalize() }${ ercc_substring }"
+    organism_substring = "${ meta.organism_sci.capitalize()[0] }${ meta.organism_sci.split('_')[1][0..2] }${ ercc_substring }"
+    build_prefix = "${ build_dir }/${ organism_substring }"
     """
     rsem-calculate-expression --num-threads $task.cpus \
       ${ meta.paired_end ? '--paired-end' : '' } \
@@ -179,7 +189,7 @@ process COUNT_ALIGNED {
       --seed 12345 \
       --strandedness ${ strandedness_opt_map.get(strandedness) } \
       starOutput/${meta.id}/${meta.id}_Aligned.toTranscriptome.out.bam \
-      ${ RSEM_REF }/ \
+      ${ build_prefix } \
       ${ meta.id }
 
     # move results into output directory
@@ -215,7 +225,7 @@ process QUANTIFY_GENES {
 process SUBSAMPLE_GENOME {
   // Extracts a user-specified sequence from the larger reference fasta and gtf file
   storeDir "${params.derivedStorePath}/subsampled_files/${ params.ref_source }_release${params.ensemblVersion}/${ organism_sci.capitalize() }"
-  tag "storeDir: ${ task.storeDir } Target(s): ${ genome_fasta.baseName }_sub_${ params.genomeSubsample  }.fa, ${ genome_gtf.baseName }_sub_${ params.genomeSubsample }.gtf"
+  tag "storeDir: ...${ task.storeDir.toString()[-params.shorten_storeDir_tag..-1] } Target(s): ${ genome_fasta.baseName }_sub_${ params.genomeSubsample  }.fa, ${ genome_gtf.baseName }_sub_${ params.genomeSubsample }.gtf"
 
   input:
     tuple path(genome_fasta), path(genome_gtf)
@@ -227,6 +237,9 @@ process SUBSAMPLE_GENOME {
 
   script:
     """
+    # ensure proper permissions for generated file
+    umask 0022
+  
     samtools faidx ${genome_fasta} ${params.genomeSubsample} > ${ genome_fasta.baseName }_sub_${ params.genomeSubsample }.fa
 
     grep -P "^#|^${params.genomeSubsample}\t" ${genome_gtf} > ${ genome_gtf.baseName }_sub_${ params.genomeSubsample  }.gtf
@@ -237,8 +250,8 @@ process CONCAT_ERCC {
   // Concanates ERCC fasta and gtf to reference fasta and gtf
   errorStrategy 'retry'
   maxRetries 3 // This addresses a very rare unexpected error where the command finishes but output is not produced.
-  tag "storeDir: ${ task.storeDir } Target(s): ${ genome_fasta.baseName }_and_${ ercc_fasta.name }, ${ genome_gtf.baseName }_and_${ ercc_gtf.name }"
   storeDir "${params.referenceStorePath}/${ params.ref_source }_release${params.ensemblVersion}/${ organism_sci.capitalize() }"
+  tag "storeDir: ...${ task.storeDir.toString()[-params.shorten_storeDir_tag..-1] } Target(s): ${ genome_fasta.baseName }_and_${ ercc_fasta.name }, ${ genome_gtf.baseName }_and_${ ercc_gtf.name }"
           
 
   input:
@@ -256,6 +269,9 @@ process CONCAT_ERCC {
 
   script:
   """
+  # ensure proper permissions for generated file
+  umask 0022
+  
   cat ${genome_fasta} ${ercc_fasta} > ${ genome_fasta.baseName }_and_${ ercc_fasta.name }
   cat ${genome_gtf} ${ercc_gtf} > ${ genome_gtf.baseName }_and_${ ercc_gtf.name }
   """
@@ -263,7 +279,7 @@ process CONCAT_ERCC {
 
 process TO_PRED {
   // Converts reference gtf into pred 
-  tag "storeDir Target: ${ task.storeDir }/${ genome_gtf }.genePred"
+  tag "storeDir Target: ...${ task.storeDir.toString()[-params.shorten_storeDir_tag..-1] }/${ genome_gtf }.genePred"
   storeDir "${ params.derivedStorePath }/Genome_GTF_BED_Files/${ params.ref_source }_release${params.ensemblVersion}/${ organism_sci.capitalize() }"
           
 
@@ -276,6 +292,9 @@ process TO_PRED {
 
   script:
   """
+  # ensure proper permissions for generated file
+  umask 0022
+  
   gtfToGenePred -geneNameAsName2 ${ genome_gtf } ${ genome_gtf }.genePred
   """
 }
@@ -283,7 +302,7 @@ process TO_PRED {
 
 process TO_BED {
   // Converts reference genePred into Bed format
-  tag "storeDir Target: ${ task.storeDir }/${ genome_pred }.bed"
+  tag "storeDir Target: ...${ task.storeDir.toString()[-params.shorten_storeDir_tag..-1] }/${ genome_pred.baseName }.bed"
   storeDir "${ params.derivedStorePath }/Genome_GTF_BED_Files/${ params.ref_source }_release${params.ensemblVersion}/${ organism_sci.capitalize() }"
           
 
@@ -296,6 +315,9 @@ process TO_BED {
 
   script:
   """
+  # ensure proper permissions for generated file
+  umask 0022
+  
   genePredToBed ${ genome_pred } ${ genome_pred.baseName }.bed
   """
 }
