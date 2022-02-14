@@ -1,15 +1,15 @@
 // Workflow that determines the strandedness of reads compared to a reference genome bed file
 include { SORT_INDEX_BAM } from './modules/rseqc.nf' addParams(PublishTo: "02-STAR_Alignment")
-include { INFER_EXPERIMENT } from './modules/rseqc.nf' addParams(PublishTo: "RSeQC_Analyses/infer_experiment_logs")
-include { GENEBODY_COVERAGE } from './modules/rseqc.nf' addParams(PublishTo: "RSeQC_Analyses/genebody_coverage_logs")
-include { INNER_DISTANCE } from './modules/rseqc.nf' addParams(PublishTo: "RSeQC_Analyses/inner_distance_logs")
-include { READ_DISTRIBUTION } from './modules/rseqc.nf' addParams(PublishTo: "RSeQC_Analyses/read_distribution_logs")
+include { GENEBODY_COVERAGE } from './modules/rseqc.nf' addParams(PublishTo: "RSeQC_Analyses/02_geneBody_coverage")
+include { INFER_EXPERIMENT } from './modules/rseqc.nf' addParams(PublishTo: "RSeQC_Analyses/03_infer_experiment")
+include { INNER_DISTANCE } from './modules/rseqc.nf' addParams(PublishTo: "RSeQC_Analyses/04_inner_distance")
+include { READ_DISTRIBUTION } from './modules/rseqc.nf' addParams(PublishTo: "RSeQC_Analyses/05_read_distribution")
 include { ASSESS_STRANDEDNESS } from './modules/rseqc.nf'
 
-include { MULTIQC as INFER_EXPERIMENT_MULTIQC } from './modules/quality.nf' addParams(PublishTo: "RSeQC_Analyses", MQCLabel:"rseqc-infer_experiment")
-include { MULTIQC as GENEBODY_COVERAGE_MULTIQC } from './modules/quality.nf' addParams(PublishTo: "RSeQC_Analyses", MQCLabel:"rseqc-genebody_coverage")
-include { MULTIQC as INNER_DISTANCE_MULTIQC } from './modules/quality.nf' addParams(PublishTo: "RSeQC_Analyses", MQCLabel:"rseqc-inner_distance")
-include { MULTIQC as READ_DISTRIBUTION_MULTIQC } from './modules/quality.nf' addParams(PublishTo: "RSeQC_Analyses", MQCLabel:"rseqc-read_distribution")
+include { MULTIQC as GENEBODY_COVERAGE_MULTIQC } from './modules/quality.nf' addParams(PublishTo: "RSeQC_Analyses/02_geneBody_coverage", MQCLabel:"geneBody_cov")
+include { MULTIQC as INFER_EXPERIMENT_MULTIQC } from './modules/quality.nf' addParams(PublishTo: "RSeQC_Analyses/03_infer_experiment", MQCLabel:"infer_exp")
+include { MULTIQC as INNER_DISTANCE_MULTIQC } from './modules/quality.nf' addParams(PublishTo: "RSeQC_Analyses/04_inner_distance", MQCLabel:"inner_dist")
+include { MULTIQC as READ_DISTRIBUTION_MULTIQC } from './modules/quality.nf' addParams(PublishTo: "RSeQC_Analyses/05_read_distribution", MQCLabel:"read_dist")
 
 
 workflow strandedness{
