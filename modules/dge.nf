@@ -38,6 +38,9 @@ process DGE_BY_DESEQ2 {
 
   stub:
     """
+    ##################
+    ## STUB VERSION ##
+    ##################
     # create output directories
     mkdir norm_counts_output
     mkdir dge_output
