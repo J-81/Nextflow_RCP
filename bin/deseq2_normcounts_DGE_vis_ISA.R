@@ -353,7 +353,7 @@ if ("ENTREZID" %in% columns(eval(parse(text = ann.dbi),env=.GlobalEnv))){
 }
 
 ## Create and add string annotation columns to the annotation table
-string_db <- STRINGdb$new( version="11", species=organism_table$taxon[organism_table$name == organism],score_threshold=0)
+string_db <- STRINGdb$new( version="11.5", species=organism_table$taxon[organism_table$name == organism],score_threshold=0)
 string_map <- string_db$map(annot,"SYMBOL",removeUnmappedRows = FALSE, takeFirst = TRUE)[,c(1,6)]
 string_map <- string_map[!duplicated(string_map$SYMBOL),]
 annot <- dplyr::left_join(annot,string_map, by = "SYMBOL")
