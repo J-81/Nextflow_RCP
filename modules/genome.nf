@@ -85,7 +85,7 @@ process ALIGN_STAR {
   tag "Sample: ${ meta.id }"
   publishDir "${ params.outputDir }/${ params.gldsAccession }",
     mode: params.publish_dir_mode,
-    pattern: "${ meta.STAR_Alignment_dir }"
+    pattern: "${ meta.STAR_Alignment_dir }/${ meta.id }**"
 
   label 'maxCPU'
   label 'big_mem'
@@ -97,6 +97,7 @@ process ALIGN_STAR {
     tuple val(meta), path("${ meta.STAR_Alignment_dir }"), emit: alignments
     path("${ meta.STAR_Alignment_dir }/${ meta.id}_Log.final.out"), emit: alignment_logs
     tuple val(meta), path("${ meta.STAR_Alignment_dir }/${ meta.id }_Aligned.sortedByCoord.out.bam"), emit: bam_by_coord
+    path("${ meta.STAR_Alignment_dir }/${ meta.id }**")
     path("versions.txt"), emit: version
 
   script:
