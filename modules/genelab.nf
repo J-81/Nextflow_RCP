@@ -83,15 +83,31 @@ process POST_PROCESSING {
 
   output:
     path("*.xlsx")
-    path("*md5sum*")
+    path("md5sum.tsv")
     path("*.md")
+
+  stub:
+    root_out_dir = "${ workflow.launchDir}/${ params.outputDir }/${ params.gldsAccession }"
+    """
+    generate_attr_files.py ${ root_out_dir } runsheet.csv filesize
+    Generate_PostProcessing_Files.py ${ root_out_dir } runsheet.csv
+    format_software_versions.py software_versions.txt
+
+    for FILE in *.xlsx;
+      do mv \$FILE ${ params.gldsAccession }_\$FILE;
+    done
+    """
 
   script:
     root_out_dir = "${ workflow.launchDir}/${ params.outputDir }/${ params.gldsAccession }"
     """
-    generate_md5sum_files.py ${ root_out_dir }
-    generate_publish_to_repo_excel.py ${ root_out_dir } runsheet.csv
+    generate_attr_files.py ${ root_out_dir } runsheet.csv md5sum
+    Generate_PostProcessing_Files.py ${ root_out_dir } runsheet.csv
     format_software_versions.py software_versions.txt
+
+    for FILE in *.xlsx;
+      do mv \$FILE ${ params.gldsAccession }_\$FILE;
+    done
     """
 }
 
