@@ -70,7 +70,8 @@ process SORT_INDEX_BAM {
   tag "Sample:${ meta.id }"
   publishDir "${ params.outputDir }/${ params.gldsAccession }/${ params.PublishTo }/${ meta.id }",
      mode: params.publish_dir_mode,
-     pattern: "*{bam,bai}"
+     pattern: "${ sorted_bam_fname }{,.bai}"
+
   label 'big_mem'
 
   input:
@@ -125,9 +126,9 @@ process INFER_EXPERIMENT {
 
 process GENEBODY_COVERAGE {
   tag "Sample:${ meta.id }"
-  publishDir "${ params.outputDir }/${ params.gldsAccession }/${ params.PublishTo }",
+  publishDir "${ params.outputDir }/${ params.gldsAccession }/${ params.PublishTo }/${ meta.id }",
      mode: params.publish_dir_mode,
-     pattern: "${ meta.id }.geneBodyCoverage.txt"
+     pattern: "${ meta.id }.geneBodyCoverage.*"
   label 'big_mem'
 
   input:
@@ -136,6 +137,7 @@ process GENEBODY_COVERAGE {
   output:
     path("${ meta.id }.geneBodyCoverage.txt"), emit: log_only
     tuple val(meta), path("${ meta.id }.geneBodyCoverage.txt"), emit: log
+    tuple val(meta), path("${ meta.id }.geneBodyCoverage.*")
     path("versions.txt"), emit: version
 
   script:
@@ -151,9 +153,9 @@ process GENEBODY_COVERAGE {
 
 process INNER_DISTANCE {
   tag "Sample:${ meta.id }"
-  publishDir "${ params.outputDir }/${ params.gldsAccession }/${ params.PublishTo }",
+  publishDir "${ params.outputDir }/${ params.gldsAccession }/${ params.PublishTo }/${ meta.id }",
      mode: params.publish_dir_mode,
-     pattern: "${ meta.id }.inner_distance_freq.txt"
+     pattern: "${ meta.id }.inner_distance*"
   label 'big_mem'
 
   input:
@@ -162,6 +164,7 @@ process INNER_DISTANCE {
   output:
     path("${ meta.id }.inner_distance_freq.txt"), emit: log_only
     tuple val(meta), path("${ meta.id }.inner_distance_freq.txt"), emit: log
+    tuple val(meta), path("${ meta.id }.inner_distance*")
     path("versions.txt"), emit: version
 
   when:
