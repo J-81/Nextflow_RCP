@@ -131,7 +131,7 @@ process ALIGN_STAR {
 
 process BUILD_RSEM {
   // Builds RSEM index, this is ercc-spike-in, organism, and ensembl version specific
-  storeDir "${ params.derivedStorePath }/RSEM_Indices/${ params.ref_source }_release${params.ensemblVersion}/${ build_dir }"
+  storeDir "${ params.derivedStorePath }/RSEM_Indices/${ params.ref_source }_release${params.ensemblVersion}"
   tag "storeDir: ...${ task.storeDir.toString()[-params.shorten_storeDir_tag..-1] } Target(s): ${ build_prefix }*"
 
   input:
@@ -151,6 +151,8 @@ process BUILD_RSEM {
     """
     mkdir  ${ build_dir }
     rsem-prepare-reference --gtf $genomeGtf $genomeFasta $build_prefix 
+
+    chmod g-w ${ build_prefix }*
 
     # echo Build_RSEM_version: `rsem-calculate-expression --version` > versions.txt
     """
@@ -175,7 +177,7 @@ process COUNT_ALIGNED {
   script:
     strandedness_opt_map = ["sense":"forward","antisense":"reverse","unstranded":"none"]
 
-    ercc_substring = "${ meta.has_ercc }" ? '_w_ERCC' : ''
+    ercc_substring = meta.has_ercc ? '_w_ERCC' : ''
     build_dir = "${ meta.organism_sci.capitalize() }${ ercc_substring }"
     organism_substring = "${ meta.organism_sci.capitalize()[0] }${ meta.organism_sci.split('_')[1][0..2] }${ ercc_substring }"
     build_prefix = "${ build_dir }/${ organism_substring }"
