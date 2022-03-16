@@ -119,7 +119,7 @@ process ALIGN_STAR {
     --outSAMheaderHD @HD VN:1.4 SO:coordinate \
     --runThreadN ${ task.cpus } \
     --readFilesCommand zcat \
-    --quantMode TranscriptomeSAM \
+    --quantMode TranscriptomeSAM GeneCounts\
     --outFileNamePrefix '${ meta.STAR_Alignment_dir }/${ meta.id }_' \
     --readFilesIn ${ reads }
 
