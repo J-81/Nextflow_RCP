@@ -176,6 +176,7 @@ process COUNT_ALIGNED {
       --alignments \
       --no-bam-output \
       --estimate-rspd \
+	    --seed-length 20 \
       --seed 12345 \
       --strandedness ${ strandedness_opt_map.get(strandedness) } \
       starOutput/${meta.id}/${meta.id}_Aligned.toTranscriptome.out.bam \
