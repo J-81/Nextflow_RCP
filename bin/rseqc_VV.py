@@ -4,44 +4,56 @@
 import argparse
 from pathlib import Path
 
-from VV.rseqc import Rseqc
-from VV.utils import load_cutoffs
-from VV.flagging import Flagger
-from VV.rnaseq_samplesheet import RNASeqSampleSheet
+from dp_tools.bulkRNASeq.vv_protocols import BulkRNASeq_VVProtocol
+from dp_tools.bulkRNASeq.loaders import (
+    load_BulkRNASeq_STAGE_00,
+    load_BulkRNASeq_STAGE_01,
+    load_BulkRNASeq_STAGE_02,
+    load_BulkRNASeq_STAGE_021,
+)
 
 ##############################################################
 # Utility Functions To Handle Logging, Config and CLI Arguments
 ##############################################################
 def _parse_args():
-    """ Parse command line args.
-    """
+    """Parse command line args."""
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--runsheet-path', required=True,
-                        help='run sheet path')
+    parser.add_argument("--root-path", required=True, help="Root data path")
 
-    parser.add_argument('--output', metavar='o', required=True,
-                        help='File to write VV results to')
-
-    parser.add_argument('--halt-severity', metavar='n', required=True,
-                        help='Flag Level to raise an error and halt processing')
-
+    parser.add_argument("--accession", required=True, help="Accession number")
+    parser.add_argument(
+        "--max-flag-code",
+        default=80,
+        help="Throw an exception if any flag code exceeds this value",
+    )
 
     args = parser.parse_args()
     return args
 
-if __name__ == '__main__':
+
+def main(root_dir: Path, accession: str, max_flag_code: int):
+    ds = load_BulkRNASeq_STAGE_021(
+        *load_BulkRNASeq_STAGE_02(
+            *load_BulkRNASeq_STAGE_01(
+                *load_BulkRNASeq_STAGE_00(
+                    root_dir, dataSystem_name=accession, stack=True
+                )
+            ),
+            stack=True,
+        ),
+        stack=True,
+    )
+    vv_protocol = BulkRNASeq_VVProtocol(dataset=ds.dataset, protocol_name="only rseqc")
+    vv_protocol.validate_all()
+    df = vv_protocol.flags_to_df()
+    output_fn = f"VV_log.tsv"
+    df.to_csv(output_fn, sep="\t")
+    assert df["flag_code"].max() < max_flag_code, f"Maximum flag code exceeded: {max_flag_code}"
+
+
+if __name__ == "__main__":
     args = _parse_args()
-
-    flagger = Flagger(script = __file__,
-                      log_to = Path(args.output),
-                      halt_level = int(args.halt_severity))
-
-    cutoffs = load_cutoffs(None, "DEFAULT_RNASEQ")
-
-    cross_checks = dict()
-    sample_sheet = RNASeqSampleSheet(sample_sheet = args.runsheet_path)
-    Rseqc(multiqc_json = sample_sheet.rseqc_multiqc,
-          samples = sample_sheet.samples,
-          flagger = flagger,
-          cutoffs = cutoffs)
+    main(
+        Path(args.root_path), accession=args.accession, max_flag_code=args.max_flag_code
+    )

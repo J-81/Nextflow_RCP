@@ -3,117 +3,67 @@
 """
 import argparse
 from pathlib import Path
-import tempfile
-import os
 
-from VV.rsem import RsemCounts
-from VV.deseq2 import Deseq2ScriptOutput
-from VV.utils import load_cutoffs
-from VV.flagging import Flagger
-from VV.rnaseq_samplesheet import RNASeqSampleSheet
-
-##############################################################
-# Utility Functions To Handle Logging, Config and CLI Arguments
-##############################################################
-def _parse_args():
-    """ Parse command line args.
-    """
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument('--runsheet-path', required=True,
-                        help='run sheet path')
-
-    parser.add_argument('--output', metavar='o', required=True,
-                        help='File to write VV results to')
-
-    parser.add_argument('--halt-severity', metavar='n', required=True,
-                        help='Flag Level to raise an error and halt processing')
-
-
-    args = parser.parse_args()
-    return args
-
-if __name__ == '__main__':
-    args = _parse_args()
-
-    flagger = Flagger(script = __file__,
-                      log_to = Path(args.output),
-                      halt_level = int(args.halt_severity))
-
-    cutoffs = load_cutoffs(None, "DEFAULT_RNASEQ")
-
-    cross_checks = dict()
-    sample_sheet = RNASeqSampleSheet(sample_sheet = args.runsheet_path)
-    cross_checks["SampleSheet"] = sample_sheet
-#! /usr/bin/env python
-""" Validation/Verification for raw reads in RNASeq Concensus Pipeline
-"""
-import argparse
-from pathlib import Path
-
-from VV import raw_reads
-from VV.utils import load_cutoffs
-from VV.flagging import Flagger, NullFlagger
-from VV.rnaseq_samplesheet import RNASeqSampleSheet
+from dp_tools.bulkRNASeq.vv_protocols import BulkRNASeq_VVProtocol
+from dp_tools.bulkRNASeq.loaders import (
+    load_BulkRNASeq_STAGE_00,
+    load_BulkRNASeq_STAGE_01,
+    load_BulkRNASeq_STAGE_02,
+    load_BulkRNASeq_STAGE_021,
+    load_BulkRNASeq_STAGE_03,
+    load_BulkRNASeq_STAGE_04,
+)
 
 ##############################################################
 # Utility Functions To Handle Logging, Config and CLI Arguments
 ##############################################################
 def _parse_args():
-    """ Parse command line args.
-    """
+    """Parse command line args."""
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--runsheet-path', required=True,
-                        help='run sheet path')
+    parser.add_argument("--root-path", required=True, help="Root data path")
 
-    parser.add_argument('--output', metavar='o', required=True,
-                        help='File to write VV results to')
-
-    parser.add_argument('--halt-severity', metavar='n', required=True,
-                        help='Flag Level to raise an error and halt processing')
-
+    parser.add_argument("--accession", required=True, help="Accession number")
+    parser.add_argument(
+        "--max-flag-code",
+        default=80,
+        help="Throw an exception if any flag code exceeds this value",
+    )
 
     args = parser.parse_args()
     return args
 
-if __name__ == '__main__':
+
+def main(root_dir: Path, accession: str, max_flag_code: int):
+    ds = load_BulkRNASeq_STAGE_04(
+        *load_BulkRNASeq_STAGE_03(
+            *load_BulkRNASeq_STAGE_021(
+                *load_BulkRNASeq_STAGE_02(
+                    *load_BulkRNASeq_STAGE_01(
+                        *load_BulkRNASeq_STAGE_00(
+                            root_dir, dataSystem_name=accession, stack=True
+                        )
+                    ),
+                    stack=True,
+                ),
+                stack=True,
+            ),
+            stack=True,
+        ),
+        stack=True,
+    )
+    vv_protocol = BulkRNASeq_VVProtocol(dataset=ds.dataset, protocol_name="only dge")
+    vv_protocol.validate_all()
+    df = vv_protocol.flags_to_df()
+    output_fn = f"VV_log.tsv"
+    df.to_csv(output_fn, sep="\t")
+    assert (
+        df["flag_code"].max() < max_flag_code
+    ), f"Maximum flag code exceeded: {max_flag_code}"
+
+
+if __name__ == "__main__":
     args = _parse_args()
-
-    flagger = Flagger(script = __file__,
-                      log_to = Path(args.output),
-                      halt_level = int(args.halt_severity))
-
-    null_flagger = NullFlagger(script = __file__,
-                               log_to = Path("tmp_remove.tsv"),
-                               halt_level = int(args.halt_severity))
-
-    cutoffs = load_cutoffs(None, "DEFAULT_RNASEQ")
-
-    cross_checks = dict()
-    sample_sheet = RNASeqSampleSheet(sample_sheet = args.runsheet_path)
-    cross_checks["SampleSheet"] = sample_sheet
-
-    rsem_cross_check =   RsemCounts(dir_mapping = sample_sheet.RSEM_Counts_dir_mapping,
-                                    flagger = null_flagger, # we don't want to reflag
-                                    has_ERCC = sample_sheet.has_ERCC,
-                                    cutoffs = cutoffs).cross_check
-    cross_checks["RSEM"] = rsem_cross_check
-
-    # cleanup "tmp_remove.tsv"
-    os.remove("tmp_remove.tsv")
-
-    Deseq2ScriptOutput(samples = sample_sheet.samples,
-                       counts_dir_path = sample_sheet.DESeq2_NormCount,
-                       dge_dir_path = sample_sheet.DESeq2_DGE,
-                       flagger = flagger,
-                       cutoffs = cutoffs,
-                       has_ERCC = sample_sheet.has_ERCC,
-                       cross_checks = cross_checks)
-    ###########################################################################
-    # Generate derivative log files
-    ###########################################################################
-    print(f"{'='*40}")
-    for log_type in ["only-issues", "by-sample", "by-step","all-by-entity"]:
-        flagger.generate_derivative_log(log_type = log_type,
-                                        samples = sample_sheet.samples)
+    main(
+        Path(args.root_path), accession=args.accession, max_flag_code=args.max_flag_code
+    )
