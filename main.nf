@@ -24,8 +24,6 @@ include { BUILD_STAR;
 include { DGE_BY_DESEQ2 } from './modules/dge.nf'
 include { VV_RAW_READS;
           VV_TRIMMED_READS;
-          VV_RAW_READS_MULTIQC;
-          VV_TRIMMED_READS_MULTIQC;
           VV_STAR_ALIGNMENTS;
           VV_RSEQC;
           VV_RSEM_COUNTS;
@@ -238,31 +236,23 @@ workflow {
         VV_RAW_READS( raw_reads_ch | map{ it -> it[1..it.size()-1] } | flatten | collect, // map use here: removes val(meta) from tuple
                       ch_vv_log_00 ) | set { ch_vv_log_01 }
 
-        VV_RAW_READS_MULTIQC( RAW_MULTIQC.out.data,
-                              ch_vv_log_01 ) | set { ch_vv_log_02 }
-
         VV_TRIMMED_READS( TRIMGALORE.out.reads | map{ it -> it[1..it.size()-1] } | flatten | collect, // map use here: removes val(meta) from tuple
-                          ch_vv_log_02 ) | set { ch_vv_log_03 }
-
-        VV_TRIMMED_READS_MULTIQC( TRIMMED_MULTIQC.out.data,
-                                  ch_vv_log_03 ) | set { ch_vv_log_04 }
+                          ch_vv_log_01 ) | set { ch_vv_log_02 }
 
         VV_STAR_ALIGNMENTS( ALIGN_STAR.out.alignments | map{ it -> it[1..it.size()-1] } | collect, // map use here: removes val(meta) from tuple
-                            ch_vv_log_04 ) | set { ch_vv_log_05 }
+                            ch_vv_log_02 ) | set { ch_vv_log_03 }
         
-        //VV_RSEQC( STRANDEDNESS.out.infer_expt_mqc, 
-        //                    ch_vv_log_05 ) | set { ch_vv_log_06 }
-
-        ch_vv_log_05 | set { ch_vv_log_06 } // temporary skip
+        VV_RSEQC( STRANDEDNESS.out.infer_expt_mqc, 
+                  ch_vv_log_03 ) | set { ch_vv_log_04 }
 
         VV_RSEM_COUNTS( COUNT_ALIGNED.out.counts | map{ it -> it[1..it.size()-1] } | flatten | collect, // map use here: removes val(meta) from tuple
-                        ch_vv_log_06 ) | set { ch_vv_log_07 }
+                        ch_vv_log_04 ) | set { ch_vv_log_05 }
 
         VV_DESEQ2_ANALYSIS( DGE_BY_DESEQ2.out.dge | map{ it -> it[1..it.size()-1] } | collect, // map use here: removes val(meta) from tuple
-                            ch_vv_log_07 ) | set { ch_vv_log_08 }
+                            ch_vv_log_05 ) | set { ch_vv_log_06 }
         
         // GeneLab post processing
-        POST_PROCESSING(STAGING.out.runsheet, ch_final_software_versions, ch_vv_log_08, STAGING.out.metasheet) // Penultimate process when V&V enabled is the last V&V process
+        POST_PROCESSING(STAGING.out.runsheet, ch_final_software_versions, ch_vv_log_06, STAGING.out.metasheet) // Penultimate process when V&V enabled is the last V&V process
       } else {
         POST_PROCESSING(STAGING.out.runsheet, ch_final_software_versions, Channel.value("NO VV, last output is software versions"), STAGING.out.metasheet)
       }
