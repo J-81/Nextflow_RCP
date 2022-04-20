@@ -22,42 +22,12 @@ process VV_RAW_READS {
     # ensure no existing VV_out.tsv file
     rm -rf VV_Log
 
-    raw_reads_VV.py  --runsheet-path Metadata/*runsheet.csv \
-                     --output VV_Log_Up_To_Halt.tsv \
-                     --halt-severity 90
+    raw_reads_VV.py  --root-path . --accession ${ params.gldsAccession }
     # move back to work dir and mv tsv into work dir
     cd -
-    mv ${ params.RootDirForVV }/${ params.gldsAccession }/VV_Log_Up_To_Halt.tsv VV_out.tsv
+    mv ${ params.RootDirForVV }/${ params.gldsAccession }/VV_log.tsv VV_out.tsv
     """
 }
-
-process VV_RAW_READS_MULTIQC {
-  tag "Dataset: ${ params.gldsAccession }"
-
-  label 'VV'
-
-  input:
-    path("NULL") // While files from processing are staged, we instead want to use the files located in the publishDir for QC
-    path("VV_in.tsv")
-
-  output:
-    path("VV_out.tsv")
-
-  script:
-    """
-    # copy to processed data directory
-    cp -L VV_in.tsv ${ params.RootDirForVV }/${ params.gldsAccession }/VV_Log_Up_To_Halt.tsv
-    # cd into processed data directory
-    cd ${ params.RootDirForVV }/${ params.gldsAccession }
-    raw_reads_multiqc_VV.py --runsheet-path Metadata/*runsheet.csv \
-                            --output VV_Log_Up_To_Halt.tsv \
-                            --halt-severity 90
-    # move back to work dir and mv tsv into work dir
-    cd -
-    mv ${ params.RootDirForVV }/${ params.gldsAccession }/VV_Log_Up_To_Halt.tsv VV_out.tsv
-    """
-}
-
 
 process VV_TRIMMED_READS {
   tag "Dataset: ${ params.gldsAccession }"
@@ -77,41 +47,13 @@ process VV_TRIMMED_READS {
     cp -L VV_in.tsv ${ params.RootDirForVV }/${ params.gldsAccession }/VV_Log_Up_To_Halt.tsv
     # cd into processed data directory
     cd ${ params.RootDirForVV }/${ params.gldsAccession }
-    trimmed_reads_VV.py --runsheet-path Metadata/*runsheet.csv \
-                        --output VV_Log_Up_To_Halt.tsv \
-                        --halt-severity 90
+    trimmed_reads_VV.py --root-path . --accession ${ params.gldsAccession }
     # move back to work dir and mv tsv into work dir
     cd -
     mv ${ params.RootDirForVV }/${ params.gldsAccession }/VV_Log_Up_To_Halt.tsv VV_out.tsv
     """
 }
 
-process VV_TRIMMED_READS_MULTIQC {
-  tag "Dataset: ${ params.gldsAccession }"
-
-  label 'VV'
-
-  input:
-    path("NULL") // While files from processing are staged, we instead want to use the files located in the publishDir for QC
-    path("VV_in.tsv")
-
-  output:
-    path("VV_out.tsv")
-
-  script:
-  """
-  # copy to processed data directory
-  cp -L VV_in.tsv ${ params.RootDirForVV }/${ params.gldsAccession }/VV_Log_Up_To_Halt.tsv
-  # cd into processed data directory
-  cd ${ params.RootDirForVV }/${ params.gldsAccession }
-  trimmed_reads_multiqc_VV.py --runsheet-path Metadata/*runsheet.csv \
-                              --output VV_Log_Up_To_Halt.tsv \
-                              --halt-severity 90
-  # move back to work dir and mv tsv into work dir
-  cd -
-  mv ${ params.RootDirForVV }/${ params.gldsAccession }/VV_Log_Up_To_Halt.tsv VV_out.tsv
-  """
-}
 
 process VV_STAR_ALIGNMENTS {
   tag "Dataset: ${ params.gldsAccession }"
@@ -131,9 +73,7 @@ process VV_STAR_ALIGNMENTS {
     cp -L VV_in.tsv ${ params.RootDirForVV }/${ params.gldsAccession }/VV_Log_Up_To_Halt.tsv
     # cd into processed data directory
     cd ${ params.RootDirForVV }/${ params.gldsAccession }
-    star_alignments_VV.py --runsheet-path Metadata/*runsheet.csv \
-                          --output VV_Log_Up_To_Halt.tsv \
-                          --halt-severity 90
+    star_alignments_VV.py --root-path . --accession ${ params.gldsAccession }
     # move back to work dir and mv tsv into work dir
     cd -
     mv ${ params.RootDirForVV }/${ params.gldsAccession }/VV_Log_Up_To_Halt.tsv VV_out.tsv
@@ -158,9 +98,8 @@ process VV_RSEQC {
     cp -L VV_in.tsv ${ params.RootDirForVV }/${ params.gldsAccession }/VV_Log_Up_To_Halt.tsv
     # cd into processed data directory
     cd ${ params.RootDirForVV }/${ params.gldsAccession }
-    rseqc_VV.py --runsheet-path Metadata/*runsheet.csv \
-                          --output VV_Log_Up_To_Halt.tsv \
-                          --halt-severity 90
+    rseqc_VV.py --root-path . --accession ${ params.gldsAccession }
+
     # move back to work dir and mv tsv into work dir
     cd -
     mv ${ params.RootDirForVV }/${ params.gldsAccession }/VV_Log_Up_To_Halt.tsv VV_out.tsv
@@ -186,9 +125,7 @@ process VV_RSEM_COUNTS {
     cp -L VV_in.tsv ${ params.RootDirForVV }/${ params.gldsAccession }/VV_Log_Up_To_Halt.tsv
     # cd into processed data directory
     cd ${ params.RootDirForVV }/${ params.gldsAccession }
-    rsem_counts_VV.py --runsheet-path Metadata/*runsheet.csv \
-                      --output VV_Log_Up_To_Halt.tsv \
-                      --halt-severity 90
+    rsem_counts_VV.py --root-path . --accession ${ params.gldsAccession }
     # move back to work dir and mv tsv into work dir
     cd -
     mv ${ params.RootDirForVV }/${ params.gldsAccession }/VV_Log_Up_To_Halt.tsv VV_out.tsv
@@ -214,10 +151,7 @@ process VV_DESEQ2_ANALYSIS {
     cp -L VV_in.tsv ${ params.RootDirForVV }/${ params.gldsAccession }/VV_Log/VV_FULL_OUT.tsv
     # cd into processed data directory
     cd ${ params.RootDirForVV }/${ params.gldsAccession }
-    deseq2_script_VV.py --runsheet-path Metadata/*runsheet.csv \
-                        --output VV_Log/VV_FULL_OUT.tsv \
-                        --halt-severity 91 # required as the stub deseq2 script results in counts that differ from the rsem, a halting error by default
-
+    deseq2_script_VV.py --root-path . --accession ${ params.gldsAccession } --max-flag-code 90
     # move back to work dir and mv tsv into work dir
     cd -
     # mv ${ params.RootDirForVV }/${ params.gldsAccession }/VV_Log
@@ -231,9 +165,7 @@ process VV_DESEQ2_ANALYSIS {
     cp -L VV_in.tsv ${ params.RootDirForVV }/${ params.gldsAccession }/VV_Log/VV_FULL_OUT.tsv
     # cd into processed data directory
     cd ${ params.RootDirForVV }/${ params.gldsAccession }
-    deseq2_script_VV.py --runsheet-path Metadata/*runsheet.csv \
-                        --output VV_Log/VV_FULL_OUT.tsv \
-                        --halt-severity 90
+    deseq2_script_VV.py --root-path . --accession ${ params.gldsAccession }
 
     # move back to work dir and mv tsv into work dir
     cd -
