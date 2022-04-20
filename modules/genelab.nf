@@ -27,7 +27,7 @@ process RNASEQ_RUNSHEET_FROM_GLDS {
 process STAGE_RAW_READS {
   // Stages the raw reads into appropriate publish directory
   tag "${ meta.id }"
-  publishDir "${ params.outputDir }/${ params.gldsAccession }/${ meta.raw_read_root_dir }",
+  publishDir "${ params.outputDir }/${ params.gldsAccession }/${ params.raw_reads_root_dir }/Fastq",
     mode: params.publish_dir_mode
 
   input:
@@ -39,12 +39,12 @@ process STAGE_RAW_READS {
   script:
     if ( meta.paired_end ) {
       """
-      cp -L 1.gz ${meta.stage1.name}
-      cp -L 2.gz ${meta.stage2.name}
+      cp -L 1.gz ${meta.id}_R1_raw.fastq.gz
+      cp -L 2.gz ${meta.id}_R2_raw.fastq.gz
       """
     } else {
       """
-      cp -L 1.gz ${meta.stage1.name}
+      cp -L 1.gz  ${meta.id}_raw.fastq.gz
       """
     }
 }
@@ -110,35 +110,17 @@ def get_runsheet_paths(LinkedHashMap row) {
                      "arabidopsis_thaliana":"ARABIDOPSIS"]
 
     def meta = [:]
-    meta.id                         = row.sample_name
+    meta.id                         = row["Sample Name"]
     meta.organism_sci               = row.organism.replaceAll(" ","_").toLowerCase()
     meta.organism_non_sci           = ORGANISMS[meta.organism_sci]
     meta.paired_end                 = row.paired_end.toBoolean()
     meta.has_ercc                   = row.has_ERCC.toBoolean()
-    meta.raw_read1                  = new File(row.raw_read1) //points to file
-    meta.raw_read_root_dir          = new File(row.raw_read1).parent //points to file, parent is directory to store
-    meta.raw_read_fastQC            = new File(row.raw_read_fastQC) //points to directory
-    meta.raw_read_multiqc           = new File(row.raw_read_multiqc).parent //points to file, parent is directory to store Raw Read MultiQC output to
-    meta.trimmed_read_root_dir      = new File(row.trimmed_read1).parent //points to file, parent is directory to store
-    meta.trimmed_read1              = new File(row.trimmed_read1) //points to file
-    meta.trimmed_read_fastQC        = new File(row.trimmed_read_fastQC) //points to directory
-    meta.trimmed_read_multiqc       = new File(row.trimmed_read_multiqc).parent //points to file, parent is directory to store Trimmed Read MultiQC output to
-    meta.STAR_Alignment_dir         = new File(row.STAR_Alignment) //points to sample directory
-    meta.STAR_Alignment_root_dir    = new File(row.STAR_Alignment).parent //points to sample directory
-    meta.RSEM_Counts_dir            = new File(row.RSEM_Counts) //points to sample directory
-    meta.RSEM_Counts_root_dir       = new File(row.RSEM_Counts).parent //points to sample directory
-    meta.DESeq2_NormCount           = new File(row.DESeq2_NormCount) //points to dataset directory, same for all samples
-    meta.DESeq2_DGE                 = new File(row.DESeq2_DGE) //points to dataset directory, same for all samples
 
     def array = []
     def raw_reads = []
-    meta.stage1 = file("${ params.gldsAccession }") / file(row.raw_read1).name
-    raw_reads.add(file(row.read1_url))
+    raw_reads.add(file(row.read1_path))
     if (meta.paired_end) {
-        meta.stage2                         = file("${ params.gldsAccession }") / file(row.raw_read2).name
-        meta.raw_read2                      = new File(row.raw_read2) //points to file
-        meta.trimmed_read2                  = new File(row.trimmed_read2) //points to file
-        raw_reads.add(file(row.read2_url))
+        raw_reads.add(file(row.read2_path))
       }
     array = [meta, raw_reads]
     return array
