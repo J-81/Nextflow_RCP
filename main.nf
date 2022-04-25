@@ -179,12 +179,11 @@ workflow {
 
       BUILD_RSEM( genome_annotations, meta_ch)
 
-      ALIGN_STAR.out.alignments | combine( BUILD_RSEM.out.build ) | set { aligned_ch }
+      ALIGN_STAR.out.bam_to_transcriptome | combine( BUILD_RSEM.out.build ) | set { aligned_ch }
       COUNT_ALIGNED( aligned_ch, strandedness_ch )
 
-      ALIGN_STAR.out.alignments | map { it -> it[1] } 
-                                | collect 
-                                | set { align_mqc_ch }
+      ALIGN_STAR.out.alignment_logs       | collect 
+                                          | set { align_mqc_ch }
 
 
       COUNT_ALIGNED.out.counts | map { it[1] } | collect | set { rsem_ch }
