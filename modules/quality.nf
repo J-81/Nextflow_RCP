@@ -95,7 +95,7 @@ process TRIMGALORE {
     ${ meta.paired_end ? \
       "cp ${ meta.id }_R1_raw_val_1.fq.gz ${ meta.id }_R1_trimmed.fastq.gz; \
       cp ${ meta.id }_R2_raw_val_2.fq.gz ${ meta.id }_R2_trimmed.fastq.gz" : \
-      "cp ${ meta.id }_R1_raw_trimmed.fq.gz ${ meta.id }_trimmed.fastq.gz"}
+      "cp ${ meta.id }_raw_trimmed.fq.gz ${ meta.id }_trimmed.fastq.gz"}
 
     trim_galore -v > versions.txt
     echo cutadapt version:\$(cutadapt --version) >> versions.txt
