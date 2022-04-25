@@ -2,13 +2,13 @@
  * Different Gene Expression Analysis Processes
  */
 process DGE_BY_DESEQ2 {
-  publishDir "${ params.outputDir }/${ params.gldsAccession }/${meta.DESeq2_NormCount}",
+  publishDir "${ params.outputDir }/${ params.gldsAccession }/04-DESeq2_NormCounts",
     mode: params.publish_dir_mode,
     pattern: "norm_counts_output/*", saveAs: { "${file(it).getName()}" }
-  publishDir "${ params.outputDir }/${ params.gldsAccession }/${meta.DESeq2_DGE}",
+  publishDir "${ params.outputDir }/${ params.gldsAccession }/05-DESeq2_DGE",
     mode: params.publish_dir_mode,
     pattern: "dge_output/*", saveAs: { "${file(it).getName()}" }
-  publishDir "${ params.outputDir }/${ params.gldsAccession }/${meta.DESeq2_DGE}",
+  publishDir "${ params.outputDir }/${ params.gldsAccession }/05-DESeq2_DGE",
     mode: params.publish_dir_mode,
     pattern: "dge_output_ercc/*", saveAs: { "ERCC_NormDGE/${file(it).getName()}" }
 
@@ -21,7 +21,7 @@ process DGE_BY_DESEQ2 {
   output:
     tuple path("norm_counts_output/Normalized_Counts.csv"),
           path("norm_counts_output/SampleTable.csv"),
-          path("norm_counts_output/Unnormalized_Counts.csv"), emit: norm_counts
+          path("norm_counts_output/RSEM_Unnormalized_Counts.csv"), emit: norm_counts
 
     tuple path("dge_output/contrasts.csv"),
           path("dge_output/differential_expression.csv"),
