@@ -82,10 +82,9 @@ process ALIGN_STAR {
   // Aligns reads against STAR index
   // TODO: make '--alignMatesGapMax 1000000' conditional on PE
   tag "Sample: ${ meta.id }"
-  publishDir "${ params.outputDir }/${ params.gldsAccession }",
+  publishDir "${ params.outputDir }/${ params.gldsAccession }/02-STAR_Alignment",
     mode: params.publish_dir_mode,
-    pattern: "${ meta.STAR_Alignment_dir }"
-
+    pattern: "${ meta.id }/${ meta.id }*"
   label 'maxCPU'
   label 'big_mem'
 
@@ -93,9 +92,10 @@ process ALIGN_STAR {
     tuple val( meta ), path( reads ), path(STAR_INDEX_DIR)
 
   output:
-    tuple val(meta), path("${ meta.STAR_Alignment_dir }"), emit: alignments
-    path("${ meta.STAR_Alignment_dir }/${ meta.id}_Log.final.out"), emit: alignment_logs
-    tuple val(meta), path("${ meta.STAR_Alignment_dir }/${ meta.id }_Aligned.sortedByCoord.out.bam"), emit: bam_by_coord
+    path("${ meta.id }/${ meta.id }*"), emit: publishables // used to ensure direct files are available for publishing directive
+    path("${ meta.id }/${ meta.id}_Log.final.out"), emit: alignment_logs
+    tuple val(meta), path("${ meta.id }/${ meta.id }_Aligned.sortedByCoord.out.bam"), emit: bam_by_coord
+    tuple val(meta), path("${ meta.id }/${ meta.id }_Aligned.toTranscriptome.out.bam"), emit: bam_to_transcriptome
     path("versions.txt"), emit: version
 
   script:
@@ -120,7 +120,7 @@ process ALIGN_STAR {
     --runThreadN ${ task.cpus } \
     --readFilesCommand zcat \
     --quantMode TranscriptomeSAM GeneCounts\
-    --outFileNamePrefix '${ meta.STAR_Alignment_dir }/${ meta.id }_' \
+    --outFileNamePrefix '${ meta.id }/${ meta.id }_' \
     --readFilesIn ${ reads }
 
     echo ALIGN_STAR_version: `STAR --version` > versions.txt
