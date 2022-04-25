@@ -5,9 +5,13 @@ from pathlib import Path
 from typing import Tuple
 from statistics import median
 
-STRANDEDNESS_ASSIGNMENT_THRESHOLD = 0.70 # values between above this will be assigned strandedness
-AMBIGUOUS_ASSIGNMENT_THRESHOLD = 0.50 # values above this, but below strandedness assignment will raise an exception
-UNSTRANDEDNESS_ASSIGMENT_THRESHOLD = 0.40 # values between this minimum and the ambiguous threshold are assigned unstranded
+# DONE: Update this to be in sync with check configuration, as of 04/25/2022
+STRANDEDNESS_ASSIGNMENT_THRESHOLD_MAX = 1.00 # values between above this will be assigned strandedness
+STRANDEDNESS_ASSIGNMENT_THRESHOLD_MIN = 0.75
+AMBIGUOUS_ASSIGNMENT_THRESHOLD_MAX = 0.75 # values above this, but below strandedness assignment will raise an exception
+AMBIGUOUS_ASSIGNMENT_THRESHOLD_MIN = 0.60
+UNSTRANDEDNESS_ASSIGMENT_THRESHOLD_MAX = 0.60 # values between this minimum and the ambiguous threshold are assigned unstranded
+UNSTRANDEDNESS_ASSIGMENT_THRESHOLD_MIN = 0.40 # values between this minimum and the ambiguous threshold are assigned unstranded
 
 
 def main(root_dir: str):
@@ -37,11 +41,11 @@ def main(root_dir: str):
         dominant, value = "antisense", median_antisense
 
     # assess strandedness
-    if value > STRANDEDNESS_ASSIGNMENT_THRESHOLD:
+    if STRANDEDNESS_ASSIGNMENT_THRESHOLD_MAX > value > STRANDEDNESS_ASSIGNMENT_THRESHOLD_MIN:
         assignment = dominant
-    elif STRANDEDNESS_ASSIGNMENT_THRESHOLD  > value  > AMBIGUOUS_ASSIGNMENT_THRESHOLD:
+    elif AMBIGUOUS_ASSIGNMENT_THRESHOLD_MAX  > value  > AMBIGUOUS_ASSIGNMENT_THRESHOLD_MIN:
         raise ValueError(f"Strandedness assignment is ambiguious for this dataset. median sense: {median_sense}, median antisense: {median_antisense}")
-    elif AMBIGUOUS_ASSIGNMENT_THRESHOLD  > value > UNSTRANDEDNESS_ASSIGMENT_THRESHOLD:
+    elif UNSTRANDEDNESS_ASSIGMENT_THRESHOLD_MAX  > value > UNSTRANDEDNESS_ASSIGMENT_THRESHOLD_MIN:
         assignment = "unstranded"
 
     with open("result.txt", "w") as f:
