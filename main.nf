@@ -232,19 +232,19 @@ workflow {
       // VV processes
       if ( !params.skipVV ) {
         ch_vv_log_00 =  Channel.fromPath("nextflow_vv_log.tsv")
-        VV_RAW_READS( raw_reads_ch | map{ it -> it[1..it.size()-1] } | flatten | collect, // map use here: removes val(meta) from tuple
+        VV_RAW_READS( RAW_MULTIQC.out.zipped_report,
                       ch_vv_log_00 ) | set { ch_vv_log_01 }
 
-        VV_TRIMMED_READS( TRIMGALORE.out.reads | map{ it -> it[1..it.size()-1] } | flatten | collect, // map use here: removes val(meta) from tuple
+        VV_TRIMMED_READS( TRIMMED_MULTIQC.out.zipped_report,
                           ch_vv_log_01 ) | set { ch_vv_log_02 }
 
-        VV_STAR_ALIGNMENTS( ALIGN_STAR.out.alignments | map{ it -> it[1..it.size()-1] } | collect, // map use here: removes val(meta) from tuple
+        VV_STAR_ALIGNMENTS( ALIGN_MULTIQC.out.zipped_report,
                             ch_vv_log_02 ) | set { ch_vv_log_03 }
         
         VV_RSEQC( STRANDEDNESS.out.infer_expt_mqc, 
                   ch_vv_log_03 ) | set { ch_vv_log_04 }
 
-        VV_RSEM_COUNTS( COUNT_ALIGNED.out.counts | map{ it -> it[1..it.size()-1] } | flatten | collect, // map use here: removes val(meta) from tuple
+        VV_RSEM_COUNTS( COUNT_MULTIQC.out.zipped_report,
                         ch_vv_log_04 ) | set { ch_vv_log_05 }
 
         VV_DESEQ2_ANALYSIS( DGE_BY_DESEQ2.out.dge | map{ it -> it[1..it.size()-1] } | collect, // map use here: removes val(meta) from tuple
