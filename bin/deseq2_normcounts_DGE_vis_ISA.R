@@ -246,7 +246,7 @@ dds_1 <- DESeq(dds_1)
 
 normCounts = as.data.frame(counts(dds_1, normalized=TRUE))
 setwd(file.path(norm_output))
-write.csv(txi.rsem$counts,file='Unnormalized_Counts.csv')
+write.csv(txi.rsem$counts,file='RSEM_Unnormalized_Counts.csv')
 write.csv(normCounts,file='Normalized_Counts.csv')
 write.csv(sampleTable,file='SampleTable.csv')
 
