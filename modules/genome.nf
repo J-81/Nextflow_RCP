@@ -155,16 +155,16 @@ process BUILD_RSEM {
 process COUNT_ALIGNED {
   // Generates gene and isoform counts from alignments
   tag "Sample: ${ meta.id }, strandedness: ${ strandedness } "
-  publishDir "${ params.outputDir }/${ params.gldsAccession }",
+  publishDir "${ params.outputDir }/${ params.gldsAccession }/03-RSEM_Counts",
     mode: params.publish_dir_mode,
-    pattern: "${ meta.RSEM_Counts_dir }/*"
+    pattern: "${ meta.id }*"
 
   input:
-    tuple val(meta), path("starOutput/*"), path(RSEM_REF)
+    tuple val(meta), path("${meta.id}_Aligned.toTranscriptome.out.bam"), path(RSEM_REF)
     val(strandedness)
 
   output:
-    tuple val(meta), path("${ meta.RSEM_Counts_dir }/*"), emit: counts
+    tuple val(meta), path("${ meta.id }*"), emit: counts
     path("versions.txt"), emit: version
 
   script:
@@ -179,15 +179,9 @@ process COUNT_ALIGNED {
 	    --seed-length 20 \
       --seed 12345 \
       --strandedness ${ strandedness_opt_map.get(strandedness) } \
-      starOutput/${meta.id}/${meta.id}_Aligned.toTranscriptome.out.bam \
+      ${meta.id}_Aligned.toTranscriptome.out.bam \
       ${ RSEM_REF }/ \
       ${ meta.id }
-
-    # move results into output directory
-    mkdir tmp
-    mv ${ meta.id }* tmp
-    mkdir -p ${ meta.RSEM_Counts_dir }
-    mv tmp/* ${ meta.RSEM_Counts_dir }
 
     echo COUNT_RSEM_version: `rsem-calculate-expression --version` > versions.txt
     """
