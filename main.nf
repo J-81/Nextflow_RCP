@@ -11,7 +11,7 @@ include { MULTIQC as RAW_MULTIQC } from './modules/quality.nf' addParams(Publish
 include { MULTIQC as TRIMMED_MULTIQC } from './modules/quality.nf' addParams(PublishTo: "01-TG_Preproc/FastQC_Reports", MQCLabel:"trimmed")
 include { MULTIQC as TRIM_MULTIQC } from './modules/quality.nf' addParams(PublishTo: "01-TG_Preproc/Trimming_Reports", MQCLabel:"trimming")
 include { MULTIQC as ALIGN_MULTIQC } from './modules/quality.nf' addParams(PublishTo: "02-STAR_Alignment", MQCLabel:"align")
-include { MULTIQC as COUNT_MULTIQC } from './modules/quality.nf' addParams(PublishTo: "03-RSEM_Counts", MQCLabel:"count")
+include { MULTIQC as COUNT_MULTIQC } from './modules/quality.nf' addParams(PublishTo: "03-RSEM_Counts", MQCLabel:"RSEM_count")
 include { MULTIQC as ALL_MULTIQC } from './modules/quality.nf' addParams(PublishTo: "MULTIQC_ALL", MQCLabel:"all")
 include { TRIMGALORE } from './modules/quality.nf'
 include { BUILD_STAR;
