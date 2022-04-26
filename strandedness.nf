@@ -50,11 +50,20 @@ workflow strandedness{
     
      ch_infer_expt | ASSESS_STRANDEDNESS
  
+     ch_rseqc_mqc_reports = Channel.empty()
+     ch_rseqc_mqc_reports | mix(INFER_EXPERIMENT_MULTIQC.out.zipped_report,
+                                INNER_DISTANCE_MULTIQC.out.zipped_report,
+                                READ_DISTRIBUTION_MULTIQC.out.zipped_report,
+                                GENEBODY_COVERAGE_MULTIQC.out.zipped_report)
+                          | collect
+                          | set{ ch_rseqc_mqc_reports }
+ 
      ch_rseqc_logs = Channel.empty()
      ch_rseqc_logs | mix(INFER_EXPERIMENT.out.log_only,
                          GENEBODY_COVERAGE.out.log_only,
                          INNER_DISTANCE.out.log_only,
                          READ_DISTRIBUTION.out.log_only)
+                   | collect
                    | set{ ch_rseqc_logs }
      
 
@@ -64,4 +73,5 @@ workflow strandedness{
      versions = ch_software_versions 
      rseqc_logs = ch_rseqc_logs
      infer_expt_mqc = INFER_EXPERIMENT_MULTIQC.out.data
+     mqc_reports = ch_rseqc_mqc_reports
 }

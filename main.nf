@@ -241,7 +241,7 @@ workflow {
         VV_STAR_ALIGNMENTS( ALIGN_MULTIQC.out.zipped_report,
                             ch_vv_log_02 ) | set { ch_vv_log_03 }
         
-        VV_RSEQC( STRANDEDNESS.out.infer_expt_mqc, 
+        VV_RSEQC( STRANDEDNESS.out.mqc_reports, 
                   ch_vv_log_03 ) | set { ch_vv_log_04 }
 
         VV_RSEM_COUNTS( COUNT_MULTIQC.out.zipped_report,
