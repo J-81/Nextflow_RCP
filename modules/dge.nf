@@ -2,6 +2,7 @@
  * Different Gene Expression Analysis Processes
  */
 process DGE_BY_DESEQ2 {
+  tag "Dataset: ${ params.gldsAccession }"
   publishDir "${ params.outputDir }/${ params.gldsAccession }/04-DESeq2_NormCounts",
     mode: params.publish_dir_mode,
     pattern: "norm_counts_output/*", saveAs: { "${file(it).getName()}" }
