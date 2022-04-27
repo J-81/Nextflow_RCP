@@ -13,7 +13,8 @@ samples <- read.csv(Sys.glob("samples.txt"), header = FALSE, row.names = 1, stri
 ##### Import RSEM Gene Count Data
 files <- list.files(file.path(counts_dir),pattern = ".genes.results", full.names = TRUE)
 ### reorder the genes.results files to match the ordering of the samples in the metadata file
-files <- files[sapply(rownames(samples), function(x)grep(x, files, value=FALSE, fixed=TRUE))]
+reordering <- sapply(rownames(samples), function(x)grep(paste0(x,".genes.results$"), files, value=FALSE))
+files <- files[reordering]
 names(files) <- rownames(samples)
 txi.rsem <- tximport(files, type = "rsem", txIn = FALSE, txOut = FALSE)
 
