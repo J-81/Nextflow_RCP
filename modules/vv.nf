@@ -6,6 +6,9 @@
 // NOTE: first VV step also creates initial VV file that is shared across all vv steps
 process VV_RAW_READS {
   tag "Dataset: ${ params.gldsAccession }"
+  publishDir "${ params.RootDirForVV }/VV_Logs",
+    mode: params.publish_dir_mode,
+    saveAs: { "VV_log_verbose_through_${ task.process }.tsv" }
 
   label 'VV'
 
@@ -18,19 +21,16 @@ process VV_RAW_READS {
 
   script:
     """
-    cd ${ params.RootDirForVV }/${ params.gldsAccession }
-    # ensure no existing VV_out.tsv file
-    rm -rf VV_Log
-
-    raw_reads_VV.py  --root-path . --accession ${ params.gldsAccession }
-    # move back to work dir and mv tsv into work dir
-    cd -
-    mv ${ params.RootDirForVV }/${ params.gldsAccession }/VV_log.tsv VV_out.tsv
+    raw_reads_VV.py  --root-path ${ params.RootDirForVV } --accession ${ params.gldsAccession }
+    mv VV_log_verbose.tsv VV_out.tsv
     """
 }
 
 process VV_TRIMMED_READS {
   tag "Dataset: ${ params.gldsAccession }"
+  publishDir "${ params.RootDirForVV }/VV_Logs",
+    mode: params.publish_dir_mode,
+    saveAs: { "VV_log_verbose_through_${ task.process }.tsv" }
 
   label 'VV'
 
@@ -43,20 +43,18 @@ process VV_TRIMMED_READS {
 
   script:
     """
-    # copy to processed data directory
-    cp -L VV_in.tsv ${ params.RootDirForVV }/${ params.gldsAccession }/VV_Log_Up_To_Halt.tsv
-    # cd into processed data directory
-    cd ${ params.RootDirForVV }/${ params.gldsAccession }
-    trimmed_reads_VV.py --root-path . --accession ${ params.gldsAccession }
-    # move back to work dir and mv tsv into work dir
-    cd -
-    mv ${ params.RootDirForVV }/${ params.gldsAccession }/VV_Log_Up_To_Halt.tsv VV_out.tsv
+    trimmed_reads_VV.py --root-path ${ params.RootDirForVV } --accession ${ params.gldsAccession }
+    tail -n +2 VV_log_verbose.tsv >> VV_in.tsv
+    mv VV_in.tsv VV_out.tsv
     """
 }
 
 
 process VV_STAR_ALIGNMENTS {
   tag "Dataset: ${ params.gldsAccession }"
+  publishDir "${ params.RootDirForVV }/VV_Logs",
+    mode: params.publish_dir_mode,
+    saveAs: { "VV_log_verbose_through_${ task.process }.tsv" }
 
   label 'VV'
 
@@ -69,19 +67,17 @@ process VV_STAR_ALIGNMENTS {
 
   script:
     """
-    # copy to processed data directory
-    cp -L VV_in.tsv ${ params.RootDirForVV }/${ params.gldsAccession }/VV_Log_Up_To_Halt.tsv
-    # cd into processed data directory
-    cd ${ params.RootDirForVV }/${ params.gldsAccession }
-    star_alignments_VV.py --root-path . --accession ${ params.gldsAccession }
-    # move back to work dir and mv tsv into work dir
-    cd -
-    mv ${ params.RootDirForVV }/${ params.gldsAccession }/VV_Log_Up_To_Halt.tsv VV_out.tsv
+    star_alignments_VV.py --root-path ${ params.RootDirForVV } --accession ${ params.gldsAccession }
+    tail -n +2 VV_log_verbose.tsv >> VV_in.tsv
+    mv VV_in.tsv VV_out.tsv
     """
 }
 
 process VV_RSEQC {
   tag "Dataset: ${ params.gldsAccession }"
+  publishDir "${ params.RootDirForVV }/VV_Logs",
+    mode: params.publish_dir_mode,
+    saveAs: { "VV_log_verbose_through_${ task.process }.tsv" }
 
   label 'VV'
 
@@ -94,21 +90,18 @@ process VV_RSEQC {
 
   script:
     """
-    # copy to processed data directory
-    cp -L VV_in.tsv ${ params.RootDirForVV }/${ params.gldsAccession }/VV_Log_Up_To_Halt.tsv
-    # cd into processed data directory
-    cd ${ params.RootDirForVV }/${ params.gldsAccession }
-    rseqc_VV.py --root-path . --accession ${ params.gldsAccession }
-
-    # move back to work dir and mv tsv into work dir
-    cd -
-    mv ${ params.RootDirForVV }/${ params.gldsAccession }/VV_Log_Up_To_Halt.tsv VV_out.tsv
+    rseqc_VV.py --root-path ${ params.RootDirForVV } --accession ${ params.gldsAccession }
+    tail -n +2 VV_log_verbose.tsv >> VV_in.tsv
+    mv VV_in.tsv VV_out.tsv
     """
 }
 
 
 process VV_RSEM_COUNTS {
   tag "Dataset: ${ params.gldsAccession }"
+  publishDir "${ params.RootDirForVV }/VV_Logs",
+    mode: params.publish_dir_mode,
+    saveAs: { "VV_log_verbose_through_${ task.process }.tsv" }
 
   label 'VV'
 
@@ -121,19 +114,16 @@ process VV_RSEM_COUNTS {
 
   script:
     """
-    # copy to processed data directory
-    cp -L VV_in.tsv ${ params.RootDirForVV }/${ params.gldsAccession }/VV_Log_Up_To_Halt.tsv
-    # cd into processed data directory
-    cd ${ params.RootDirForVV }/${ params.gldsAccession }
-    rsem_counts_VV.py --root-path . --accession ${ params.gldsAccession }
-    # move back to work dir and mv tsv into work dir
-    cd -
-    mv ${ params.RootDirForVV }/${ params.gldsAccession }/VV_Log_Up_To_Halt.tsv VV_out.tsv
+    rsem_counts_VV.py --root-path ${ params.RootDirForVV } --accession ${ params.gldsAccession }
+    tail -n +2 VV_log_verbose.tsv >> VV_in.tsv
+    mv VV_in.tsv VV_out.tsv
     """
 }
 
 process VV_DESEQ2_ANALYSIS {
   tag "Dataset: ${ params.gldsAccession }"
+  publishDir "${ params.RootDirForVV }/VV_Logs",
+    mode: params.publish_dir_mode
 
   label 'VV'
 
@@ -142,34 +132,26 @@ process VV_DESEQ2_ANALYSIS {
     path("VV_in.tsv")
 
   output:
-    path("VV_Log")
+    tuple path("VV_log_final.tsv"), path("VV_log_final_only_issues.tsv")
 
   stub:
+    // SET MAX FLAG CODE TO ONLY HALT ON DEVELOPER LEVEL FLAGS
     """
-    # copy to processed data directory
-    mkdir -p ${ params.RootDirForVV }/${ params.gldsAccession }/VV_Log
-    cp -L VV_in.tsv ${ params.RootDirForVV }/${ params.gldsAccession }/VV_Log/VV_FULL_OUT.tsv
-    # cd into processed data directory
-    cd ${ params.RootDirForVV }/${ params.gldsAccession }
-    deseq2_script_VV.py --root-path . --accession ${ params.gldsAccession } --max-flag-code 90
-    # move back to work dir and mv tsv into work dir
-    cd -
-    # mv ${ params.RootDirForVV }/${ params.gldsAccession }/VV_Log
-    touch VV_Log # signals end of VV
+    deseq2_script_VV.py --root-path ${ params.RootDirForVV } --accession ${ params.gldsAccession } --max-flag-code 90
+    tail -n +2 VV_log_verbose.tsv >> VV_in.tsv
+    mv VV_in.tsv VV_log_final.tsv
+
+    # filtered log
+    filer_to_only_issues.py
     """
 
   script:
     """
-    # copy to processed data directory
-    mkdir -p ${ params.RootDirForVV }/${ params.gldsAccession }/VV_Log
-    cp -L VV_in.tsv ${ params.RootDirForVV }/${ params.gldsAccession }/VV_Log/VV_FULL_OUT.tsv
-    # cd into processed data directory
-    cd ${ params.RootDirForVV }/${ params.gldsAccession }
-    deseq2_script_VV.py --root-path . --accession ${ params.gldsAccession }
+    deseq2_script_VV.py --root-path ${ params.RootDirForVV } --accession ${ params.gldsAccession }
+    tail -n +2 VV_log_verbose.tsv >> VV_in.tsv
+    mv VV_in.tsv VV_log_final.tsv
 
-    # move back to work dir and mv tsv into work dir
-    cd -
-    # mv ${ params.RootDirForVV }/${ params.gldsAccession }/VV_Log
-    touch VV_Log # signals end of VV
+    # filtered log
+    filer_to_only_issues.py
     """
 }

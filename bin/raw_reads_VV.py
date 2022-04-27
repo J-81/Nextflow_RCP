@@ -36,9 +36,17 @@ def main(root_dir: Path, accession: str, max_flag_code: int):
         dataset=ds.dataset, dry_run=False, protocol_name="only raw"
     )
     vv_protocol.validate_all()
+    # output default dataframe
     df = vv_protocol.flags_to_df()
     output_fn = f"VV_log.tsv"
     df.to_csv(output_fn, sep="\t")
+
+    # output verbose dataframe
+    df = vv_protocol.flags_to_df(schema="verbose")
+    output_fn = f"VV_log_verbose.tsv"
+    df.to_csv(output_fn, sep="\t")
+
+    # halt on error
     assert (
         df["flag_code"].max() < max_flag_code
     ), f"Maximum flag code exceeded: {max_flag_code}"

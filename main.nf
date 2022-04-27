@@ -27,7 +27,7 @@ include { VV_RAW_READS;
           VV_STAR_ALIGNMENTS;
           VV_RSEQC;
           VV_RSEM_COUNTS;
-          VV_DESEQ2_ANALYSIS } from './modules/vv.nf' addParams( RootDirForVV: "${workflow.launchDir}/${ params.outputDir }")
+          VV_DESEQ2_ANALYSIS } from './modules/vv.nf' addParams( RootDirForVV: "${workflow.launchDir}/${ params.outputDir }/${ params.gldsAccession }")
 include { GET_MAX_READ_LENGTH } from './modules/fastqc.nf'
 include { POST_PROCESSING } from './modules/genelab.nf'
 
