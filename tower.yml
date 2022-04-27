@@ -1,0 +1,3 @@
+reports:
+    "**/*multiqc.html":
+        display: "MultiQC"
