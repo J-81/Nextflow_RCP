@@ -44,8 +44,10 @@ process VV_TRIMMED_READS {
   script:
     """
     trimmed_reads_VV.py --root-path ${ params.RootDirForVV } --accession ${ params.gldsAccession }
-    tail -n +2 VV_log_verbose.tsv >> VV_in.tsv
-    mv VV_in.tsv VV_out.tsv
+    # Copy input log to destined output log
+    cp VV_in.tsv VV_out_proto.tsv
+    tail -n +2 VV_log_verbose.tsv >> VV_out_proto.tsv
+    mv VV_out_proto.tsv VV_out.tsv
     """
 }
 
@@ -68,8 +70,10 @@ process VV_STAR_ALIGNMENTS {
   script:
     """
     star_alignments_VV.py --root-path ${ params.RootDirForVV } --accession ${ params.gldsAccession }
-    tail -n +2 VV_log_verbose.tsv >> VV_in.tsv
-    mv VV_in.tsv VV_out.tsv
+    # Copy input log to destined output log
+    cp VV_in.tsv VV_out_proto.tsv
+    tail -n +2 VV_log_verbose.tsv >> VV_out_proto.tsv
+    mv VV_out_proto.tsv VV_out.tsv
     """
 }
 
@@ -91,8 +95,10 @@ process VV_RSEQC {
   script:
     """
     rseqc_VV.py --root-path ${ params.RootDirForVV } --accession ${ params.gldsAccession }
-    tail -n +2 VV_log_verbose.tsv >> VV_in.tsv
-    mv VV_in.tsv VV_out.tsv
+    # Copy input log to destined output log
+    cp VV_in.tsv VV_out_proto.tsv
+    tail -n +2 VV_log_verbose.tsv >> VV_out_proto.tsv
+    mv VV_out_proto.tsv VV_out.tsv
     """
 }
 
@@ -115,8 +121,10 @@ process VV_RSEM_COUNTS {
   script:
     """
     rsem_counts_VV.py --root-path ${ params.RootDirForVV } --accession ${ params.gldsAccession }
-    tail -n +2 VV_log_verbose.tsv >> VV_in.tsv
-    mv VV_in.tsv VV_out.tsv
+    # Copy input log to destined output log
+    cp VV_in.tsv VV_out_proto.tsv
+    tail -n +2 VV_log_verbose.tsv >> VV_out_proto.tsv
+    mv VV_out_proto.tsv VV_out.tsv
     """
 }
 
@@ -138,20 +146,24 @@ process VV_DESEQ2_ANALYSIS {
     // SET MAX FLAG CODE TO ONLY HALT ON DEVELOPER LEVEL FLAGS
     """
     deseq2_script_VV.py --root-path ${ params.RootDirForVV } --accession ${ params.gldsAccession } --max-flag-code 90
-    tail -n +2 VV_log_verbose.tsv >> VV_in.tsv
-    mv VV_in.tsv VV_log_final.tsv
+    # Copy input log to destined output log
+    cp VV_in.tsv VV_out_proto.tsv
+    tail -n +2 VV_log_verbose.tsv >> VV_out_proto.tsv
+    mv VV_out_proto.tsv VV_log_final.tsv
 
     # filtered log
-    filer_to_only_issues.py
+    filter_to_only_issues.py
     """
 
   script:
     """
     deseq2_script_VV.py --root-path ${ params.RootDirForVV } --accession ${ params.gldsAccession }
-    tail -n +2 VV_log_verbose.tsv >> VV_in.tsv
-    mv VV_in.tsv VV_log_final.tsv
+    # Copy input log to destined output log
+    cp VV_in.tsv VV_out_proto.tsv
+    tail -n +2 VV_log_verbose.tsv >> VV_out_proto.tsv
+    mv VV_out_proto.tsv VV_log_final.tsv
 
     # filtered log
-    filer_to_only_issues.py
+    filter_to_only_issues.py
     """
 }
