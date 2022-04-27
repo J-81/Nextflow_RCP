@@ -84,7 +84,7 @@ process POST_PROCESSING {
     val(LAST_PROCESS_MARKER_2) // Unused in task, but used in workflow definition to ensure this process follows metasheet generation
 
   output:
-    path("*.xlsx")
+    path("updated_curation_tables") // directory containing extended ISA tables
     path("*md5sum*")
     path("*.md")
 
@@ -92,7 +92,7 @@ process POST_PROCESSING {
     root_out_dir = "${ workflow.launchDir}/${ params.outputDir }/${ params.gldsAccession }"
     """
     generate_md5sum_files.py ${ root_out_dir }
-    generate_publish_to_repo_excel.py ${ root_out_dir } runsheet.csv
+    update_curation_table.py --root-path ${ root_out_dir } --accession ${ params.gldsAccession }
     format_software_versions.py software_versions.txt
     """
 }
