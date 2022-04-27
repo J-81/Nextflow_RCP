@@ -78,7 +78,7 @@ process INFER_EXPERIMENT {
 
 process GENEBODY_COVERAGE {
   tag "Sample:${ meta.id }"
-  publishDir "${ params.outputDir }/${ params.gldsAccession }/${ params.PublishTo }/${meta. id}",
+  publishDir "${ params.outputDir }/${ params.gldsAccession }/${ params.PublishTo }/${ meta.id }",
      mode: params.publish_dir_mode,
      pattern: "${ meta.id }.geneBodyCoverage.*"
   label 'big_mem'
