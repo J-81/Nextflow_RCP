@@ -1,5 +1,12 @@
 #! /usr/bin/env Rscript
 
+# TODO: DISCUSS: new section
+## Set options
+
+# allow more flexibility in download time
+# useful for slower connections where the default of 60 seconds might be exceeded
+options(timeout=600)
+
 ## Import libraries (tximport, DESeq2, tidyverse, Risa)
 library(tximport)
 library(DESeq2)
