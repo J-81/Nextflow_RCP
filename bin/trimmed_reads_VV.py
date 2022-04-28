@@ -46,10 +46,10 @@ def main(root_dir: Path, accession: str, max_flag_code: int):
     df.to_csv(output_fn, sep="\t")
 
     # halt on error
+    flagged_messages = '\n'.join([msg for msg in df.loc[df['flag_code'] > max_flag_code]['message']])
     assert (
         df["flag_code"].max() < max_flag_code
-    ), f"Maximum flag code exceeded: {max_flag_code}"
-
+    ), f"Maximum flag code exceeded: {max_flag_code}. Printing flag messages that caused this halt: {flagged_messages}"
 
 if __name__ == "__main__":
     args = _parse_args()
