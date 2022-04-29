@@ -239,7 +239,7 @@ workflow {
                           ch_vv_log_01 ) | set { ch_vv_log_02 }
 
         // Ensure this requires the resorted bam bai to start
-        VV_STAR_ALIGNMENTS( ALIGN_MULTIQC.out.zipped_report | mix(STRANDEDNESS.out.bam_bed) | view,
+        VV_STAR_ALIGNMENTS( ALIGN_MULTIQC.out.zipped_report | mix(STRANDEDNESS.out.bam_bed) | collect | view,
                             ch_vv_log_02 ) | set { ch_vv_log_03 }
         
         VV_RSEQC( STRANDEDNESS.out.mqc_reports, 
