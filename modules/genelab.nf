@@ -1,5 +1,6 @@
 /* Processes dealing with retrieving data from GeneLab
 */
+// TODO Migrate these CLI args to updated dp tools package API
 process RNASEQ_RUNSHEET_FROM_GLDS {
   // Downloads isazip and creates run sheets using GeneLab API
   tag "${ glds_accession }"
