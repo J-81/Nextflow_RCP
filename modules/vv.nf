@@ -5,7 +5,6 @@
 
 // NOTE: first VV step also creates initial VV file that is shared across all vv steps
 process VV_RAW_READS {
-  tag "Dataset: ${ params.gldsAccession }"
   publishDir "${ params.RootDirForVV }/VV_Logs",
     mode: params.publish_dir_mode,
     saveAs: { "VV_log_verbose_through_${ task.process }.tsv" }
@@ -27,7 +26,6 @@ process VV_RAW_READS {
 }
 
 process VV_TRIMMED_READS {
-  tag "Dataset: ${ params.gldsAccession }"
   publishDir "${ params.RootDirForVV }/VV_Logs",
     mode: params.publish_dir_mode,
     saveAs: { "VV_log_verbose_through_${ task.process }.tsv" }
@@ -53,7 +51,6 @@ process VV_TRIMMED_READS {
 
 
 process VV_STAR_ALIGNMENTS {
-  tag "Dataset: ${ params.gldsAccession }"
   publishDir "${ params.RootDirForVV }/VV_Logs",
     mode: params.publish_dir_mode,
     saveAs: { "VV_log_verbose_through_${ task.process }.tsv" }
@@ -78,7 +75,6 @@ process VV_STAR_ALIGNMENTS {
 }
 
 process VV_RSEQC {
-  tag "Dataset: ${ params.gldsAccession }"
   publishDir "${ params.RootDirForVV }/VV_Logs",
     mode: params.publish_dir_mode,
     saveAs: { "VV_log_verbose_through_${ task.process }.tsv" }
@@ -104,7 +100,6 @@ process VV_RSEQC {
 
 
 process VV_RSEM_COUNTS {
-  tag "Dataset: ${ params.gldsAccession }"
   publishDir "${ params.RootDirForVV }/VV_Logs",
     mode: params.publish_dir_mode,
     saveAs: { "VV_log_verbose_through_${ task.process }.tsv" }
@@ -129,7 +124,6 @@ process VV_RSEM_COUNTS {
 }
 
 process VV_DESEQ2_ANALYSIS {
-  tag "Dataset: ${ params.gldsAccession }"
   publishDir "${ params.RootDirForVV }/VV_Logs",
     mode: params.publish_dir_mode
 
