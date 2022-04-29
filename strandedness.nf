@@ -74,4 +74,5 @@ workflow strandedness{
      rseqc_logs = ch_rseqc_logs
      infer_expt_mqc = INFER_EXPERIMENT_MULTIQC.out.data
      mqc_reports = ch_rseqc_mqc_reports
+     bam_bed = SORT_INDEX_BAM.out.bam_only_files
 }

@@ -31,6 +31,7 @@ process SORT_INDEX_BAM {
 
   output:
     tuple val(meta), path(sorted_bam_fname), path("${ sorted_bam_fname }.bai"), emit: bam
+    tuple path(sorted_bam_fname), path("${ sorted_bam_fname }.bai"), emit: bam_only_files
     path("versions.txt"), emit: version
 
   script:
