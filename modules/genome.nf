@@ -241,16 +241,16 @@ process CONCAT_ERCC {
     val(has_ercc)
 
   output:
-    tuple path("${ genome_fasta.baseName }_and_ERCC.fa"), \
-          path("${ genome_gtf.baseName }_and_ERCC.gtf")
+    tuple path("${ genome_fasta.baseName }_and_ERCC92.fa"), \
+          path("${ genome_gtf.baseName }_and_ERCC92.gtf")
 
   when:
     has_ercc
 
   script:
   """
-  cat ${genome_fasta} ${ercc_fasta} > ${ genome_fasta.baseName }_and_ERCC.fa
-  cat ${genome_gtf} ${ercc_gtf} > ${ genome_gtf.baseName }_and_ERCC.gtf
+  cat ${genome_fasta} ${ercc_fasta} > ${ genome_fasta.baseName }_and_ERCC92.fa
+  cat ${genome_gtf} ${ercc_gtf} > ${ genome_gtf.baseName }_and_ERCC92.gtf
   """
 }
 
