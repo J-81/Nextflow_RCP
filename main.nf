@@ -39,7 +39,7 @@ include { POST_PROCESSING } from './modules/genelab.nf'
 allowed_ref_order = ['toplevel','primary_assemblyELSEtoplevel']
 if (params.help) {
   println("┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅")
-  println("┇ RNASeq Concensus Pipeline: $workflow.manifest.version  ┇")
+  println("┇ RNASeq Consensus Pipeline: $workflow.manifest.version  ┇")
   println("┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅")
   println("Usage example 1:")
   println("   Fetches ensembl reference files via ftp and GeneLab raw data via https before running processing pipeline")
