@@ -20,7 +20,8 @@ include { BUILD_STAR;
           COUNT_ALIGNED;
           SUBSAMPLE_GENOME;
           CONCAT_ERCC;
-          QUANTIFY_GENES } from './modules/genome.nf'
+          QUANTIFY_STAR_GENES;
+          QUANTIFY_RSEM_GENES } from './modules/genome.nf'
 include { DGE_BY_DESEQ2 } from './modules/dge.nf'
 include { VV_RAW_READS;
           VV_TRIMMED_READS;
@@ -180,6 +181,12 @@ workflow {
       BUILD_RSEM( genome_annotations, meta_ch)
 
       ALIGN_STAR.out.bam_to_transcriptome | combine( BUILD_RSEM.out.build ) | set { aligned_ch }
+      QUANTIFY_STAR_GENES( 
+          samples_ch, 
+          ALIGN_STAR.out.read_per_gene | toSortedList,
+          strandedness_ch
+        )
+        
       COUNT_ALIGNED( aligned_ch, strandedness_ch )
 
       ALIGN_STAR.out.alignment_logs       | collect 
@@ -188,7 +195,7 @@ workflow {
 
       COUNT_ALIGNED.out.counts | map { it[1] } | collect | set { rsem_ch }
 
-      QUANTIFY_GENES( samples_ch, rsem_ch )
+      QUANTIFY_RSEM_GENES( samples_ch, rsem_ch )
 
       organism_ch = channel.fromPath( params.organismCSV )
 
@@ -239,16 +246,16 @@ workflow {
                           ch_vv_log_01 ) | set { ch_vv_log_02 }
 
         // Ensure this requires the resorted bam bai to start
-        VV_STAR_ALIGNMENTS( ALIGN_MULTIQC.out.zipped_report | mix(STRANDEDNESS.out.bam_bed) | collect | view,
+        VV_STAR_ALIGNMENTS( ALIGN_MULTIQC.out.zipped_report | mix(STRANDEDNESS.out.bam_bed) | toSortedList | view,
                             ch_vv_log_02 ) | set { ch_vv_log_03 }
         
-        VV_RSEQC( STRANDEDNESS.out.mqc_reports, 
+        VV_RSEQC( STRANDEDNESS.out.mqc_reports | toSortedList, 
                   ch_vv_log_03 ) | set { ch_vv_log_04 }
 
-        VV_RSEM_COUNTS( COUNT_MULTIQC.out.zipped_report,
+        VV_RSEM_COUNTS( COUNT_MULTIQC.out.zipped_report | toSortedList,
                         ch_vv_log_04 ) | set { ch_vv_log_05 }
 
-        VV_DESEQ2_ANALYSIS( DGE_BY_DESEQ2.out.dge | map{ it -> it[1..it.size()-1] } | collect, // map use here: removes val(meta) from tuple
+        VV_DESEQ2_ANALYSIS( DGE_BY_DESEQ2.out.dge | map{ it -> it[1..it.size()-1] } | toSortedList, // map use here: removes val(meta) from tuple
                             ch_vv_log_05 ) | set { ch_vv_log_06 }
         
         // GeneLab post processing

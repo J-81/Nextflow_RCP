@@ -188,7 +188,7 @@ process COUNT_ALIGNED {
     """
 }
 
-process QUANTIFY_GENES {
+process QUANTIFY_RSEM_GENES {
   // An R script that extracts gene counts by sample to a table
   publishDir "${ params.outputDir }/${ params.gldsAccession }/03-RSEM_Counts",
     mode: params.publish_dir_mode
@@ -203,6 +203,26 @@ process QUANTIFY_GENES {
   script:
     """
     Quantitate_non-zero_genes_per_sample.R
+    """
+
+}
+
+process QUANTIFY_STAR_GENES {
+  // An R script that extracts gene counts by sample to a table
+  publishDir "${ params.outputDir }/${ params.gldsAccession }/02-STAR_Alignment",
+    mode: params.publish_dir_mode
+
+  input:
+    path("samples.txt")
+    path("02-STAR_Alignment/*")
+    val(strandedness)
+
+  output:
+    tuple path("STAR_Unnormalized_Counts.csv"), path("NumNonZeroGenes.csv")
+
+  script:
+    """
+    Quantitate_non-zero_genes_per_sample_STAR.R ${strandedness}
     """
 
 }
