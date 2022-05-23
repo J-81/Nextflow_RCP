@@ -218,7 +218,7 @@ process QUANTIFY_STAR_GENES {
     val(strandedness)
 
   output:
-    tuple path("STAR_Unnormalized_Counts.csv"), path("NumNonZeroGenes.csv")
+    tuple path("STAR_Unnormalized_Counts.csv"), path("STAR_NumNonZeroGenes.csv")
 
   script:
     """
