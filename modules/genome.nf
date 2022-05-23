@@ -96,6 +96,7 @@ process ALIGN_STAR {
     path("${ meta.id }/${ meta.id}_Log.final.out"), emit: alignment_logs
     tuple val(meta), path("${ meta.id }/${ meta.id }_Aligned.sortedByCoord.out.bam"), emit: bam_by_coord
     tuple val(meta), path("${ meta.id }/${ meta.id }_Aligned.toTranscriptome.out.bam"), emit: bam_to_transcriptome
+    path("${ meta.id }/${ meta.id }_ReadsPerGene.out.tab"), emit: read_per_gene
     path("versions.txt"), emit: version
 
   script:
@@ -187,7 +188,7 @@ process COUNT_ALIGNED {
     """
 }
 
-process QUANTIFY_GENES {
+process QUANTIFY_RSEM_GENES {
   // An R script that extracts gene counts by sample to a table
   publishDir "${ params.outputDir }/${ params.gldsAccession }/03-RSEM_Counts",
     mode: params.publish_dir_mode
@@ -202,6 +203,26 @@ process QUANTIFY_GENES {
   script:
     """
     Quantitate_non-zero_genes_per_sample.R
+    """
+
+}
+
+process QUANTIFY_STAR_GENES {
+  // An R script that extracts gene counts by sample to a table
+  publishDir "${ params.outputDir }/${ params.gldsAccession }/02-STAR_Alignment",
+    mode: params.publish_dir_mode
+
+  input:
+    path("samples.txt")
+    path("02-STAR_Alignment/*")
+    val(strandedness)
+
+  output:
+    tuple path("STAR_Unnormalized_Counts.csv"), path("NumNonZeroGenes.csv")
+
+  script:
+    """
+    Quantitate_non-zero_genes_per_sample_STAR.R ${strandedness}
     """
 
 }
