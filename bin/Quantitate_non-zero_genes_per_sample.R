@@ -29,7 +29,7 @@ colnames(NumNonZeroGenes) <- c("Number of genes with non-zero counts")
 
 ##### Export the number of genes with non-zero counts for each sample
 #setwd(file.path(counts_dir))
-write.csv(NumNonZeroGenes,file='NumNonZeroGenes.csv')
+write.csv(NumNonZeroGenes,file='RSEM_NumNonZeroGenes.csv')
 
 ## print session info ##
 print("Session Info below: ")

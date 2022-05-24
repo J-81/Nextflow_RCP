@@ -198,7 +198,7 @@ process QUANTIFY_RSEM_GENES {
     path("03-RSEM_Counts/*")
 
   output:
-    tuple path("RSEM_Unnormalized_Counts.csv"), path("NumNonZeroGenes.csv")
+    tuple path("RSEM_Unnormalized_Counts.csv"), path("RSEM_NumNonZeroGenes.csv")
 
   script:
     """
