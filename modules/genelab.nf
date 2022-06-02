@@ -87,12 +87,11 @@ process POST_PROCESSING {
   output:
     path("updated_curation_tables") // directory containing extended ISA tables
     path("*md5sum*")
-    path("*.md")
 
   script:
     root_out_dir = "${ workflow.launchDir}/${ params.outputDir }/${ params.gldsAccession }"
     """
-    generate_md5sum_files.py ${ root_out_dir }
+    generate_md5sum_files.py --root-path ${ root_out_dir } --accession ${ params.gldsAccession }
     update_curation_table.py --root-path ${ root_out_dir } --accession ${ params.gldsAccession }
     format_software_versions.py software_versions.txt
     """
