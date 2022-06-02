@@ -140,13 +140,15 @@ process BUILD_RSEM {
 
   output:
     path("${ genomeFasta.baseName }"), emit: build
-    path("${ genomeFasta.baseName }/.grp") // to ensure check expected file contents exist
+    path("${ genomeFasta.baseName }/${ organism_str }.grp") // to ensure check expected file contents exist
 
 
   script:
+    // e.g. 'mus_musculus' should become 'Mmus'
+    organism_str = "${ meta.organism_sci.substring(0,1).toUpperCase() }${ meta.organism_sci.split('_')[1].substring(0,3).toLowerCase() }"
     """
     mkdir  ${ genomeFasta.baseName }
-    rsem-prepare-reference --gtf $genomeGtf $genomeFasta ${ genomeFasta.baseName }/
+    rsem-prepare-reference --gtf $genomeGtf $genomeFasta ${ genomeFasta.baseName }/${ organism_str }
 
     # echo Build_RSEM_version: `rsem-calculate-expression --version` > versions.txt
     """
@@ -170,6 +172,8 @@ process COUNT_ALIGNED {
 
   script:
     strandedness_opt_map = ["sense":"forward","antisense":"reverse","unstranded":"none"]
+    // e.g. 'mus_musculus' should become 'Mmus'
+    organism_str = "${ meta.organism_sci.substring(0,1).toUpperCase() }${ meta.organism_sci.split('_')[1].substring(0,3).toLowerCase() }"
     """
     rsem-calculate-expression --num-threads $task.cpus \
       ${ meta.paired_end ? '--paired-end' : '' } \
@@ -181,7 +185,7 @@ process COUNT_ALIGNED {
       --seed 12345 \
       --strandedness ${ strandedness_opt_map.get(strandedness) } \
       ${meta.id}_Aligned.toTranscriptome.out.bam \
-      ${ RSEM_REF }/ \
+      ${ RSEM_REF }/${ organism_str } \
       ${ meta.id }
 
     echo COUNT_RSEM_version: `rsem-calculate-expression --version` > versions.txt
