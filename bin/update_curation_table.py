@@ -5,7 +5,6 @@ import argparse
 from pathlib import Path
 
 from dp_tools.core.post_processing import update_curation_tables
-from dp_tools.bulkRNASeq.vv_protocols import BulkRNASeq_VVProtocol
 from dp_tools.bulkRNASeq.loaders import (
     load_BulkRNASeq_STAGE_00,
     load_BulkRNASeq_STAGE_01,
@@ -48,12 +47,9 @@ def main(root_dir: Path, accession: str):
             stack=True,
         )
     )
-    update_curation_tables(
-        ds.dataset, config=("bulkRNASeq", "Latest")
-    )
+    update_curation_tables(ds.dataset, config=("bulkRNASeq", "Latest"))
+
 
 if __name__ == "__main__":
     args = _parse_args()
-    main(
-        Path(args.root_path), accession=args.accession
-    )
+    main(Path(args.root_path), accession=args.accession)
