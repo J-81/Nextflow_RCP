@@ -108,7 +108,7 @@ process INNER_DISTANCE {
   tag "Sample:${ meta.id }"
   publishDir "${ params.outputDir }/${ params.gldsAccession }/${ params.PublishTo }/${meta. id}",
      mode: params.publish_dir_mode,
-     pattern: "${ meta.id }.inner_distance_*"
+     pattern: "${ meta.id }.inner_distance*"
   label 'big_mem'
 
   input:
@@ -116,7 +116,7 @@ process INNER_DISTANCE {
 
   output:
     path("${ meta.id }.inner_distance_freq.txt"), emit: log_only
-    path("${ meta.id }.inner_distance_*"), emit: all
+    path("${ meta.id }.inner_distance*"), emit: all
     tuple val(meta), path("${ meta.id }.inner_distance_freq.txt"), emit: log
     path("versions.txt"), emit: version
 
