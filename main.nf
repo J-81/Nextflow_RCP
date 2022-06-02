@@ -28,7 +28,8 @@ include { VV_RAW_READS;
           VV_STAR_ALIGNMENTS;
           VV_RSEQC;
           VV_RSEM_COUNTS;
-          VV_DESEQ2_ANALYSIS } from './modules/vv.nf' addParams( RootDirForVV: "${workflow.launchDir}/${ params.outputDir }/${ params.gldsAccession }")
+          VV_DESEQ2_ANALYSIS;
+          VV_CONCAT_FILTER } from './modules/vv.nf' addParams( RootDirForVV: "${workflow.launchDir}/${ params.outputDir }/${ params.gldsAccession }")
 include { GET_MAX_READ_LENGTH } from './modules/fastqc.nf'
 include { POST_PROCESSING } from './modules/genelab.nf'
 
@@ -246,17 +247,28 @@ workflow {
                           ch_vv_log_01 ) | set { ch_vv_log_02 }
 
         // Ensure this requires the resorted bam bai to start
-        VV_STAR_ALIGNMENTS( ALIGN_MULTIQC.out.zipped_report | mix(STRANDEDNESS.out.bam_bed) | toSortedList | view,
+        VV_STAR_ALIGNMENTS( ALIGN_MULTIQC.out.zipped_report | mix(STRANDEDNESS.out.bam_bed | flatten) | toSortedList ,
                             ch_vv_log_02 ) | set { ch_vv_log_03 }
         
-        VV_RSEQC( STRANDEDNESS.out.mqc_reports | toSortedList, 
+        VV_RSEQC( STRANDEDNESS.out.mqc_reports | flatten | toSortedList, 
                   ch_vv_log_03 ) | set { ch_vv_log_04 }
 
         VV_RSEM_COUNTS( COUNT_MULTIQC.out.zipped_report | toSortedList,
                         ch_vv_log_04 ) | set { ch_vv_log_05 }
 
-        VV_DESEQ2_ANALYSIS( DGE_BY_DESEQ2.out.dge | map{ it -> it[1..it.size()-1] } | toSortedList, // map use here: removes val(meta) from tuple
+        VV_DESEQ2_ANALYSIS( DGE_BY_DESEQ2.out.dge | map{ it -> it[1..it.size()-1] } | flatten | toSortedList, // map use here: removes val(meta) from tuple
                             ch_vv_log_05 ) | set { ch_vv_log_06 }
+
+        VV_CONCAT_FILTER( 
+          ch_vv_log_01 | mix(
+                        ch_vv_log_02,
+                        ch_vv_log_03,
+                        ch_vv_log_04,
+                        ch_vv_log_05,
+                        ch_vv_log_06
+                      ) | collect
+
+        )
         
         // GeneLab post processing
         POST_PROCESSING(STAGING.out.runsheet, ch_final_software_versions, ch_vv_log_06, STAGING.out.metasheet) // Penultimate process when V&V enabled is the last V&V process
