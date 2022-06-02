@@ -6,5 +6,5 @@ OUTPUT_FN="VV_log_final_only_issues.tsv"
 
 df = pd.read_csv(INPUT_FN, sep="\t")
 
-df_filtered = df.loc[df["flag_code"] > 20]
+df_filtered = df.loc[~df["code"].isin(["FlagCode.GREEN"])]
 df_filtered.to_csv(OUTPUT_FN, sep="\t")
