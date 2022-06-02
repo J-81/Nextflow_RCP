@@ -258,8 +258,9 @@ write.csv(normCounts,file='Normalized_Counts.csv')
 write.csv(sampleTable,file='SampleTable.csv')
 
 if (ERCC_MODE) {
-	ERCCnormCounts = as.data.frame(counts(dds_2, normalized=TRUE))
-	write.csv(ERCCnormCounts,file='ERCC_Normalized_Counts.csv')
+	ERCCnormCounts = as.data.frame(counts(dds_2, normalized = TRUE))
+	write.csv(ERCCnormCounts, file ='ERCC_Normalized_Counts.csv')
+	write.csv(sampleTable_sub, file = 'ERCC_SampleTable.csv')
 }
 setwd(file.path(work_dir))
 
