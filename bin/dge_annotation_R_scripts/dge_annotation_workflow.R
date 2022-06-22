@@ -53,6 +53,12 @@ parser <- add_option(parser, c("--runsheet_path"),
 parser <- add_option(parser, c("--annotation_file_path"),
     help = "Annotation database file to use for adding gene annotations",
 )
+parser <- add_option(parser, c("--extended_table_output_prefix"),
+    help = "Visualization table output prefix",
+)
+parser <- add_option(parser, c("--extended_table_output_suffix"),
+    help = "Visualization table output suffix",
+)
 
 args <- parse_args(parser)
 
@@ -63,6 +69,7 @@ cat_bullet(ansi_align(names(args)), " : ", args)
 if (!args$skip_perform_dge) {
     cli_alert_warning("Running Perform_DGE.Rmd")
     rmarkdown::render(here("dge_annotation_R_scripts", "Perform_DGE.Rmd"),
+        output_dir = args$work_dir,
         quiet = !args$verbose,
         params = list(
             work_dir = args$work_dir,
@@ -86,6 +93,7 @@ if (!args$skip_perform_dge) {
 if (!args$skip_gene_annotation) {
     cli_alert_warning("Running Add_Gene_Annotations.Rmd")
     rmarkdown::render(here("dge_annotation_R_scripts", "Add_Gene_Annotations.Rmd"),
+        output_dir = args$work_dir,
         quiet = !args$verbose,
         params = list(
             input_table_path = paste0(args$dge_output_prefix, "differential_expression_no_annotations.csv"),
@@ -98,6 +106,40 @@ if (!args$skip_gene_annotation) {
     cli_alert_success("Done running Add_Gene_Annotations.Rmd")
 } else {
     cli_alert_warning("Skipping Add_Gene_Annotations.Rmd")
+}
+
+if (!args$skip_gene_annotation) {
+    cli_alert_warning("Running Extend_DGE_Table.Rmd")
+    rmarkdown::render(here("dge_annotation_R_scripts", "Extend_DGE_Table.Rmd"),
+        output_dir = args$work_dir,
+        quiet = !args$verbose,
+        params = list(
+            input_table_path = paste0(args$dge_output_prefix, "differential_expression.csv"),
+            work_dir = args$work_dir,
+            extended_table_output_prefix = args$extended_table_output_prefix,
+            extended_table_output_suffix = args$extended_table_output_suffix
+        )
+    )
+    cli_alert_success("Done running Extend_DGE_Table.Rmd")
+} else {
+    cli_alert_warning("Skipping Extend_DGE_Table.Rmd")
+}
+
+if (!args$skip_gene_annotation) {
+    cli_alert_warning("Running Generate_PCA_Table.Rmd")
+    rmarkdown::render(here("dge_annotation_R_scripts", "Generate_PCA_Table.Rmd"),
+        output_dir = args$work_dir,
+        quiet = !args$verbose,
+        params = list(
+            input_table_path = paste0(args$normalized_counts_output_prefix, "Normalized_Counts.csv"),
+            work_dir = args$work_dir,
+            pca_table_output_prefix = args$extended_table_output_prefix,
+            pca_table_output_suffix = args$extended_table_output_suffix
+        )
+    )
+    cli_alert_success("Done running Generate_PCA_Table.Rmd")
+} else {
+    cli_alert_warning("Skipping Generate_PCA_Table.Rmd")
 }
 
 cli_alert_success("All done!")
