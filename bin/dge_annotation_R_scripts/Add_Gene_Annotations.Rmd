@@ -54,6 +54,7 @@ DT::datatable(head(annot),
 ```{r, load-table-to-annotate}
 df <- read.csv(params$input_table_path,
                  sep = params$table_sep,
+                 check.names = FALSE # don't rename column names with check.names
                  )
 DT::datatable(head(df),
   caption = "First few rows of the input table on load",
