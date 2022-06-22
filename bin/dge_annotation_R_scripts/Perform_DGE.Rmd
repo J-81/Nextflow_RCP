@@ -387,3 +387,16 @@ DT::datatable(head(output_table_1, n = 30),
 )
 ```
 
+```{r version-reporting}
+## print session info ##
+print("Session Info below: ")
+sessionInfo()
+## Log same info into versions.txt file
+version_output_fn <- "versions.txt"
+cat(capture.output(sessionInfo()),
+    "BioC_version_associated_with_R_version",
+    toString(tools:::.BioC_version_associated_with_R_version()),
+    file = version_output_fn,
+    append = TRUE,
+    sep = "\n")
+```
