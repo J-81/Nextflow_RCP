@@ -289,7 +289,7 @@ dds_1 <- DESeq(dds)
 
 ```{r output-normalized-counts-related-files}
 normCounts <- as.data.frame(counts(dds_1, normalized = TRUE))
-dir.create(dirname(params$normalized_counts_output_prefix), recursive = TRUE)
+dir.create(dirname(paste0(params$normalized_counts_output_prefix, "_")), recursive = TRUE)
 write.csv(
     txi.rsem$counts,
     file = paste0(params$normalized_counts_output_prefix, "RSEM_Unnormalized_Counts.csv")
@@ -368,7 +368,9 @@ rm(group_stdev,group_means,tcounts)
 ```
 
 ```{r output-dge-related-files}
-dir.create(dirname(params$dge_output_prefix), recursive = TRUE)
+# note: the paste0 here is ensure no string file name prefixes still create their directories
+# e.g. dge_output/
+dir.create(dirname(paste0(params$dge_output_prefix,"_")), recursive = TRUE)
 write.csv(contrasts, paste0(params$dge_output_prefix, "contrasts.csv"))
 write.csv(output_table_1,
           row.names = FALSE,

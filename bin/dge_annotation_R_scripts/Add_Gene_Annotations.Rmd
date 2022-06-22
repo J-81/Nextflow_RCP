@@ -86,6 +86,6 @@ DT::datatable(head(df2),
   )
 )
 
-dir.create(dirname(params$annotated_output_prefix))
+dir.create(dirname(paste0(params$annotated_output_prefix, "_")), recursive = TRUE)
 write.csv(df2, row.names = FALSE, paste0(params$annotated_output_prefix, "differential_expression.csv"))
 ```
