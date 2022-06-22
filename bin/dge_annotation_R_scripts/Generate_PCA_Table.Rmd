@@ -34,7 +34,8 @@ library(tibble)
 ```{r, load-table-to-extend}
 normCounts <- read.csv(params$input_table_path,
                        sep = params$table_sep,
-                       row.names = 1
+                       row.names = 1,
+                       check.names = FALSE
                       )
 DT::datatable(head(df),
   caption = "First few rows of the input table on load",
