@@ -109,10 +109,19 @@ def get_runsheet_paths(LinkedHashMap row) {
                      "caenorhabditis_elegans":"WORM",
                      "arabidopsis_thaliana":"ARABIDOPSIS"]
 
+    def PRIMARY_KEYS = ["mus_musculus":"ENSEMBL",
+                        "danio_rerio":"ENSEMBL",
+                        "rattus_norvegicus":"ENSEMBL",
+                        "homo_sapiens":"ENSEMBL",
+                        "drosophila_melanogaster":"ENSEMBL",
+                        "caenorhabditis_elegans":"ENSEMBL",
+                        "arabidopsis_thaliana":"TAIR"]
+
     def meta = [:]
     meta.id                         = row["Sample Name"]
     meta.organism_sci               = row.organism.replaceAll(" ","_").toLowerCase()
     meta.organism_non_sci           = ORGANISMS[meta.organism_sci]
+    meta.primary_keytype            = PRIMARY_KEYS[meta.organism_sci]
     meta.paired_end                 = row.paired_end.toBoolean()
     meta.has_ercc                   = row.has_ERCC.toBoolean()
 
