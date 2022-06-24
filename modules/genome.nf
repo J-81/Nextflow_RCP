@@ -168,6 +168,7 @@ process COUNT_ALIGNED {
 
   output:
     tuple val(meta), path("${ meta.id }*"), emit: counts
+    path("${ meta.id }.genes.results"), emit: gene_counts
     path("versions.txt"), emit: version
 
   script:
