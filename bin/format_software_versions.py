@@ -250,6 +250,9 @@ def main(software_versions_path: Path):
     PUBLISH_TABLE_ORDER.extend(list(extra_software))
     #print(PUBLISH_TABLE_ORDER)
     print(df)
+    print(PUBLISH_TABLE_ORDER)
+    # deduplicate any entries
+    df = df.drop_duplicates()
     df = df.reindex(PUBLISH_TABLE_ORDER)
     output_file = software_versions_path.parent / Path("software_versions.md")
     df.to_markdown(output_file, index=True)
