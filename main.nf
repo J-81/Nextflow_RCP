@@ -200,13 +200,13 @@ workflow {
 
       organism_ch = channel.fromPath( params.organismCSV )
 
-      DGE_BY_DESEQ2( STAGING.out.runsheet, organism_ch, rsem_ch, meta_ch  )
+      DGE_BY_DESEQ2( STAGING.out.runsheet, organism_ch, COUNT_ALIGNED.out.gene_counts | collect, meta_ch, params.annotation_path, "${ workflow.projectDir }/bin/dge_annotation_R_scripts")
 
 
       // ALL MULTIQC
       RAW_MULTIQC( samples_ch, raw_mqc_ch, ch_multiqc_config  )
       TRIMMED_MULTIQC( samples_ch, trim_mqc_ch, ch_multiqc_config ) // refering to the trimmed reads
-      TRIM_MULTIQC( samples_ch, TRIMGALORE.out.reports, ch_multiqc_config ) // refering to the trimming process
+      TRIM_MULTIQC( samples_ch, TRIMGALORE.out.reports | collect, ch_multiqc_config ) // refering to the trimming process
       ALIGN_MULTIQC( samples_ch, align_mqc_ch, ch_multiqc_config )
       COUNT_MULTIQC( samples_ch, rsem_ch, ch_multiqc_config )
       raw_mqc_ch | concat( trim_mqc_ch ) 
