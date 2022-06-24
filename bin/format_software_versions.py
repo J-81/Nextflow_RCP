@@ -8,172 +8,196 @@ from pathlib import Path
 
 import pandas as pd
 
-PUBLISH_TABLE_ORDER = ["Nextflow", "FastQC", "MultiQC","Cutadapt", "TrimGalore!", "STAR", "RSEM", "R", "Bioconductor", "DESeq2", "tximport", "tidyverse", "STRINGdb", "PANTHER.db"]
+PUBLISH_TABLE_ORDER = [
+    "Nextflow",
+    "FastQC",
+    "MultiQC",
+    "Cutadapt",
+    "TrimGalore!",
+    "STAR",
+    "RSEM",
+    "R",
+    "Bioconductor",
+    "DESeq2",
+    "tximport",
+    "tidyverse",
+    "STRINGdb",
+    "PANTHER.db",
+]
+
 
 def _parse_samtools_block(text) -> dict:
-    """ Parses an Samtools version output
-    """
+    """Parses an Samtools version output"""
     for line in text.splitlines():
         if line.startswith("samtools version:"):
-            return {'Program':"Samtools",
-                    'Version':line.split(':')[1].strip(),
-                    'Relevant Links':'https://github.com/samtools/samtools'
-                    }
+            return {
+                "Program": "Samtools",
+                "Version": line.split(":")[1].strip(),
+                "Relevant Links": "https://github.com/samtools/samtools",
+            }
     raise ValueError
+
 
 def _parse_Nextflow_block(text) -> dict:
-    """ Parses an Nextflow version output
-    """
+    """Parses an Nextflow version output"""
     for line in text.splitlines():
         if line.startswith("Nextflow Version:"):
-            return {'Program':"Nextflow",
-                    'Version':line.split(':')[1],
-                    'Relevant Links':'https://github.com/nextflow-io/nextflow'
-                    }
+            return {
+                "Program": "Nextflow",
+                "Version": line.split(":")[1],
+                "Relevant Links": "https://github.com/nextflow-io/nextflow",
+            }
     raise ValueError
 
+
 def _parse_rseqc_block(text) -> dict:
-    """ Parses an RSEQC version output.  Note, these this operates on individual tools version output.
-    """
+    """Parses an RSEQC version output.  Note, these this operates on individual tools version output."""
     results = list()
     for line in text.splitlines():
-        if (len(line.split()) == 2) and ('.py' in line):
+        if (len(line.split()) == 2) and (".py" in line):
             tool, version = line.split()
-            return {'Program':tool,
-                      'Version':version,
-                      'Relevant Links':'https://sourceforge.net/projects/rseqc'
-                     }
+            return {
+                "Program": tool,
+                "Version": version,
+                "Relevant Links": "https://sourceforge.net/projects/rseqc",
+            }
     raise ValueError("NO VERSIONS SUCCESSFULLY PARSED")
 
+
 def _parse_RSEM_block(text) -> dict:
-    """ Parses an RSEM version output
-    """
+    """Parses an RSEM version output"""
     for line in text.splitlines():
         if line.startswith("COUNT_RSEM_version: Current version: RSEM"):
-            return {'Program':"RSEM",
-                    'Version':line.split(':')[-1].split()[-1].lstrip("v"),
-                    'Relevant Links':'https://github.com/deweylab/RSEM'
-                    }
+            return {
+                "Program": "RSEM",
+                "Version": line.split(":")[-1].split()[-1].lstrip("v"),
+                "Relevant Links": "https://github.com/deweylab/RSEM",
+            }
+
 
 def _parse_STAR_block(text) -> dict:
-    """ Parses an STAR version output
-    """
+    """Parses an STAR version output"""
     for line in text.splitlines():
         if line.startswith("ALIGN_STAR_version:"):
-            return {'Program':"STAR",
-                    'Version':line.split()[-1],
-                    'Relevant Links':'https://github.com/alexdobin/STAR'
-                    }
+            return {
+                "Program": "STAR",
+                "Version": line.split()[-1],
+                "Relevant Links": "https://github.com/alexdobin/STAR",
+            }
+
 
 def _parse_FastQC_block(text) -> dict:
-    """ Parses an Fastqc version output
-    """
+    """Parses an Fastqc version output"""
     for line in text.splitlines():
         if line.startswith("FastQC v"):
-            return {'Program':"FastQC",
-                    'Version':line.split()[-1].lstrip("v"),
-                    'Relevant Links':'https://www.bioinformatics.babraham.ac.uk/projects/fastqc/'
-                    }
+            return {
+                "Program": "FastQC",
+                "Version": line.split()[-1].lstrip("v"),
+                "Relevant Links": "https://www.bioinformatics.babraham.ac.uk/projects/fastqc/",
+            }
+
 
 def _parse_multiqc_block(text) -> dict:
-    """ Parses an multiqc version output
-    """
+    """Parses an multiqc version output"""
     for line in text.splitlines():
         if line.startswith("multiqc, version"):
-            return {'Program':"MultiQC",
-                    'Version':line.split()[-1],
-                    'Relevant Links':'https://multiqc.info/'
-                    }
+            return {
+                "Program": "MultiQC",
+                "Version": line.split()[-1],
+                "Relevant Links": "https://multiqc.info/",
+            }
+
 
 def _parse_Trimgalore_block(text) -> list[dict, dict]:
-    """ Parses out Trimgalore and Cutadapt versions
-    """
+    """Parses out Trimgalore and Cutadapt versions"""
     lines = text.splitlines()
     for i, line in enumerate(lines):
-        if '[powered by Cutadapt]' in line:
+        if "[powered by Cutadapt]" in line:
             # next line has version
-            version = lines[i+1].split()[-1]
-            version_trimgalore = {'Program':"TrimGalore!",
-                        'Version':version,
-                        'Relevant Links':'https://www.bioinformatics.babraham.ac.uk/projects/trim_galore/'
-                        }
-        if line.startswith('cutadapt version:'):
-            version = line.split(':')[-1]
-            version_cutadapt = {'Program':"Cutadapt",
-                                'Version':version,
-                                'Relevant Links':'https://cutadapt.readthedocs.io/en/stable/'
-                                }
+            version = lines[i + 1].split()[-1]
+            version_trimgalore = {
+                "Program": "TrimGalore!",
+                "Version": version,
+                "Relevant Links": "https://www.bioinformatics.babraham.ac.uk/projects/trim_galore/",
+            }
+        if line.startswith("cutadapt version:"):
+            version = line.split(":")[-1]
+            version_cutadapt = {
+                "Program": "Cutadapt",
+                "Version": version,
+                "Relevant Links": "https://cutadapt.readthedocs.io/en/stable/",
+            }
     return [version_trimgalore, version_cutadapt]
+
 
 R_VERSION_TABLE_DICT = {
     "DESeq2": {
-        'table_name':'DESeq2',
-        'link':'https://bioconductor.org/packages/release/bioc/html/DESeq2.html'
+        "table_name": "DESeq2",
+        "link": "https://bioconductor.org/packages/release/bioc/html/DESeq2.html",
     },
     "PANTHER.db": {
-        'table_name':'PANTHER.db',
-        'link':'https://bioconductor.org/packages/release/data/annotation/html/PANTHER.db.html'
+        "table_name": "PANTHER.db",
+        "link": "https://bioconductor.org/packages/release/data/annotation/html/PANTHER.db.html",
     },
     "STRINGdb": {
-        'table_name':'STRINGdb',
-        'link':'https://www.bioconductor.org/packages/release/bioc/html/STRINGdb.html'
+        "table_name": "STRINGdb",
+        "link": "https://www.bioconductor.org/packages/release/bioc/html/STRINGdb.html",
     },
-    "tidyverse": {
-        'table_name':'tidyverse',
-        'link':'https://www.tidyverse.org'
-    },
+    "tidyverse": {"table_name": "tidyverse", "link": "https://www.tidyverse.org"},
     "tximport": {
-        'table_name':'tximport',
-        'link':'https://bioconductor.org/packages/release/bioc/html/tximport.html'
+        "table_name": "tximport",
+        "link": "https://bioconductor.org/packages/release/bioc/html/tximport.html",
     },
     "org.Mm.eg.db": {
-        'table_name':'org.Mm.eg.db',
-        'link':'https://bioconductor.org/packages/release/data/annotation/html/org.Mm.eg.db.html'
+        "table_name": "org.Mm.eg.db",
+        "link": "https://bioconductor.org/packages/release/data/annotation/html/org.Mm.eg.db.html",
     },
     "org.Rn.eg.db": {
-        'table_name':'org.Rn.eg.db',
-        'link':'https://bioconductor.org/packages/release/data/annotation/html/org.Rn.eg.db.html'
+        "table_name": "org.Rn.eg.db",
+        "link": "https://bioconductor.org/packages/release/data/annotation/html/org.Rn.eg.db.html",
     },
     "org.Dr.eg.db": {
-        'table_name':'org.Dr.eg.db',
-        'link':'https://bioconductor.org/packages/release/data/annotation/html/org.Dr.eg.db.html'
+        "table_name": "org.Dr.eg.db",
+        "link": "https://bioconductor.org/packages/release/data/annotation/html/org.Dr.eg.db.html",
     },
     "org.Dm.eg.db": {
-        'table_name':'org.Dm.eg.db',
-        'link':'https://bioconductor.org/packages/release/data/annotation/html/org.Dm.eg.db.html'
+        "table_name": "org.Dm.eg.db",
+        "link": "https://bioconductor.org/packages/release/data/annotation/html/org.Dm.eg.db.html",
     },
     "org.Ce.eg.db": {
-        'table_name':'org.Ce.eg.db',
-        'link':'https://bioconductor.org/packages/release/data/annotation/html/org.Ce.eg.db.html'
+        "table_name": "org.Ce.eg.db",
+        "link": "https://bioconductor.org/packages/release/data/annotation/html/org.Ce.eg.db.html",
     },
     "org.Sc.sgd.db": {
-        'table_name':'org.Sc.sgd.db',
-        'link':'https://bioconductor.org/packages/release/data/annotation/html/org.Sc.sgd.db.html'
+        "table_name": "org.Sc.sgd.db",
+        "link": "https://bioconductor.org/packages/release/data/annotation/html/org.Sc.sgd.db.html",
     },
     "org.At.tair.db": {
-        'table_name':'org.At.tair.db',
-        'link':'https://bioconductor.org/packages/release/data/annotation/html/org.At.tair.db.html'
+        "table_name": "org.At.tair.db",
+        "link": "https://bioconductor.org/packages/release/data/annotation/html/org.At.tair.db.html",
     },
     "org.EcK12.eg.db": {
-        'table_name':'org.EcK12.eg.db',
-        'link':'https://bioconductor.org/packages/release/data/annotation/html/org.EcK12.eg.db.html'
+        "table_name": "org.EcK12.eg.db",
+        "link": "https://bioconductor.org/packages/release/data/annotation/html/org.EcK12.eg.db.html",
     },
 }
-def _parse_R_block(text: str, filter_to_rename_dict: dict = R_VERSION_TABLE_DICT, filter_to_rename = True) -> list:
-    """ Parses out R package versions
-    """
+
+
+def _parse_R_block(
+    text: str, filter_to_rename_dict: dict = R_VERSION_TABLE_DICT, filter_to_rename=True
+) -> list:
+    """Parses out R package versions"""
+
     def _is_package(token: str):
-        """ Returns true if this token represents a package
-        """
+        """Returns true if this token represents a package"""
         if all(
-                (
-                    len(token.split("_")) == 2,
-                    "=" not in token,
-                )
-            ):
+            (
+                len(token.split("_")) == 2,
+                "=" not in token,
+            )
+        ):
             return True
         return False
-
 
     lines = text.splitlines()
     versions = list()
@@ -184,38 +208,46 @@ def _parse_R_block(text: str, filter_to_rename_dict: dict = R_VERSION_TABLE_DICT
         if not len(tokens) >= 1:
             continue
         if line.startswith("R version"):
-            versions.append({
-                'Program':"R",
-                'Version':line.split()[2],
-                'Relevant Links':'https://www.r-project.org',
-                })
+            versions.append(
+                {
+                    "Program": "R",
+                    "Version": line.split()[2],
+                    "Relevant Links": "https://www.r-project.org",
+                }
+            )
 
         if line.startswith("BioC_version_associated_with_R_version"):
             # next line is Bioconductor version
-            versions.append({
-                'Program':"Bioconductor",
-                'Version':lines[i+1].strip(),
-                'Relevant Links':'https://bioconductor.org',
-                })
+            versions.append(
+                {
+                    "Program": "Bioconductor",
+                    "Version": lines[i + 1].strip(),
+                    "Relevant Links": "https://bioconductor.org",
+                }
+            )
 
         if tokens[0].startswith("[") and tokens[0].endswith("]"):
             for potential_package_token in tokens[1:]:
                 if _is_package(potential_package_token):
-                    package, version = potential_package_token.split('_')
+                    package, version = potential_package_token.split("_")
                     if package not in filter_to_rename_dict.keys():
                         continue
                     else:
-                        versions.append({
-                            'Program':filter_to_rename_dict[package]["table_name"],
-                            'Version':version,
-                            'Relevant Links':filter_to_rename_dict[package]["link"],
-                            })
+                        versions.append(
+                            {
+                                "Program": filter_to_rename_dict[package]["table_name"],
+                                "Version": version,
+                                "Relevant Links": filter_to_rename_dict[package][
+                                    "link"
+                                ],
+                            }
+                        )
     return versions
 
 
 def main(software_versions_path: Path):
     with software_versions_path.open() as f:
-        text_blocks = f.read().split('<><><>')
+        text_blocks = f.read().split("<><><>")
     results = list()
     for text_block in text_blocks:
         if "COUNT_RSEM_version: Current version: RSEM" in text_block:
@@ -237,18 +269,18 @@ def main(software_versions_path: Path):
         elif "RSeQC" in text_block:
             results.append(_parse_rseqc_block(text_block))
         else:
-            #raise NotImplementedError(f"Scripts does not know how to parse: {text_block}")
+            # raise NotImplementedError(f"Scripts does not know how to parse: {text_block}")
             print(f"WARNING: Script does not know how to parse: {text_block}")
             pass
-    #print(results)
+    # print(results)
     df = pd.DataFrame(results)
     df = df.set_index(keys="Program")
-    #print(df.head())
+    # print(df.head())
     # find any software not in conserved list (e.g. organism specific annotation databases)
     extra_software = set(df.index).difference(set(PUBLISH_TABLE_ORDER))
     # and add to end of the table
     PUBLISH_TABLE_ORDER.extend(list(extra_software))
-    #print(PUBLISH_TABLE_ORDER)
+    # print(PUBLISH_TABLE_ORDER)
     print(df)
     print(PUBLISH_TABLE_ORDER)
     # deduplicate any entries
@@ -259,5 +291,5 @@ def main(software_versions_path: Path):
     print(f"Wrote {output_file}")
 
 
-if __name__ == '__main__':
-    main(software_versions_path = Path(sys.argv[1]))
+if __name__ == "__main__":
+    main(software_versions_path=Path(sys.argv[1]))
