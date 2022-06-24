@@ -17,6 +17,8 @@ process DGE_BY_DESEQ2 {
     path(organisms_csv)
     path("Rsem_gene_counts/*")
     val(meta)
+    path(annotation_file)
+    path("dge_annotation_R_scripts")
 
   output:
     tuple path("norm_counts_output/Normalized_Counts.csv"),
@@ -29,6 +31,7 @@ process DGE_BY_DESEQ2 {
           path("dge_output/visualization_PCA_table.csv"), emit: dge
 
     tuple path("norm_counts_output/ERCC_Normalized_Counts.csv"),
+          path("norm_counts_output/ERCC_SampleTable.csv"),
           path("dge_output_ercc/ERCCnorm_contrasts.csv"),
           path("dge_output_ercc/ERCCnorm_differential_expression.csv"),
           path("dge_output_ercc/visualization_output_table_ERCCnorm.csv"),
@@ -38,35 +41,65 @@ process DGE_BY_DESEQ2 {
 
   stub:
     """
-    # create output directories
-    mkdir norm_counts_output
-    mkdir dge_output
-    ${ meta.has_ercc ? 'mkdir dge_output_ercc' : '' } # create directory, only if meta.has_ercc is true
+    ./dge_annotation_R_scripts/dge_annotation_workflow.R \
+        --runsheet_path runsheet.csv \
+        --DEBUG_MODE_LIMIT_GENES \
+        --DEBUG_MODE_ADD_DUMMY_COUNTS \
+        --input_gene_results_dir "Rsem_gene_counts" \
+        --primary_keytype ${ meta.primary_keytype } \
+        --normalization 'default' \
+        --normalized_counts_output_prefix "norm_counts_output/" \
+        --dge_output_prefix "dge_output/" \
+        --annotation_file_path ${annotation_file} \
+        --extended_table_output_prefix "dge_output/"\
+        --extended_table_output_suffix ".csv" \
+        --verbose
 
-    # run the script with R
-    deseq2_normcounts_DGE_vis_ISA.R \
-      ${ meta.organism_non_sci } \
-      runsheet.csv \
-      norm_counts_output \
-      dge_output \
-      TRUE \
-      ${ meta.has_ercc ? 'dge_output_ercc' : '' }
+    if ${ meta.has_ercc ? 'true' : 'false'}
+    then
+        ./dge_annotation_R_scripts/dge_annotation_workflow.R \
+            --runsheet_path runsheet.csv \
+            --DEBUG_MODE_LIMIT_GENES \
+            --DEBUG_MODE_ADD_DUMMY_COUNTS \
+            --input_gene_results_dir "Rsem_gene_counts" \
+            --primary_keytype ${ meta.primary_keytype } \
+            --normalization 'ERCC-groupB' \
+            --normalized_counts_output_prefix "norm_counts_output/ERCC_" \
+            --dge_output_prefix "dge_output_ercc/ERCCnorm_" \
+            --annotation_file_path ${annotation_file} \
+            --extended_table_output_prefix "dge_output_ercc/"\
+            --extended_table_output_suffix "_ERCCnorm.csv" \
+            --verbose
+    fi
     """
 
   script:
     """
-    # create output directories
-    mkdir norm_counts_output
-    mkdir dge_output
-    ${ meta.has_ercc ? 'mkdir dge_output_ercc' : '' } # create directory, only if meta.has_ercc is true
+    ./dge_annotation_R_scripts/dge_annotation_workflow.R \
+        --runsheet_path runsheet.csv \
+        --input_gene_results_dir "Rsem_gene_counts" \
+        --primary_keytype ${ meta.primary_keytype } \
+        --normalization 'default' \
+        --normalized_counts_output_prefix "norm_counts_output/" \
+        --dge_output_prefix "dge_output/" \
+        --annotation_file_path ${annotation_file} \
+        --extended_table_output_prefix "dge_output/"\
+        --extended_table_output_suffix ".csv" \
+        --verbose
 
-    # run the script with R
-    deseq2_normcounts_DGE_vis_ISA.R \
-      ${ meta.organism_non_sci } \
-      runsheet.csv \
-      norm_counts_output \
-      dge_output \
-      FALSE \
-      ${ meta.has_ercc ? 'dge_output_ercc' : '' }
+    if ${ meta.has_ercc ? 'true' : 'false'}
+    then
+        ./dge_annotation_R_scripts/dge_annotation_workflow.R \
+            --runsheet_path runsheet.csv \
+            --input_gene_results_dir "Rsem_gene_counts" \
+            --primary_keytype ${ meta.primary_keytype } \
+            --normalization 'ERCC-groupB' \
+            --normalized_counts_output_prefix "norm_counts_output/ERCC_" \
+            --dge_output_prefix "dge_output_ercc/ERCCnorm_" \
+            --annotation_file_path ${annotation_file} \
+            --extended_table_output_prefix "dge_output_ercc/"\
+            --extended_table_output_suffix "_ERCCnorm.csv" \
+            --verbose
+    fi
     """
 }
