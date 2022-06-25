@@ -73,7 +73,9 @@ df2 <- merge(
                 annot,
                 df,
                 by = params$primary_keytype,
-                all = FALSE,
+                # ensure all original dge rows are kept.
+                # If unmatched in the annotation database, then fill missing with NAN
+                all.y = TRUE
             )
 
 DT::datatable(head(df2),
