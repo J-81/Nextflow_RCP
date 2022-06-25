@@ -284,6 +284,8 @@ dds_1 <- nbinomWaldTest(dds_1)
 ```
 
 ```{r default-normalized-dge-analysis, include = (params$normalization == "default"), eval = (params$normalization == "default")}
+# remove ERCC genes
+dds <- dds[-c(grep("ERCC-",rownames(dds))),]
 dds_1 <- DESeq(dds)
 ```
 
