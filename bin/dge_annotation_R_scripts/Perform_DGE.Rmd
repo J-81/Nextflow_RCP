@@ -40,6 +40,7 @@ suppressMessages(library(Risa))
 suppressMessages(library(stringr))
 
 params
+yaml::write_yaml(params, "last_params.yml")
 ```
 ```{r validate_params}
 # assert either runsheet_path OR isa_path supplied in params
