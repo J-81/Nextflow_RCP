@@ -134,7 +134,6 @@ reordering <- sapply(samples, function(x)grep(paste0(x,".genes.results$"), files
 files <- files[reordering]
 names(files) <- samples
 txi.rsem <- tximport(files, type = "rsem", txIn = FALSE, txOut = FALSE)
-txi.rsem
 if ((dim(txi.rsem$counts)[2] == nrow(study)) == FALSE) {
     stop(sprintf("Assert statement: '%s' was False: Sample count mismatch after comparing imported gene results and runsheet", deparse(quote(dim(txi.rsem$counts)[2] == nrow(study))) )) }
 
