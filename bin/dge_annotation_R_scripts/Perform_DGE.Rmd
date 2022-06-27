@@ -140,15 +140,20 @@ if ((dim(txi.rsem$counts)[2] == nrow(study)) == FALSE) {
 
 if (params$DEBUG_MODE_LIMIT_GENES) {
     txi.rsem <- lapply(txi.rsem, tail, n = 150)
+    print(sprintf("DEBUG: %s: Limiting analysis to last 150 genes", Sys.time()))
 }
 
 if (params$DEBUG_MODE_ADD_DUMMY_COUNTS) {
     txi.rsem$counts <- txi.rsem$counts + matrix(sample( 0:5000, NROW(txi.rsem$counts)*NCOL(txi.rsem$counts), replace=TRUE),nrow=NROW(txi.rsem$counts))
+    print(sprintf("DEBUG: %s: Replacing original counts with random values from 0 to 5000", Sys.time()))
 }
 
 ## Add 1 to genes with lengths of zero - needed to make DESeqDataSet object
 print(sprintf("DEBUG: %s: Converting %d zero length genes to 1-length of %d genes (%f %% total)", Sys.time(), length(txi.rsem$length[txi.rsem$length == 0]), length(txi.rsem$length), length(txi.rsem$length[txi.rsem$length == 0])/length(txi.rsem$length)))
 txi.rsem$length[txi.rsem$length == 0] <- 1
+
+print(sprintf("DEBUG: %s Printing: '%s' below", Sys.time(), 'txi.rsem'))
+print(txi.rsem, quote = TRUE)
 ```
 
 ```{r viz-head-loaded-counts}
