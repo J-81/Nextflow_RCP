@@ -41,64 +41,62 @@ process DGE_BY_DESEQ2 {
 
   stub:
     """
-    ./dge_annotation_R_scripts/dge_annotation_workflow.R \
-        --runsheet_path runsheet.csv \
-        --DEBUG_MODE_LIMIT_GENES \
-        --DEBUG_MODE_ADD_DUMMY_COUNTS \
-        --input_gene_results_dir "Rsem_gene_counts" \
-        --primary_keytype ${ meta.primary_keytype } \
-        --normalization 'default' \
-        --normalized_counts_output_prefix "norm_counts_output/" \
-        --dge_output_prefix "dge_output/" \
-        --annotation_file_path ${annotation_file} \
-        --extended_table_output_prefix "dge_output/"\
-        --extended_table_output_suffix ".csv" \
+    ./dge_annotation_R_scripts/dge_annotation_workflow.R \\
+        --runsheet_path runsheet.csv \\
+        --DEBUG_MODE_ADD_DUMMY_COUNTS \\
+        --input_gene_results_dir "Rsem_gene_counts" \\
+        --primary_keytype ${ meta.primary_keytype } \\
+        --normalization 'default' \\
+        --normalized_counts_output_prefix "norm_counts_output/" \\
+        --dge_output_prefix "dge_output/" \\
+        --annotation_file_path ${annotation_file} \\
+        --extended_table_output_prefix "dge_output/"\\
+        --extended_table_output_suffix ".csv" \\
         --verbose
 
     if ${ meta.has_ercc ? 'true' : 'false'}
     then
-        ./dge_annotation_R_scripts/dge_annotation_workflow.R \
-            --runsheet_path runsheet.csv \
-            --DEBUG_MODE_LIMIT_GENES \
-            --DEBUG_MODE_ADD_DUMMY_COUNTS \
-            --input_gene_results_dir "Rsem_gene_counts" \
-            --primary_keytype ${ meta.primary_keytype } \
-            --normalization 'ERCC-groupB' \
-            --normalized_counts_output_prefix "norm_counts_output/ERCC_" \
-            --dge_output_prefix "dge_output_ercc/ERCCnorm_" \
-            --annotation_file_path ${annotation_file} \
-            --extended_table_output_prefix "dge_output_ercc/"\
-            --extended_table_output_suffix "_ERCCnorm.csv" \
+        ./dge_annotation_R_scripts/dge_annotation_workflow.R \\
+            --runsheet_path runsheet.csv \\
+            --DEBUG_MODE_ADD_DUMMY_COUNTS \\
+            --input_gene_results_dir "Rsem_gene_counts" \\
+            --primary_keytype ${ meta.primary_keytype } \\
+            --normalization 'ERCC-groupB' \\
+            --normalized_counts_output_prefix "norm_counts_output/ERCC_" \\
+            --dge_output_prefix "dge_output_ercc/ERCCnorm_" \\
+            --annotation_file_path ${annotation_file} \\
+            --extended_table_output_prefix "dge_output_ercc/"\\
+            --extended_table_output_suffix "_ERCCnorm.csv" \\
             --verbose
     fi
     """
 
   script:
     """
-    ./dge_annotation_R_scripts/dge_annotation_workflow.R \
-        --runsheet_path runsheet.csv \
-        --input_gene_results_dir "Rsem_gene_counts" \
-        --primary_keytype ${ meta.primary_keytype } \
-        --normalization 'default' \
-        --normalized_counts_output_prefix "norm_counts_output/" \
-        --dge_output_prefix "dge_output/" \
-        --annotation_file_path ${annotation_file} \
-        --extended_table_output_prefix "dge_output/"\
-        --extended_table_output_suffix ".csv" \
+    ./dge_annotation_R_scripts/dge_annotation_workflow.R \\
+        --runsheet_path runsheet.csv \\
+        --input_gene_results_dir "Rsem_gene_counts" \\
+        --primary_keytype ${ meta.primary_keytype } \\
+        --normalization 'default' \\
+        --normalized_counts_output_prefix "norm_counts_output/" \\
+        --dge_output_prefix "dge_output/" \\
+        --annotation_file_path ${annotation_file} \\
+        --extended_table_output_prefix "dge_output/"\\
+        --extended_table_output_suffix ".csv" \\
         --verbose
 
     if ${ meta.has_ercc ? 'true' : 'false'}
     then
-        ./dge_annotation_R_scripts/dge_annotation_workflow.R \
-            --runsheet_path runsheet.csv \
-            --input_gene_results_dir "Rsem_gene_counts" \
-            --primary_keytype ${ meta.primary_keytype } \
-            --normalization 'ERCC-groupB' \
-            --normalized_counts_output_prefix "norm_counts_output/ERCC_" \
-            --dge_output_prefix "dge_output_ercc/ERCCnorm_" \
-            --annotation_file_path ${annotation_file} \
-            --extended_table_output_prefix "dge_output_ercc/"\
-            --extended_table_output_suffix "_ERCCnorm.csv" \
+        ./dge_annotation_R_scripts/dge_annotation_workflow.R \\
+            --runsheet_path runsheet.csv \\
+            --input_gene_results_dir "Rsem_gene_counts" \\
+            --primary_keytype ${ meta.primary_keytype } \\
+            --normalization 'ERCC-groupB' \\
+            --normalized_counts_output_prefix "norm_counts_output/ERCC_" \\
+            --dge_output_prefix "dge_output_ercc/ERCCnorm_" \\
+            --annotation_file_path ${annotation_file} \\
+            --extended_table_output_prefix "dge_output_ercc/"\\
+            --extended_table_output_suffix "_ERCCnorm.csv" \\
             --verbose
     fi
     """
