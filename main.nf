@@ -31,7 +31,8 @@ include { VV_RAW_READS;
           VV_DESEQ2_ANALYSIS;
           VV_CONCAT_FILTER } from './modules/vv.nf' addParams( RootDirForVV: "${workflow.launchDir}/${ params.outputDir }/${ params.gldsAccession }")
 include { GET_MAX_READ_LENGTH } from './modules/fastqc.nf'
-include { POST_PROCESSING } from './modules/genelab.nf'
+include { POST_PROCESSING;
+          SOFTWARE_VERSIONS } from './modules/genelab.nf'
 
 /**************************************************
 * HELP MENU  **************************************
@@ -138,7 +139,6 @@ workflow {
       STAGING.out.raw_reads | map { it[0].id }
                             | collectFile(name: "samples.txt", sort: true, newLine: true)
                             | set { samples_ch }
-      STAGING.out.isa | set { isa_ch }
 
       meta_ch | view { meta -> "${c_bright_green}Autodetected Processing Metadata:\n\t hasERCC: ${meta.has_ercc}\n\t pairedEND: ${meta.paired_end}\n\t organism: ${meta.organism_sci}${c_reset}"  }
 
@@ -271,10 +271,17 @@ workflow {
         )
         
         // GeneLab post processing
-        POST_PROCESSING(STAGING.out.runsheet, ch_final_software_versions, ch_vv_log_06, STAGING.out.metasheet) // Penultimate process when V&V enabled is the last V&V process
+        if (!params.runsheetPath) {
+          POST_PROCESSING(STAGING.out.runsheet, ch_vv_log_06, STAGING.out.metasheet) // Penultimate process when V&V enabled is the last V&V process
+        }
       } else {
-        POST_PROCESSING(STAGING.out.runsheet, ch_final_software_versions, Channel.value("NO VV, last output is software versions"), STAGING.out.metasheet)
+        if (!params.runsheetPath) {
+          POST_PROCESSING(STAGING.out.runsheet, Channel.value("NO VV, last output is software versions"), STAGING.out.metasheet)
+        }
       }
+
+      // Generate final versions output
+      SOFTWARE_VERSIONS(ch_final_software_versions)
     }
 }
 
