@@ -284,7 +284,7 @@ def main(software_versions_path: Path):
     print(df)
     print(PUBLISH_TABLE_ORDER)
     # deduplicate any entries
-    df = df[~df.index.duplicated(keep='first')]
+    df = df[~df.index.duplicated(keep="first")]
     print(df)
     print(df.index)
     df = df.reindex(PUBLISH_TABLE_ORDER)
