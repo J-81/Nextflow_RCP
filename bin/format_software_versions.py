@@ -20,9 +20,9 @@ PUBLISH_TABLE_ORDER = [
     "Bioconductor",
     "DESeq2",
     "tximport",
-    "tidyverse",
-    "STRINGdb",
-    "PANTHER.db",
+    # "tidyverse",
+    # "STRINGdb",
+    # "PANTHER.db",
 ]
 
 
@@ -284,8 +284,12 @@ def main(software_versions_path: Path):
     print(df)
     print(PUBLISH_TABLE_ORDER)
     # deduplicate any entries
-    df = df.drop_duplicates()
+    df = df[~df.index.duplicated(keep='first')]
+    print(df)
+    print(df.index)
     df = df.reindex(PUBLISH_TABLE_ORDER)
+    print(df.index)
+    print(df)
     output_file = software_versions_path.parent / Path("software_versions.md")
     df.to_markdown(output_file, index=True)
     print(f"Wrote {output_file}")
