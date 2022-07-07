@@ -50,8 +50,11 @@ parser <- add_option(parser, c("--isa_path"),
 parser <- add_option(parser, c("--runsheet_path"),
     help = "runsheet csv path, one of two allowed metadata inputs, exactly one metadata input must be supplied",
 )
-parser <- add_option(parser, c("--annotation_file_path"),
-    help = "Annotation database file to use for adding gene annotations",
+parser <- add_option(parser, c("--organism"),
+    help = "Organism, as referenced in organisms.csv, denotes the organism for gene annotation purposes",
+)
+parser <- add_option(parser, c("--organism_csv"),
+    help = "Path of assets files that supplies organism metadata for gene annotation mapping",
 )
 parser <- add_option(parser, c("--extended_table_output_prefix"),
     help = "Visualization table output prefix",
@@ -98,7 +101,8 @@ if (!args$skip_gene_annotation) {
         params = list(
             input_table_path = paste0(args$dge_output_prefix, "differential_expression_no_annotations.csv"),
             work_dir = args$work_dir,
-            annotation_file_path = args$annotation_file_path,
+            organism = args$organism,
+            organisms_csv = args$organisms_csv,
             primary_keytype = args$primary_keytype,
             annotated_output_prefix = args$dge_output_prefix
         )

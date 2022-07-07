@@ -9,7 +9,9 @@ params:
     annotation_file_path: ""
     primary_keytype: "" # Denotes the name of the identifier column (e.g. ENSEMBL, TAIR)
     annotated_output_prefix: ""
-    work_dir: "." # should be set to launch directory 
+    work_dir: "." # should be set to launch directory
+    organisms_csv: NULL # Path of assets files that supplies organism metadata for gene annotation mapping
+    organism: NULL # Determines row of organisms.csv to use.
 ---
 
 ## Results {.tabset}
@@ -31,9 +33,13 @@ suppressMessages(library(tibble))
 ### Output
 ```{r, load-annotation-table}
 ### Read in annotation table for the appropriate organism ###
+# reading organisms.csv table
+org_table <- read.table(params$organisms_csv, sep = ",", header = TRUE)
+# getting link to annotations table
+annotations_link <- org_table[org_table$name == organism, "genelab_annots_link"]
 
 annot <- read.table(
-            params$annotation_file_path,
+            annotations_link,
             sep = "\t",
             header = TRUE,
             quote = "",

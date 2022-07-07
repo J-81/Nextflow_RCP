@@ -200,7 +200,11 @@ workflow {
 
       organism_ch = channel.fromPath( params.organismCSV )
 
-      DGE_BY_DESEQ2( STAGING.out.runsheet, organism_ch, COUNT_ALIGNED.out.gene_counts | collect, meta_ch, params.annotation_path, "${ workflow.projectDir }/bin/dge_annotation_R_scripts")
+      DGE_BY_DESEQ2( STAGING.out.runsheet, 
+                     organism_ch, 
+                     COUNT_ALIGNED.out.gene_counts | collect, 
+                     meta_ch, 
+                     "${ workflow.projectDir }/bin/dge_annotation_R_scripts")
 
 
       // ALL MULTIQC
