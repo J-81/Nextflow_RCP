@@ -1,11 +1,11 @@
-﻿name,species,taxon,annotations
-HUMAN,Homo sapiens,9606,org.Hs.eg.db
-MOUSE,Mus musculus,10090,org.Mm.eg.db
-RAT,Rattus norvegicus,10116,org.Rn.eg.db
-ZEBRAFISH,Danio rerio,7955,org.Dr.eg.db
-FLY,Drosophila melanogaster,7227,org.Dm.eg.db
-WORM,Caenorhabditis elegans,6239,org.Ce.eg.db
-YEAST,Saccharomyces cerevisiae (strain ATCC 204508 / S288c),559292,org.Sc.sgd.db
-ARABIDOPSIS,Arabidopsis thaliana,3702,org.At.tair.db
-ECOLI,Escherichia coli (strain K12),83333,org.EcK12.eg.db
-BACSU,Bacillus subtilis (strain 168),224308,
+﻿name,species,taxon,annotations,genelab_annots_link,genelab_annots_info_link
+HUMAN,Homo sapiens,9606,org.Hs.eg.db,https://figshare.com/ndownloader/files/35939645,https://figshare.com/ndownloader/files/35939651
+MOUSE,Mus musculus,10090,org.Mm.eg.db,https://figshare.com/ndownloader/files/35939642,https://figshare.com/ndownloader/files/35939657
+RAT,Rattus norvegicus,10116,org.Rn.eg.db,,
+ZEBRAFISH,Danio rerio,7955,org.Dr.eg.db,,
+FLY,Drosophila melanogaster,7227,org.Dm.eg.db,https://figshare.com/ndownloader/files/35939663,https://figshare.com/ndownloader/files/35939660
+WORM,Caenorhabditis elegans,6239,org.Ce.eg.db,,
+YEAST,Saccharomyces cerevisiae (strain ATCC 204508 / S288c),559292,org.Sc.sgd.db,,
+ARABIDOPSIS,Arabidopsis thaliana,3702,org.At.tair.db,https://figshare.com/ndownloader/files/35939648,https://figshare.com/ndownloader/files/35939654
+ECOLI,Escherichia coli (strain K12),83333,org.EcK12.eg.db,,
+BACSU,Bacillus subtilis (strain 168),224308,,,
