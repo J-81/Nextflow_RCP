@@ -35,4 +35,4 @@ jobs:
 
       - name: Run pipeline with test data
         run: |
-          nextflow run ${GITHUB_WORKSPACE} --gldsAccession GLDS-48 --ensemblVersion 96 --truncateTo 100
+          nextflow run ${GITHUB_WORKSPACE} --gldsAccession GLDS-48 --ensemblVersion 96 --truncateTo 100 --annotation_path https://figshare.com/ndownloader/files/35939642	
