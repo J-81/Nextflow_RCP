@@ -29,7 +29,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install Nextflow
-        uses: nf-core/setup-nextflow@v1
+        uses: nf-core/setup-nextflow@v1.1.0
         with:
           version: "{% raw %}${{ matrix.NXF_VER }}{% endraw %}"
 
