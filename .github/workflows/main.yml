@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: CI
+name: Test workflow
 
 # Controls when the workflow will run
 on:
@@ -35,4 +35,4 @@ jobs:
 
       - name: Run pipeline with test data
         run: |
-          nextflow run ${GITHUB_WORKSPACE} --help
+          nextflow run ${GITHUB_WORKSPACE} --gldsAccession GLDS-48 --ensemblVersion 96 --truncateTo 100
