@@ -39,4 +39,6 @@ jobs:
 
       - name: Run pipeline with test data
         run: |
-          nextflow run ${GITHUB_WORKSPACE}  ${{ matrix.RUN_PARAMS }}
+          export TOWER_ACCESS_TOKEN=${{ secrets.TOWER_ACCESS_TOKEN }}
+          export TOWER_WORKSPACE_ID=${{ secrets.TOWER_WORKSPACE_ID }}
+          nextflow run ${GITHUB_WORKSPACE}  ${{ matrix.RUN_PARAMS }} -with-tower -name "GH_CI_$(date '+%s')"
