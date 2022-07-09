@@ -24,6 +24,13 @@ jobs:
         NXF_VER:
           - "22.04.0"
           - "latest-everything"
+        RUN_PARAMS:
+          - "--gldsAccession GLDS-48  --ensemblVersion 96 --ref_source ensembl --truncateTo 100 --annotation_path https://figshare.com/ndownloader/files/35939642"
+          - "--gldsAccession GLDS-194 --ensemblVersion 96 --ref_source ensembl --truncateTo 100 --annotation_path https://figshare.com/ndownloader/files/35939642"
+          - "--gldsAccession GLDS-251 --ensemblVersion 44 --ref_source ensembl_plants --truncateTo 100 --annotation_path https://figshare.com/ndownloader/files/35939648"
+    env:
+       TOWER_ACCESS_TOKEN: ${{ secrets.TOWER_ACCESS_TOKEN }}
+       TOWER_WORKSPACE_ID: ${{ secrets.TOWER_WORKSPACE_ID }}
     steps:
       - name: Check out pipeline code
         uses: actions/checkout@v2
@@ -35,4 +42,4 @@ jobs:
 
       - name: Run pipeline with test data
         run: |
-          nextflow run ${GITHUB_WORKSPACE} --gldsAccession GLDS-48 --ensemblVersion 96 --truncateTo 100 --annotation_path https://figshare.com/ndownloader/files/35939642	
+          nextflow run ${GITHUB_WORKSPACE}  ${{ matrix.RUN_PARAMS }} -with-tower -name "GH_CI_$(date '+%s')"
