@@ -17,8 +17,9 @@ on:
 jobs:
   test:
     name: Run pipeline with test data
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     strategy:
+      max-parallel: 1
       matrix:
         NXF_VER:
           - "21.10.6"
