@@ -17,7 +17,6 @@ on:
 jobs:
   test:
     name: Run pipeline with test data
-    # Only run on push if this is the nf-core dev branch (merged PRs)
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -43,4 +42,4 @@ jobs:
 
       - name: Run pipeline with test data
         run: |
-          nextflow run ${GITHUB_WORKSPACE}  ${{ matrix.RUN_PARAMS }} -with-tower -name "GH_CI_$(date '+%s')"
+          nextflow run ${GITHUB_WORKSPACE}  ${{ matrix.RUN_PARAMS }} -with-tower -name "GH_CI_$(date '+%s')" -ansi-log false
