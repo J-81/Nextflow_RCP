@@ -43,4 +43,4 @@ jobs:
 
       - name: Run pipeline with test data
         run: |
-          nextflow run ${GITHUB_WORKSPACE}  ${{ matrix.RUN_PARAMS }} -with-tower -name "GH_CI_$(date '+%s')" -ansi-log false -process.conda.createOptions '--copy'
+          nextflow run ${GITHUB_WORKSPACE}  ${{ matrix.RUN_PARAMS }} -with-tower -name "GH_CI_$(date '+%s')" -ansi-log false -process.conda.createOptions '--copy' || { ORIG_ERROR=$?; cat .nextflow.log; exit $? }
