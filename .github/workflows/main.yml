@@ -25,9 +25,10 @@ jobs:
           - "21.10.6"
         # MUST use earlier versionaffected by this issue: https://github.com/nextflow-io/nextflow/issues/3023  - "latest-everything"
         RUN_PARAMS:
-          - "--gldsAccession GLDS-48  --ensemblVersion 96 --ref_source ensembl --truncateTo 100 --annotation_path https://figshare.com/ndownloader/files/35939642"
-          - "--gldsAccession GLDS-194 --ensemblVersion 96 --ref_source ensembl --truncateTo 100 --annotation_path https://figshare.com/ndownloader/files/35939642"
-          - "--gldsAccession GLDS-251 --ensemblVersion 44 --ref_source ensembl_plants --truncateTo 100 --annotation_path https://figshare.com/ndownloader/files/35939648"
+          - "-profile test48"
+          - "-profile test194"
+          - "-profile test207"
+          - "-profile test251"
     environment: Nextflow_Tower
     env:
        TOWER_ACCESS_TOKEN: ${{ secrets.TOWER_ACCESS_TOKEN }}
@@ -44,6 +45,7 @@ jobs:
       - name: Run pipeline with test data
         run: |
           nextflow run ${GITHUB_WORKSPACE}  ${{ matrix.RUN_PARAMS }} \
-                   -with-tower -name "GH_CI_$(date '+%s')" -ansi-log false \
-                   -process.conda.createOptions '--copy' -process.conda.useMamba true \
-                   || { ORIG_ERROR=$?; cat .nextflow.log; exit ORIG_ERROR; } 
+                  -with-tower -name "GH_CI_$(date '+%s')" -ansi-log false \
+                  -profile test \
+                  -process.conda.createOptions '--copy' -process.conda.useMamba true \
+                  || { ORIG_ERROR=$?; cat .nextflow.log; exit ORIG_ERROR; } 
