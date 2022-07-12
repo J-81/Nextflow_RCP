@@ -45,4 +45,5 @@ jobs:
         run: |
           nextflow run ${GITHUB_WORKSPACE}  ${{ matrix.RUN_PARAMS }} \
                    -with-tower -name "GH_CI_$(date '+%s')" -ansi-log false \
-                   -process.conda.createOptions '--copy' || { ORIG_ERROR=$?; cat .nextflow.log; exit ORIG_ERROR; }
+                   -process.conda.createOptions '--copy' -process.conda.useMamba true \
+                   || { ORIG_ERROR=$?; cat .nextflow.log; exit ORIG_ERROR; } 
