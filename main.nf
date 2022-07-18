@@ -131,26 +131,37 @@ workflow {
 	main:
     STAGING( ch_glds_accession )
     if ( params.stageLocal ) {
+      // This process can use a single meta and a collection of read paths
+      STAGING.out.raw_reads | first | map{it -> it[0]} | set { ch_meta }
+      STAGING.out.raw_reads | map{ it -> it[1] } | collect | set { ch_all_raw_reads }
+      STAGING.out.raw_reads | map { it[0].id }
+                            | collectFile(name: "samples.txt", sort: true, newLine: true)
+                            | set { ch_samples_txt }
+
+      STAGING.out.raw_reads | RAW_FASTQC
+
+      RAW_FASTQC.out.fastqc | map { it -> [ it[1], it[2] ] }
+                            | flatten
+                            | unique
+                            | collect
+                            | set { raw_mqc_ch }
+
+      RAW_MULTIQC( ch_samples_txt, raw_mqc_ch, ch_multiqc_config  )
+
+      VV_RAW_READS( STAGING.out.runsheet,
+                    ch_all_raw_reads,
+                    RAW_FASTQC.out.fastqc | map { it -> [ it[1], it[2] ] } | flatten | collect,
+                    RAW_MULTIQC.out.zipped_report,
+                  )
+    }
+      /*
       STAGING.out.runsheet
       STAGING.out.raw_reads | set { raw_reads_ch }
       // meta only for dataset specific processes that don't use samples
       // e.g. downloading correct reference genome base on organism
-      STAGING.out.raw_reads | take(1) | map{it -> it[0]} | set { meta_ch }
-      STAGING.out.raw_reads | map { it[0].id }
-                            | collectFile(name: "samples.txt", sort: true, newLine: true)
-                            | set { samples_ch }
 
-      meta_ch | view { meta -> "${c_bright_green}Autodetected Processing Metadata:\n\t hasERCC: ${meta.has_ercc}\n\t pairedEND: ${meta.paired_end}\n\t organism: ${meta.organism_sci}${c_reset}"  }
+      ch_meta | view { meta -> "${c_bright_green}Autodetected Processing Metadata:\n\t hasERCC: ${meta.has_ercc}\n\t pairedEND: ${meta.paired_end}\n\t organism: ${meta.organism_sci}${c_reset}"  }
 
-      raw_reads_ch | RAW_FASTQC //| view {"POST_FASTQC: $it"}
-
-      RAW_FASTQC.out.fastqc | map { it -> [ it[1], it[2] ] }
-                            //| view {"POST_MAP: $it"}
-                            | flatten
-                            | unique
-                            | collect
-                            //| view {"PRE_RAW_MULTIQC: $it"}
-                            | set { raw_mqc_ch }
 
       RAW_FASTQC.out.fastqc | map { it -> [ it[2] ] }
                             | flatten
@@ -169,21 +180,21 @@ workflow {
                                 | collect \
                                 | set { trim_mqc_ch }
 
-      REFERENCES( meta_ch | map { it.organism_sci }, meta_ch | map { it.has_ercc } )
+      REFERENCES( ch_meta | map { it.organism_sci }, ch_meta | map { it.has_ercc } )
       REFERENCES.out.genome_annotations | set { genome_annotations }      
 
-      BUILD_STAR( genome_annotations, meta_ch, max_read_length_ch)
+      BUILD_STAR( genome_annotations, ch_meta, max_read_length_ch)
 
       TRIMGALORE.out.reads | combine( BUILD_STAR.out.build ) | ALIGN_STAR
 
-      STRANDEDNESS ( ALIGN_STAR.out.bam_by_coord, REFERENCES.out.genome_bed, samples_ch ) 
+      STRANDEDNESS ( ALIGN_STAR.out.bam_by_coord, REFERENCES.out.genome_bed, ch_samples_txt ) 
       STRANDEDNESS.out.strandedness | map { it.text.split(":")[0] } | set { strandedness_ch }
 
-      BUILD_RSEM( genome_annotations, meta_ch)
+      BUILD_RSEM( genome_annotations, ch_meta)
 
       ALIGN_STAR.out.bam_to_transcriptome | combine( BUILD_RSEM.out.build ) | set { aligned_ch }
       QUANTIFY_STAR_GENES( 
-          samples_ch, 
+          ch_samples_txt, 
           ALIGN_STAR.out.read_per_gene | toSortedList,
           strandedness_ch
         )
@@ -196,26 +207,25 @@ workflow {
 
       COUNT_ALIGNED.out.counts | map { it[1] } | collect | set { rsem_ch }
 
-      QUANTIFY_RSEM_GENES( samples_ch, rsem_ch )
+      QUANTIFY_RSEM_GENES( ch_samples_txt, rsem_ch )
 
       organism_ch = channel.fromPath( params.organismCSV )
 
-      DGE_BY_DESEQ2( STAGING.out.runsheet, organism_ch, COUNT_ALIGNED.out.gene_counts | collect, meta_ch, params.annotation_path, "${ workflow.projectDir }/bin/dge_annotation_R_scripts")
+      DGE_BY_DESEQ2( STAGING.out.runsheet, organism_ch, COUNT_ALIGNED.out.gene_counts | collect, ch_meta, params.annotation_path, "${ workflow.projectDir }/bin/dge_annotation_R_scripts")
 
 
       // ALL MULTIQC
-      RAW_MULTIQC( samples_ch, raw_mqc_ch, ch_multiqc_config  )
-      TRIMMED_MULTIQC( samples_ch, trim_mqc_ch, ch_multiqc_config ) // refering to the trimmed reads
-      TRIM_MULTIQC( samples_ch, TRIMGALORE.out.reports | collect, ch_multiqc_config ) // refering to the trimming process
-      ALIGN_MULTIQC( samples_ch, align_mqc_ch, ch_multiqc_config )
-      COUNT_MULTIQC( samples_ch, rsem_ch, ch_multiqc_config )
+      TRIMMED_MULTIQC( ch_samples_txt, trim_mqc_ch, ch_multiqc_config ) // refering to the trimmed reads
+      TRIM_MULTIQC( ch_samples_txt, TRIMGALORE.out.reports | collect, ch_multiqc_config ) // refering to the trimming process
+      ALIGN_MULTIQC( ch_samples_txt, align_mqc_ch, ch_multiqc_config )
+      COUNT_MULTIQC( ch_samples_txt, rsem_ch, ch_multiqc_config )
       raw_mqc_ch | concat( trim_mqc_ch ) 
                  | concat( ALIGN_STAR.out.alignment_logs ) 
                  | concat( STRANDEDNESS.out.rseqc_logs )
                  | concat( rsem_ch )
                  | concat( TRIMGALORE.out.reports )
                  | collect | set { all_mqc_ch }
-      ALL_MULTIQC( samples_ch, all_mqc_ch, ch_multiqc_config )
+      ALL_MULTIQC( ch_samples_txt, all_mqc_ch, ch_multiqc_config )
 
       // Software Version Capturing
       nf_version = "Nextflow Version:".concat("${nextflow.version}\n<><><>\n")
@@ -236,29 +246,11 @@ workflow {
                            | collectFile(name: "software_versions.txt", newLine: true, cache: false)
 			   | set{ch_final_software_versions}
 
-
+      /*
       // VV processes
       if ( !params.skipVV ) {
-        ch_vv_log_00 =  Channel.fromPath("nextflow_vv_log.tsv")
-        VV_RAW_READS( RAW_MULTIQC.out.zipped_report,
-                      ch_vv_log_00 ) | set { ch_vv_log_01 }
-
-        VV_TRIMMED_READS( TRIMMED_MULTIQC.out.zipped_report,
-                          ch_vv_log_01 ) | set { ch_vv_log_02 }
-
-        // Ensure this requires the resorted bam bai to start
-        VV_STAR_ALIGNMENTS( ALIGN_MULTIQC.out.zipped_report | mix(STRANDEDNESS.out.bam_bed | flatten) | toSortedList ,
-                            ch_vv_log_02 ) | set { ch_vv_log_03 }
+        VV_RAW_READS( STAGING.out.raw_reads | collect )
         
-        VV_RSEQC( STRANDEDNESS.out.mqc_reports | flatten | toSortedList, 
-                  ch_vv_log_03 ) | set { ch_vv_log_04 }
-
-        VV_RSEM_COUNTS( COUNT_MULTIQC.out.zipped_report | toSortedList,
-                        ch_vv_log_04 ) | set { ch_vv_log_05 }
-
-        VV_DESEQ2_ANALYSIS( DGE_BY_DESEQ2.out.dge | map{ it -> it[1..it.size()-1] } | flatten | toSortedList, // map use here: removes val(meta) from tuple
-                            ch_vv_log_05 ) | set { ch_vv_log_06 }
-
         VV_CONCAT_FILTER( 
           ch_vv_log_01 | mix(
                         ch_vv_log_02,
@@ -278,11 +270,12 @@ workflow {
         if (!params.runsheetPath) {
           POST_PROCESSING(STAGING.out.runsheet, Channel.value("NO VV, last output is software versions"), STAGING.out.metasheet)
         }
-      }
+      */
+      // }
 
       // Generate final versions output
-      SOFTWARE_VERSIONS(ch_final_software_versions)
-    }
+      // SOFTWARE_VERSIONS(ch_final_software_versions)
+    // }
 }
 
 workflow.onComplete {
