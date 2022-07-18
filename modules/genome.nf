@@ -249,7 +249,9 @@ process SUBSAMPLE_GENOME {
     """
     samtools faidx ${genome_fasta} ${params.genomeSubsample} > ${ genome_fasta.baseName }_sub_${ params.genomeSubsample }.fa
 
-    grep -P "^#|^${params.genomeSubsample}\t" ${genome_gtf} > ${ genome_gtf.baseName }_sub_${ params.genomeSubsample  }.gtf
+    # subsample gtf file
+    grep '^#!' ${genome_gtf} > ${ genome_gtf.baseName }_sub_${ params.genomeSubsample  }.gtf
+    grep '^${params.genomeSubsample}\t' ${genome_gtf} >> ${ genome_gtf.baseName }_sub_${ params.genomeSubsample  }.gtf
     """
 }
 
