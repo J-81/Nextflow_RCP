@@ -30,7 +30,7 @@ def _parse_args():
 
 
 def main(root_dir: Path, accession: str, max_flag_code: int):
-    ds = load_BulkRNASeq_STAGE_00(root_dir, dataSystem_name=accession)
+    ds = load_BulkRNASeq_STAGE_00(root_dir, dataSystem_name=accession, load_isa_archive = False)
     vp = validate_bulkRNASeq(
         ds.dataset,
         report_args={"include_skipped": True},
