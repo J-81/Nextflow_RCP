@@ -123,12 +123,13 @@ def download_from_ftp(target_file_suffix, target_file_folder, verbose = False):
             checksum[target_file] = [int(val) for val in line.split()[0:2]]
     ftp.retrlines(f"RETR {checksum_file}", _checksum_for)
     ensembl_checksum = checksum[target_file]
+    print(f"Ensembl check sum for {target_file}: {ensembl_checksum}")
 
     ### compute checksum for downloaded file ###
     computed_checksum = subprocess.run(["sum", target_file], capture_output=True).stdout
     # convert to string from bytes
     # strip whitespace
-    computed_checksum = [int(val) for val in computed_checksum.decode("utf-8").strip().split()]
+    computed_checksum = [int(val) for val in computed_checksum.decode("utf-8").strip().split()[0:2]]
 
     ### Check if they match ###
     print(f"Successfully downloaded recorded checksums: {ensembl_checksum}") if verbose else None
