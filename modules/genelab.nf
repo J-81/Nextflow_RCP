@@ -28,8 +28,6 @@ process RNASEQ_RUNSHEET_FROM_GLDS {
 process STAGE_RAW_READS {
   // Stages the raw reads into appropriate publish directory
   tag "${ meta.id }"
-  publishDir "${ params.outputDir }/${ params.gldsAccession }/${ params.raw_reads_root_dir }/Fastq",
-    mode: params.publish_dir_mode
 
   input:
     tuple val(meta), path("?.gz")
