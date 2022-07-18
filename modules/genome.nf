@@ -4,7 +4,7 @@
 
 process BUILD_STAR {
   // Builds STAR index, this is ercc-spike-in, organism, read length and ensembl version specific
-  tag "Refs:${ genomeFasta },${ genomeGtf }, Ensembl.V:${params.ensemblVersion} MaxReadLength:${ max_read_length } ${ params.genomeSubsample ? 'GenomeSubsample: ' + params.genomeSubsample : ''}"
+  tag "Refs:${ genomeFasta },${ genomeGtf }, Ensembl.V:${params.ensemblVersion} MaxReadLength:${ max_read_length }${ params.genomeSubsample ? ' GenomeSubsample: ' + params.genomeSubsample : ''}"
   storeDir "${ params.derivedStorePath }/STAR_Indices/${ params.ref_source }_release${params.ensemblVersion}/${ meta.organism_sci.capitalize() }"
 
   label 'maxCPU'
@@ -131,7 +131,7 @@ process ALIGN_STAR {
 
 process BUILD_RSEM {
   // Builds RSEM index, this is ercc-spike-in, organism, and ensembl version specific
-  tag "Refs:${ genomeFasta },${ genomeGtf }, Ensembl Version: ${params.ensemblVersion}, GenomeSubsample: ${ params.genomeSubsample }"
+  tag "Refs:${ genomeFasta },${ genomeGtf }, Ensembl Version: ${params.ensemblVersion}${ params.genomeSubsample ? ' GenomeSubsample: ' + params.genomeSubsample : ''}"
   storeDir "${ params.derivedStorePath }/RSEM_Indices/${ params.ref_source }_release${params.ensemblVersion}/${ meta.organism_sci.capitalize() }"
 
   input:
