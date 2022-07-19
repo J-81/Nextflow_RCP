@@ -21,60 +21,38 @@ process BUILD_STAR {
 
   script:
     """
-#! /usr/bin/env python
-    
-import subprocess
-import shlex
+    #################################################
+    # Determine genomeSAindexNbases as per manual:
+    # 
+    # Manual Excerpt: 
+    # genomeSAindexNbases         14
+    # int: length (bases) of the SA pre-indexing string. Typically between 10 and 15. Longer strings will use much more memory, but allow faster searches. 
+    # For small genomes, the parameter --genomeSAindexNbases must be scaled down to min(14, log2(GenomeLength)/2 - 1). 
+    #################################################
+    min() {
+        printf "%s\n" "\${@:2}" | sort "\$1" | head -n1
+    }
 
-command = '''
-STAR --runThreadN ${task.cpus} \
---runMode genomeGenerate \
---limitGenomeGenerateRAM ${ task.memory.toBytes() } \
---genomeSAindexNbases 14 \
---genomeDir ${ genomeFasta.baseName }_RL-${ max_read_length.toInteger() } \
---genomeFastaFiles ${ genomeFasta } \
---sjdbGTFfile ${ genomeGtf } \
---sjdbOverhang ${ max_read_length.toInteger() - 1 }
-'''
+    # Get bases in the fasta file
+    # We substract the number of lines to remove newline characters from the count
+    NUM_BASES=\$(( \$(grep -v '>' ${ genomeFasta } | wc -c) - \$(grep -v '>' ${ genomeFasta } | wc -l)))
+    echo NUM_BASES=\$NUM_BASES
 
-def rerun(suggested):
-    command = '''
+    # Compute parameter using formula: min(14, log2(GenomeLength)/2 - 1)
+    COMPUTED_GenomeSAindexNbases=\$(awk -v a=\$NUM_BASES 'BEGIN { print " ", int(((log(a)/log(2))/2)-1) }')
+    echo "log2(GenomeLength)/2 - 1 = \${COMPUTED_GenomeSAindexNbases}"
+    COMPUTED_GenomeSAindexNbases=\$(min -g 14 \$COMPUTED_GenomeSAindexNbases)
+
+
     STAR --runThreadN ${task.cpus} \
     --runMode genomeGenerate \
     --limitGenomeGenerateRAM ${ task.memory.toBytes() } \
-    --genomeSAindexNbases {suggested} \
+    --genomeSAindexNbases \$COMPUTED_GenomeSAindexNbases \
     --genomeDir ${ genomeFasta.baseName }_RL-${ max_read_length.toInteger() } \
     --genomeFastaFiles ${ genomeFasta } \
     --sjdbGTFfile ${ genomeGtf } \
     --sjdbOverhang ${ max_read_length.toInteger() - 1 }
-    '''
-    print(command)
-    command = command.format(suggested=suggested)
-    
-    output_rerun = subprocess.check_output(shlex.split(command), shell=False)
-    print(output_rerun)
-
-# invoke initial build process
-process = subprocess.Popen(shlex.split(command), shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-# Poll process.stdout
-while True:
-    output = process.stderr.readline()
-    if process.poll() is not None:
-        break
-    if output:
-        line = output.strip().decode()
-        print(line)
-        if "!!!!! WARNING: --genomeSAindexNbases" in line: # indicating better parameters
-            suggested = int(line.split()[-1])
-            print(f"Restarting build with suggested '--genomeSAindexNbases' parameter ({suggested})")
-            process.kill()
-            rerun(suggested)
-            break
-        
-    rc = process.poll()
     """
-
 }
 
 
