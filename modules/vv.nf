@@ -59,7 +59,14 @@ process VV_TRIMMED_READS {
 
   script:
     """
-    trimmed_reads_VV.py --root-path VV --accession ${ params.gldsAccession }
+    # move from VV_INPUT to task directory
+    # This allows detection as output files for publishing
+    mv VV_INPUT/* .
+
+    # Run V&V unless user requests to skip V&V
+    if ${ !params.skipVV} ; then
+      trimmed_reads_VV.py --root-path . --accession ${ params.gldsAccession }
+    fi
     """
 }
 
