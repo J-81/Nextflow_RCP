@@ -35,15 +35,15 @@ df <- read.csv(params$input_table_path,
                sep = params$table_sep,
                 check.names = FALSE # don't rename column names with check.names
                  )
-DT::datatable(head(df),
-  caption = "First few rows of the input table on load",
-  extensions = "FixedColumns",
-  options = list(
-    dom = "t",
-    scrollX = TRUE,
-    fixedColumns = TRUE
-  )
-)
+# DT::datatable(head(df),
+#   caption = "First few rows of the input table on load",
+#   extensions = "FixedColumns",
+#   options = list(
+#     dom = "t",
+#     scrollX = TRUE,
+#     fixedColumns = TRUE
+#   )
+# )
 ```
 
 ```{r, add-viz-columns}
@@ -77,16 +77,16 @@ colnames(log_adj_pval_table) <- paste0("Log2_", colnames(log_adj_pval_table))
 df <- cbind(df, log_adj_pval_table)
 rm(log_adj_pval_table)
 
-DT::datatable(head(df),
-  caption = "DGE table extended with Visualization Columns",
-  extensions = "FixedColumns",
-  options = list(
-    dom = "t",
-    scrollX = TRUE,
-    scrollY = TRUE,
-    fixedColumns = TRUE
-  )
-)
+# DT::datatable(head(df),
+#   caption = "DGE table extended with Visualization Columns",
+#   extensions = "FixedColumns",
+#   options = list(
+#     dom = "t",
+#     scrollX = TRUE,
+#     scrollY = TRUE,
+#     fixedColumns = TRUE
+#   )
+# )
 
 dir.create(dirname(paste0(params$extended_table_output_prefix, "_")), recursive = TRUE)
 write.csv(df,

@@ -36,7 +36,6 @@ options(timeout=600)
 # Import libraries (tximport, DESeq2, tidyverse, Risa)
 suppressMessages(library(tximport))
 suppressMessages(library(DESeq2))
-suppressMessages(library(Risa))
 suppressMessages(library(stringr))
 
 params
@@ -62,10 +61,13 @@ compare_csv_from_runsheet <- function(runsheet_path) {
 }
 # Loading metadata from runsheet csv file
 compare_csv <- compare_csv_from_runsheet(params$runsheet_path)
-DT::datatable(compare_csv, caption = "Data Frame of parsed runsheet filtered to required columns")
+#DT::datatable(compare_csv, caption = "Data Frame of parsed runsheet filtered to required columns")
 ```
 
 ```{r isa-to-compare_df, include=(!is.null(params$isa_path)), eval=(!is.null(params$isa_path))}
+# TODO: Remove this route, ISA zip support will be dropped as of DPPD-7101-F
+suppressMessages(library(Risa))
+
 compare_csv_from_isa_archive <- function(isa_path) {
     td = tempdir()
     unzip(isa_path, exdir = td)
@@ -78,14 +80,14 @@ compare_csv_from_isa_archive <- function(isa_path) {
 }
 # Loading metadata from isa archive
 compare_csv <- compare_csv_from_isa_archive(params$isa_path)
-DT::datatable(compare_csv, caption = "Data Frame of parsed isa archive filtered to required metadata")
+#DT::datatable(compare_csv, caption = "Data Frame of parsed isa archive filtered to required metadata")
 ```
 
 ```{r compare_df-to-study_df}
 study <- as.data.frame(compare_csv[,2:dim(compare_csv)[2]])
 colnames(study) <- colnames(compare_csv)[2:dim(compare_csv)[2]]
 rownames(study) <- compare_csv[,1]
-DT::datatable(study, caption = "TBA")
+#DT::datatable(study, caption = "TBA")
 ```
 
 ```{r study_df-to-group_df}
@@ -98,7 +100,7 @@ if (dim(study) >= 2){
 group_names <- paste0("(",group,")",sep = "") # human readable group names
 group <- make.names(group) # group naming compatible with R models
 names(group) <- group_names
-DT::datatable(as.data.frame(group), caption = "TBA")
+#DT::datatable(as.data.frame(group), caption = "TBA")
 ```
 
 ```{r group_df-to-contrasts_df}
@@ -109,12 +111,12 @@ contrast.names <- c(paste(contrast.names[1,],contrast.names[2,],sep = "v"),paste
 contrasts <- cbind(contrasts,contrasts[c(2,1),])
 colnames(contrasts) <- contrast.names
 rm(contrast.names)
-DT::datatable(contrasts, caption = "TBA", extensions = 'FixedColumns',
-  options = list(
-    dom = 't',
-    scrollX = TRUE,
-    fixedColumns = FALSE
-  ))
+# DT::datatable(contrasts, caption = "TBA", extensions = 'FixedColumns',
+#   options = list(
+#     dom = 't',
+#     scrollX = TRUE,
+#     fixedColumns = FALSE
+#   ))
 ```
 
 ### 3. Load Gene Counts
@@ -156,14 +158,14 @@ print(txi.rsem, quote = TRUE)
 ```
 
 ```{r viz-head-loaded-counts}
-DT::datatable(head(txi.rsem$counts))
+#DT::datatable(head(txi.rsem$counts))
 ```
 
 ```{r create-sample-table}
 ## Create data frame defining which group each sample belongs to
 sampleTable <- data.frame(condition=factor(group))
 rownames(sampleTable) <- colnames(txi.rsem$counts)
-DT::datatable(sampleTable, caption = "TBA")
+#DT::datatable(sampleTable, caption = "TBA")
 ```
 
 ### 4. DGE
@@ -187,7 +189,7 @@ if ((length(ercc_rows_all) == 92) == FALSE) {
 output_fn = file.path(getwd(), 'ERCC_rawCounts_unfiltered.csv')
 ERCC_rawCounts_all = as.data.frame(counts(ercc_dds_all))
 write.csv(ERCC_rawCounts_all,file=output_fn)
-DT::datatable(head(ERCC_rawCounts_all))
+#DT::datatable(head(ERCC_rawCounts_all))
 ```
 
 ```{r filter-genes-by-normalized-counts}
@@ -385,15 +387,15 @@ write.csv(output_table_1,
           row.names = FALSE,
           paste0(params$dge_output_prefix, "differential_expression_no_annotations.csv")
          )
-DT::datatable(head(output_table_1, n = 30),
-  caption = "First 30 rows of differential gene expression table",
-  extensions = "FixedColumns",
-  options = list(
-    dom = "t",
-    scrollX = TRUE,
-    fixedColumns = TRUE
-  )
-)
+# DT::datatable(head(output_table_1, n = 30),
+#   caption = "First 30 rows of differential gene expression table",
+#   extensions = "FixedColumns",
+#   options = list(
+#     dom = "t",
+#     scrollX = TRUE,
+#     fixedColumns = TRUE
+#   )
+# )
 ```
 
 ```{r version-reporting}

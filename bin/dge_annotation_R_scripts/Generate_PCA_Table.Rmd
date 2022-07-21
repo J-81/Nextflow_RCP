@@ -37,15 +37,15 @@ normCounts <- read.csv(params$input_table_path,
                        row.names = 1,
                        check.names = FALSE
                       )
-DT::datatable(head(df),
-  caption = "First few rows of the input table on load",
-  extensions = "FixedColumns",
-  options = list(
-    dom = "t",
-    scrollX = TRUE,
-    fixedColumns = TRUE
-  )
-)
+# DT::datatable(head(df),
+#   caption = "First few rows of the input table on load",
+#   extensions = "FixedColumns",
+#   options = list(
+#     dom = "t",
+#     scrollX = TRUE,
+#     fixedColumns = TRUE
+#   )
+# )
 ```
 
 ```{r, add-viz-columns}
@@ -60,15 +60,15 @@ write.csv(PCA_raw$x,
                  params$pca_table_output_suffix)
           )
 
-DT::datatable(as.data.frame(PCA_raw$x),
-  caption = "PCA Table",
-  extensions = "FixedColumns",
-  options = list(
-    dom = "t",
-    scrollX = TRUE,
-    fixedColumns = FALSE
-  )
-)
+# DT::datatable(as.data.frame(PCA_raw$x),
+#   caption = "PCA Table",
+#   extensions = "FixedColumns",
+#   options = list(
+#     dom = "t",
+#     scrollX = TRUE,
+#     fixedColumns = FALSE
+#   )
+# )
 ```
 
 ```{r version-reporting}

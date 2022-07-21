@@ -1,4 +1,3 @@
-#! /usr/bin/env -S Rscript --vanilla
 here::i_am("dge_annotation_R_scripts/dge_annotation_workflow.R")
 library("optparse")
 library("here")

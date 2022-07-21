@@ -40,15 +40,15 @@ annot <- read.table(
             comment.char = "",
         )
 
-DT::datatable(head(annot),
-  caption = "First few rows of the annotation table",
-  extensions = "FixedColumns",
-  options = list(
-    dom = "t",
-    scrollX = TRUE,
-    fixedColumns = TRUE
-  )
-)
+# DT::datatable(head(annot),
+#   caption = "First few rows of the annotation table",
+#   extensions = "FixedColumns",
+#   options = list(
+#     dom = "t",
+#     scrollX = TRUE,
+#     fixedColumns = TRUE
+#   )
+# )
 ```
 
 ```{r, load-table-to-annotate}
@@ -56,15 +56,15 @@ df <- read.csv(params$input_table_path,
                  sep = params$table_sep,
                  check.names = FALSE # don't rename column names with check.names
                  )
-DT::datatable(head(df),
-  caption = "First few rows of the input table on load",
-  extensions = "FixedColumns",
-  options = list(
-    dom = "t",
-    scrollX = TRUE,
-    fixedColumns = TRUE
-  )
-)
+# DT::datatable(head(df),
+#   caption = "First few rows of the input table on load",
+#   extensions = "FixedColumns",
+#   options = list(
+#     dom = "t",
+#     scrollX = TRUE,
+#     fixedColumns = TRUE
+#   )
+# )
 ```
 
 ```{r, add-annotations}
@@ -78,15 +78,15 @@ df2 <- merge(
                 all.y = TRUE
             )
 
-DT::datatable(head(df2),
-  caption = "First few rows of the annotated output table",
-  extensions = "FixedColumns",
-  options = list(
-    dom = "t",
-    scrollX = TRUE,
-    fixedColumns = FALSE
-  )
-)
+# DT::datatable(head(df2),
+#   caption = "First few rows of the annotated output table",
+#   extensions = "FixedColumns",
+#   options = list(
+#     dom = "t",
+#     scrollX = TRUE,
+#     fixedColumns = FALSE
+#   )
+# )
 
 dir.create(dirname(paste0(params$annotated_output_prefix, "_")), recursive = TRUE)
 write.csv(df2, row.names = FALSE, paste0(params$annotated_output_prefix, "differential_expression.csv"))
