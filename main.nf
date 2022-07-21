@@ -132,7 +132,12 @@ workflow {
     STAGING( ch_glds_accession )
     if ( params.stageLocal ) {
       // This process can use a single meta and a collection of read paths
-      STAGING.out.raw_reads | first | map{it -> it[0]} | set { ch_meta }
+      STAGING.out.raw_reads | first 
+                            | map{it -> it[0]} 
+                            | view { meta -> "${c_bright_green}Autodetected Processing Metadata:\n\t hasERCC: ${meta.has_ercc}\n\t pairedEND: ${meta.paired_end}\n\t organism: ${meta.organism_sci}${c_reset}"  }
+                            | set { ch_meta }
+
+      STAGING.out.raw_reads | map{ it -> it[1] } | collect | set { ch_all_raw_reads }
       STAGING.out.raw_reads | map{ it -> it[1] } | collect | set { ch_all_raw_reads }
       STAGING.out.raw_reads | map { it[0].id }
                             | collectFile(name: "samples.txt", sort: true, newLine: true)
@@ -153,24 +158,14 @@ workflow {
                     RAW_FASTQC.out.fastqc | map { it -> [ it[1], it[2] ] } | flatten | collect,
                     RAW_MULTIQC.out.zipped_report,
                   )
-    }
-      /*
-      STAGING.out.runsheet
-      STAGING.out.raw_reads | set { raw_reads_ch }
-      // meta only for dataset specific processes that don't use samples
-      // e.g. downloading correct reference genome base on organism
-
-      ch_meta | view { meta -> "${c_bright_green}Autodetected Processing Metadata:\n\t hasERCC: ${meta.has_ercc}\n\t pairedEND: ${meta.paired_end}\n\t organism: ${meta.organism_sci}${c_reset}"  }
-
-
       RAW_FASTQC.out.fastqc | map { it -> [ it[2] ] }
                             | flatten
                             | GET_MAX_READ_LENGTH
 
-      GET_MAX_READ_LENGTH.out.length | max { it.toInteger() }
-                                     | set { max_read_length_ch }
+      GET_MAX_READ_LENGTH.out.length  | max { it.toInteger() }
+                                      | set { max_read_length_ch }
 
-      raw_reads_ch |  TRIMGALORE
+      STAGING.out.raw_reads |  TRIMGALORE
 
       TRIMGALORE.out.reads | TRIMMED_FASTQC
 
@@ -212,6 +207,17 @@ workflow {
       organism_ch = channel.fromPath( params.organismCSV )
 
       DGE_BY_DESEQ2( STAGING.out.runsheet, organism_ch, COUNT_ALIGNED.out.gene_counts | collect, ch_meta, params.annotation_path, "${ workflow.projectDir }/bin/dge_annotation_R_scripts")
+
+
+    }
+      /*
+      STAGING.out.runsheet
+      STAGING.out.raw_reads | set { raw_reads_ch }
+      // meta only for dataset specific processes that don't use samples
+      // e.g. downloading correct reference genome base on organism
+
+
+
 
 
       // ALL MULTIQC
